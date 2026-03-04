@@ -1,0 +1,127 @@
+{% if domain_config %}
+# {{ name }} — Agent Instructions
+
+{{ domain_config.instructions_description }}
+
+## Quick Reference
+
+```bash
+{{ domain_config.instructions_quick_ref }}
+```
+
+## Project Structure
+
+```
+{{ domain_config.instructions_project_structure }}
+```
+
+## Critical Rules
+
+{% for rule in domain_config.instructions_rules %}
+{{ loop.index }}. {{ rule }}
+{% endfor %}
+
+## Primary Workflow
+
+{% for phase in domain_config.instructions_workflow_phases %}
+### Phase {{ loop.index }}: {{ phase.title }}
+
+{{ phase.content }}
+
+{% endfor %}
+
+## Key Principle
+
+{{ domain_config.instructions_key_principle }}
+
+## Common Gotchas
+
+{% for gotcha in domain_config.instructions_gotchas %}
+- {{ gotcha }}
+{% endfor %}
+{% else %}
+# {{ name }} — Agent Instructions
+
+<!-- AGENT: Write 1-2 sentences describing what this system does and its primary constraints.
+     If code exists: read README + entry point + package config.
+     If greenfield: ask the user what they're building. -->
+
+## Quick Reference
+
+```bash
+<!-- AGENT: List 3-5 common commands for this project.
+     If code exists: check package.json scripts, Makefile, pyproject.toml, Cargo.toml, go.mod.
+     If greenfield: infer from tech stack ({{ language }}) or ask the user. -->
+```
+
+## Project Structure
+
+```
+<!-- AGENT: Annotate the directory tree with purpose of each key directory.
+     If code exists: run a directory listing and describe what each dir contains.
+     If greenfield: describe the planned structure based on the tech stack. -->
+```
+
+## Critical Rules
+
+<!-- AGENT: List 3-5 inviolable constraints for this project.
+     If code exists: extract from linter config (.eslintrc, ruff.toml, .golangci.yml),
+     CI pipeline (.github/workflows/), README, and code comments.
+     If greenfield: ask about language version, security requirements, conventions.
+     Example: "Python 3.9+ — use `from __future__ import annotations` everywhere." -->
+
+1. **Fail graceful** — Each item wrapped in try/except, log error, continue.
+
+## Domain Model
+
+<!-- AGENT: Describe core entities, their relationships, and primary data flow.
+     If code exists: look for models/, schemas/, types/, database migrations, API routes.
+     If greenfield: ask "What are the main entities and how do they relate?" -->
+
+## Primary Workflow
+
+<!-- AGENT: Define 3-5 phases of the typical development cycle.
+     If code exists: infer from scripts, CI pipeline, and project structure.
+     If greenfield: ask "What's the typical workflow for a task in this project?" -->
+
+### Phase 1: Gather Requirements
+
+<!-- AGENT: What does the agent need to know before starting?
+     If code exists: look at test fixtures, config files, example inputs.
+     If greenfield: ask the user. -->
+
+### Phase 2: Execute
+
+<!-- AGENT: What does the agent do? What commands does it run?
+     If code exists: identify build, run, and test commands.
+     If greenfield: infer from tech stack. -->
+
+### Phase 3: Analyze Results (DO NOT SKIP)
+
+<!-- AGENT: What should the agent check after execution?
+     If code exists: look for test suites, linters, type checkers, CI checks.
+     If greenfield: ask about quality gates. -->
+
+### Phase 4: Iterate
+
+<!-- AGENT: What levers can the agent pull to improve results?
+     If code exists: look for configuration knobs, feature flags, optimization patterns.
+     If greenfield: ask the user. -->
+
+### Phase 5: Deliver
+
+<!-- AGENT: How does the agent deliver the final result?
+     If code exists: look for deploy scripts, publish commands, output directories.
+     If greenfield: ask about delivery mechanism. -->
+
+## Key Principle
+
+The agent's job is NOT just to run commands. It is to understand, analyze, iterate, and deliver quality.
+
+## Common Gotchas
+
+<!-- AGENT: List hard-won lessons and common pitfalls.
+     If code exists: look for workarounds in comments, TODO/FIXME/HACK markers,
+     error-prone patterns, and .env.example for config gotchas.
+     If greenfield: ask "anything that's bitten you before?" -->
+{% endif %}

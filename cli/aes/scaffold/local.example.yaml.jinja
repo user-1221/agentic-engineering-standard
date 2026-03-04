@@ -1,0 +1,35 @@
+# .agent/local.example.yaml — Template for local overrides
+#
+# Copy this to local.yaml and fill in your values:
+#   cp .agent/local.example.yaml .agent/local.yaml
+#
+# local.yaml is gitignored. It is merged on top of permissions.yaml
+# during `aes sync` so your personal settings apply without modifying
+# shared config files.
+
+permissions:
+  allow:
+    shell:
+      remote: []
+        # Add SSH commands for your remote servers:
+        # - "ssh -i ~/.ssh/my_key user@myhost *"
+
+resources: {}
+  # Adjust resource limits for your machine:
+  # max_cpu_percent: 70
+  # max_memory_percent: 75
+  # notes: "Description of your machine constraints"
+
+environment: {}
+{% if domain_config and domain_config.env_required %}
+  # Required environment variables — set these in local.yaml:
+{% for env in domain_config.env_required %}
+  # {{ env.name }}: ""   # {{ env.description }}
+{% endfor %}
+{% endif %}
+{% if domain_config and domain_config.env_optional %}
+  # Optional environment variables:
+{% for env in domain_config.env_optional %}
+  # {{ env.name }}: "{{ env.default }}"   # {{ env.description }}
+{% endfor %}
+{% endif %}

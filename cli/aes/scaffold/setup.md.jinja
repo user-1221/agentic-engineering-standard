@@ -1,0 +1,208 @@
+{% if domain_config %}
+# Command: /setup
+
+Review and customize .agent/ configuration for your project.
+Your `.agent/` directory was initialized with **{{ domain }}** domain defaults. This command helps you tailor the pre-filled content to your specific project.
+
+## Phase 0: Detect Context
+
+Determine which path to follow:
+- **If source files exist** (src/, lib/, app/, or language-specific code) → **Codebase path**: read code to refine the pre-filled config
+- **If the project is empty** (no source code, only .agent/) → **Interview path**: ask the user what they're building to customize the config
+
+All subsequent phases note both approaches where they differ.
+
+## Phase 1: Understand the Project
+
+**Codebase path:**
+1. Read README.md, package config (pyproject.toml / package.json / go.mod / Cargo.toml)
+2. List top-level directories — identify: source code, tests, config, scripts, docs
+3. Identify framework and key dependencies
+4. Note entry point(s) and build system
+
+**Interview path:**
+1. Ask: "What are you building? (1-2 sentences)"
+2. Ask: "What's the tech stack? (language, framework, database, deployment target)"
+3. Based on complexity of answers, optionally ask:
+   - "What are the main operations this system performs?"
+   - "What entities does it manage and what are their lifecycle states?"
+   - "Any security constraints, resource limits, or team conventions?"
+   Stop asking when you have enough to generate useful content.
+
+## Phase 2: Refine Instructions
+
+Edit `.agent/instructions.md` — review and customize the pre-filled content:
+1. **Description**: verify the project purpose matches your actual system
+2. **Quick Reference**: update commands to match your actual scripts and tools
+   - Codebase: extract from package scripts / Makefile / CI config
+   - Interview: confirm with user
+3. **Project Structure**: update directory tree to match reality
+   - Codebase: run directory listing, annotate key dirs
+   - Interview: describe planned structure
+4. **Critical Rules**: add project-specific constraints
+   - Codebase: extract from linter configs, CI checks, README, code comments
+   - Interview: ask about language version, security requirements
+5. **Primary Workflow**: adjust phases to match your actual dev cycle
+6. **Gotchas**: add project-specific hard-won lessons
+   - Codebase: look for workarounds in comments, error-prone patterns
+   - Interview: ask "anything that's bitten you before?"
+
+## Phase 3: Review Skills
+
+Skills have been pre-populated for the **{{ domain }}** domain. For each skill in `skills/`:
+1. Review the `.skill.yaml` manifest — verify inputs, outputs, and triggers match your system
+2. Review the `.md` runbook — customize the decision tree and error handling
+3. Add any missing skills specific to your project
+4. Remove any pre-filled skills that don't apply
+5. Update `skills/ORCHESTRATOR.md` — adjust pipeline order and decision tree
+
+## Phase 4: Review Workflow
+
+{% if domain_config.workflow %}
+A workflow has been pre-populated: `workflows/{{ domain_config.workflow.id }}.yaml`
+1. Review the states — add, remove, or rename to match your actual entity lifecycle
+2. Review transitions — verify the flow matches your process
+3. Update `agent.yaml` if you add/remove workflows
+{% else %}
+No workflow was pre-populated. If your project has entities with lifecycle states:
+1. Identify the primary entity (feature, order, dataset, service, etc.)
+2. Map lifecycle states and transitions
+3. Create `workflows/{id}.yaml`
+4. Update `agent.yaml` workflows list
+{% endif %}
+
+## Phase 5: Review Permissions
+
+Edit `.agent/permissions.yaml`:
+1. Verify **shell read** commands match your inspection tools
+2. Verify **shell execute** commands match your build/test/run tools
+   - Codebase: cross-reference with package scripts, Makefile
+   - Interview: confirm with user
+3. Verify **file write** patterns cover your source directories
+4. Add any project-specific **deny** rules (destructive commands)
+5. Add any **confirm** rules (high-impact commands like deploy, publish)
+6. Update **resource limits** if your project has compute constraints
+
+## Phase 6: Configure Environment
+
+Edit `agent.yaml` environment section:
+- Codebase: scan for `os.environ`, `process.env`, `.env`, `.env.example`
+- Interview: ask "any API keys or config vars needed?"
+List required vars and optional vars with defaults.
+
+## Phase 7: Validate and Sync
+
+```bash
+aes validate
+```
+
+Report: what was customized, any validation errors to fix.
+
+```bash
+aes sync
+```
+
+Re-sync to update tool-specific config files (CLAUDE.md, .cursorrules, etc.) with your changes.
+{% else %}
+# Command: /setup
+
+Populate .agent/ configuration by analyzing the codebase or interviewing the user.
+Run this after `aes init` to replace placeholder content with real project-specific config.
+
+## Phase 0: Detect Context
+
+Determine which path to follow:
+- **If source files exist** (src/, lib/, app/, or language-specific code) → **Codebase path**: read code to extract project knowledge
+- **If the project is empty** (no source code, only .agent/) → **Interview path**: ask the user what they're building
+
+All subsequent phases note both approaches where they differ.
+
+## Phase 1: Understand the Project
+
+**Codebase path:**
+1. Read README.md, package config (pyproject.toml / package.json / go.mod / Cargo.toml)
+2. List top-level directories — identify: source code, tests, config, scripts, docs
+3. Identify framework and key dependencies
+4. Note entry point(s) and build system
+
+**Interview path:**
+1. Ask: "What are you building? (1-2 sentences)"
+2. Ask: "What's the tech stack? (language, framework, database, deployment target)"
+3. Based on complexity of answers, optionally ask:
+   - "What are the main operations this system performs?"
+   - "What entities does it manage and what are their lifecycle states?"
+   - "Any security constraints, resource limits, or team conventions?"
+   Stop asking when you have enough to generate useful content.
+
+## Phase 2: Fill Instructions
+
+Edit `.agent/instructions.md` — replace all `<!-- AGENT: -->` comments:
+1. **Description**: project purpose and primary constraints
+2. **Quick Reference**: 3-5 most common commands
+   - Codebase: extract from package scripts / Makefile / CI config
+   - Interview: ask user or infer from tech stack
+3. **Project Structure**: annotated directory tree
+   - Codebase: run directory listing, annotate key dirs
+   - Interview: describe planned structure
+4. **Critical Rules**: 3-5 inviolable constraints
+   - Codebase: extract from linter configs, CI checks, README, code comments
+   - Interview: ask about language version, security requirements, conventions
+5. **Primary Workflow**: 3-5 phases of the typical dev cycle
+6. **Gotchas**: hard-won lessons
+   - Codebase: look for workarounds in comments, error-prone patterns
+   - Interview: ask "anything that's bitten you before?"
+
+## Phase 3: Define Skills (if skills/ exists)
+
+**Codebase path:** Identify major operations from: CLI commands, API endpoints, scripts/, pipeline stages, scheduled jobs. Each becomes a skill.
+
+**Interview path:** Ask "What are the 2-4 main things this system does?" Each answer becomes a skill.
+
+For each skill:
+1. Create `skills/{id}.skill.yaml` — inputs, outputs, trigger command, error strategy, code location
+2. Create `skills/{id}.md` runbook — purpose, how it works, decision tree, error handling
+3. Update `agent.yaml` skills list
+4. Fill `skills/ORCHESTRATOR.md` — pipeline order, status flow, decision tree
+
+## Phase 4: Define Workflow (if workflows/ exists)
+
+1. Identify the primary entity (feature, order, dataset, service, etc.)
+   - Codebase: look for status columns, enums, state machines
+   - Interview: ask "what's the main thing that moves through your system?"
+2. Map lifecycle states and transitions
+3. Create `workflows/{id}.yaml`
+4. Update `agent.yaml` workflows list
+
+## Phase 5: Set Permissions
+
+Edit `.agent/permissions.yaml`:
+1. **Shell read**: inspection commands (git, ls, status)
+2. **Shell execute**: work commands (build, test, run)
+   - Codebase: extract from package scripts, Makefile
+   - Interview: infer from tech stack
+3. **File write**: source directories the agent should modify
+4. **Deny**: destructive commands (rm -rf, DROP, force-push)
+5. **Confirm**: high-impact commands (deploy, publish, push)
+6. **Resource limits**: if the project has compute constraints
+
+## Phase 6: Configure Environment
+
+Edit `agent.yaml` environment section:
+- Codebase: scan for `os.environ`, `process.env`, `.env`, `.env.example`
+- Interview: ask "any API keys or config vars needed?"
+List required vars and optional vars with defaults.
+
+## Phase 7: Validate and Sync
+
+```bash
+aes validate
+```
+
+Report: what was generated, how many skills/states/rules, any validation errors to fix.
+
+```bash
+aes sync
+```
+
+Re-sync to update tool-specific config files (CLAUDE.md, .cursorrules, etc.) with your changes.
+{% endif %}

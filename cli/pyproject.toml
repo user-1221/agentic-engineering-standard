@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aes-cli"
+version = "0.1.0"
+description = "CLI tool for the Agentic Engineering Standard"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Hiro"},
+]
+dependencies = [
+    "click>=8.0",
+    "pyyaml>=6.0",
+    "jsonschema>=4.17",
+    "jinja2>=3.1",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-tmp-files>=0.0.2",
+]
+
+[project.scripts]
+aes = "aes.__main__:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aes*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,29 @@
+aes_skill: "1.0"
+
+id: "provision"
+name: "Provision Infrastructure"
+version: "1.0.0"
+description: "Create or update cloud infrastructure via Terraform"
+
+stage: 1
+phase: "infrastructure"
+
+inputs:
+  required:
+    - name: "service"
+      type: "string"
+      description: "Service to provision"
+  environment:
+    - "AWS_PROFILE"
+
+triggers:
+  - type: "manual"
+    command: "terraform plan && terraform apply"
+
+error_handling:
+  strategy: "fail-fast"
+
+code:
+  primary: "terraform/"
+
+tags: ["terraform", "infrastructure", "aws"]

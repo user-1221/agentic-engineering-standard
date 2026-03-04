@@ -1,0 +1,61 @@
+aes_skill: "1.0"
+
+id: "discover"
+name: "Discover Datasets"
+version: "1.0.0"
+description: "Find new public datasets from OpenML and Kaggle APIs"
+
+stage: 1
+phase: "ingestion"
+
+inputs:
+  required:
+    - name: "db_connection"
+      type: "sqlite3.Connection"
+      description: "Active database connection"
+  optional:
+    - name: "max_datasets"
+      type: "int"
+      default: 50
+      description: "Maximum datasets to discover per run"
+  environment:
+    - "OPENML_APIKEY"
+    - "KAGGLE_USERNAME"
+    - "KAGGLE_KEY"
+
+outputs:
+  - name: "new_dataset_ids"
+    type: "list[int]"
+    description: "IDs of newly discovered datasets"
+    state_change:
+      entity: "dataset"
+      from_status: null
+      to_status: "discovered"
+
+prerequisites:
+  - "Database initialized"
+  - "API keys configured"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/run_pipeline.py --stage discover"
+  - type: "schedule"
+    cron: "0 3 * * *"
+
+error_handling:
+  strategy: "per-item-isolation"
+  retries: 1
+  on_network_error: "log_and_continue"
+  on_rate_limit: "sleep_and_retry"
+
+code:
+  primary: "pipeline/discover.py"
+  functions:
+    - "discover(conn) -> list[int]"
+    - "dataset_exists(conn, source, source_id) -> bool"
+    - "insert_dataset(conn, ...) -> int"
+
+depends_on: []
+blocks: ["examine"]
+
+tags: ["data-ingestion", "openml", "kaggle"]

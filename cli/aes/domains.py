@@ -1,0 +1,685 @@
+"""Domain-specific configuration for aes init.
+
+Each supported domain (ml, web, devops) has pre-filled content drawn from
+the reference examples.  Templates receive a DomainConfig instance; when it
+is None the templates fall back to the existing TODO scaffolding.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional
+
+
+# ---------------------------------------------------------------------------
+# Data classes
+# ---------------------------------------------------------------------------
+
+@dataclass
+class SkillDef:
+    """Definition for a single skill (manifest + runbook content)."""
+
+    id: str
+    name: str
+    version: str
+    description: str
+    stage: int
+    phase: str
+    inputs_required: List[Dict[str, str]] = field(default_factory=list)
+    inputs_optional: List[Dict[str, str]] = field(default_factory=list)
+    inputs_environment: List[str] = field(default_factory=list)
+    outputs: List[Dict[str, str]] = field(default_factory=list)
+    trigger_command: str = ""
+    error_strategy: str = "per-item-isolation"
+    code_primary: str = ""
+    tags: List[str] = field(default_factory=list)
+    depends_on: List[str] = field(default_factory=list)
+    blocks: List[str] = field(default_factory=list)
+    # Runbook content sections
+    runbook_purpose: str = ""
+    runbook_when: str = ""
+    runbook_how: str = ""
+    runbook_decision_tree: str = ""
+    runbook_error_handling: str = ""
+
+
+@dataclass
+class WorkflowStateDef:
+    """A single state in a workflow."""
+
+    id: str
+    description: str
+    initial: bool = False
+    terminal: bool = False
+    active: bool = False
+
+
+@dataclass
+class WorkflowTransitionDef:
+    """A transition between workflow states."""
+
+    from_state: str
+    to_state: str
+    skill: str = ""
+    conditions: List[str] = field(default_factory=list)
+    on_failure: str = ""
+    description: str = ""
+
+
+@dataclass
+class WorkflowDef:
+    """Complete workflow definition."""
+
+    id: str
+    entity: str
+    description: str
+    states: List[WorkflowStateDef] = field(default_factory=list)
+    transitions: List[WorkflowTransitionDef] = field(default_factory=list)
+
+
+@dataclass
+class DomainConfig:
+    """All domain-specific content for aes init."""
+
+    # instructions.md content
+    instructions_description: str = ""
+    instructions_quick_ref: str = ""
+    instructions_project_structure: str = ""
+    instructions_rules: List[str] = field(default_factory=list)
+    instructions_workflow_phases: List[Dict[str, str]] = field(default_factory=list)
+    instructions_key_principle: str = ""
+    instructions_gotchas: List[str] = field(default_factory=list)
+
+    # Skills
+    skills: List[SkillDef] = field(default_factory=list)
+
+    # Orchestrator content
+    orchestrator_pipeline: str = ""
+    orchestrator_status_flow: str = ""
+    orchestrator_decision_tree: str = ""
+    orchestrator_when_to_stop: str = ""
+
+    # Workflow
+    workflow: Optional[WorkflowDef] = None
+
+    # Permissions additions
+    permissions_shell_read: List[str] = field(default_factory=list)
+    permissions_shell_execute: List[str] = field(default_factory=list)
+    permissions_file_write: List[str] = field(default_factory=list)
+    permissions_deny_shell: List[str] = field(default_factory=list)
+    permissions_confirm_shell: List[str] = field(default_factory=list)
+    permissions_confirm_actions: List[str] = field(default_factory=list)
+    permissions_resource_limits: Optional[Dict[str, object]] = None
+
+    # Environment
+    env_required: List[Dict[str, str]] = field(default_factory=list)
+    env_optional: List[Dict[str, str]] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# ML domain config — drawn from examples/ml-pipeline
+# ---------------------------------------------------------------------------
+
+_ML_SKILLS = [
+    SkillDef(
+        id="discover",
+        name="Discover Datasets",
+        version="1.0.0",
+        description="Find new public datasets from OpenML and Kaggle APIs",
+        stage=1,
+        phase="ingestion",
+        inputs_required=[
+            {"name": "db_connection", "type": "sqlite3.Connection",
+             "description": "Active database connection"},
+        ],
+        inputs_optional=[
+            {"name": "max_datasets", "type": "int", "default": "50",
+             "description": "Maximum datasets to discover per run"},
+        ],
+        inputs_environment=["OPENML_APIKEY", "KAGGLE_USERNAME", "KAGGLE_KEY"],
+        outputs=[
+            {"name": "new_dataset_ids", "type": "list[int]",
+             "description": "IDs of newly discovered datasets"},
+        ],
+        trigger_command="python scripts/run_pipeline.py --stage discover",
+        error_strategy="per-item-isolation",
+        code_primary="pipeline/discover.py",
+        tags=["data-ingestion", "openml", "kaggle"],
+        blocks=["examine"],
+        runbook_purpose="Find new public datasets from OpenML and Kaggle that meet quality and licensing criteria.",
+        runbook_when="- No datasets in `discovered` status\n- User requests new data sources\n- Scheduled daily",
+        runbook_how="1. Query OpenML API for datasets matching size/license filters\n2. Query Kaggle API for datasets in target domains\n3. Deduplicate against existing records via `dataset_exists()`\n4. Insert new records via `insert_dataset()`\n5. Record attribution via `insert_attribution()`",
+        runbook_decision_tree="For each candidate dataset:\n  |- Already exists? -> Skip\n  |- License not in whitelist? -> Skip\n  |- Rows < 100 or > 500,000? -> Skip\n  |- Features < 3? -> Skip\n  \\- Passes all checks? -> Insert as \"discovered\"",
+        runbook_error_handling="- **API timeout**: Retry once, then skip source\n- **Rate limit**: Sleep and retry\n- **Invalid response**: Log debug, skip dataset",
+    ),
+    SkillDef(
+        id="examine",
+        name="Examine Dataset",
+        version="1.0.0",
+        description="Download, profile, and compute quality score for a dataset",
+        stage=2,
+        phase="profiling",
+        inputs_required=[
+            {"name": "db_connection", "type": "sqlite3.Connection",
+             "description": "Active database connection"},
+            {"name": "dataset_id", "type": "int",
+             "description": "Dataset to examine"},
+        ],
+        outputs=[
+            {"name": "quality_score", "type": "float",
+             "description": "0.0-1.0 weighted quality score"},
+        ],
+        trigger_command="python scripts/run_pipeline.py --stage examine --dataset-id {ID}",
+        error_strategy="per-item-isolation",
+        code_primary="pipeline/examine.py",
+        tags=["data-quality", "profiling"],
+        depends_on=["discover"],
+        runbook_purpose="Download a dataset, compute quality score, detect feature types, and decide if it's worth training on.",
+        runbook_when="- Dataset is at `discovered` status\n- After discover skill completes",
+        runbook_how="1. Download data from source (OpenML API or Kaggle)\n2. Compute quality score (weighted): missing 30%, dupes 15%, constants 15%, imbalance 20%, features 10%, cardinality 10%\n3. Check hard rejections: >50% missing, <3 features, <10 minority samples\n4. Detect feature types: numeric, categorical, datetime, text\n5. Save as parquet\n6. Advance to `examined`",
+        runbook_decision_tree="Download dataset\n  |- Download fails? -> Reject: \"download_failed\"\n  |- >50% missing values? -> Reject: \"too_many_missing\"\n  |- <3 features? -> Reject: \"too_few_features\"\n  |- <10 minority samples? -> Reject: \"insufficient_minority\"\n  \\- Passes? -> Status: \"examined\"",
+        runbook_error_handling="- **Network error**: Log and continue\n- **Invalid data**: Skip with log",
+    ),
+    SkillDef(
+        id="train",
+        name="Train Models",
+        version="1.0.0",
+        description="Run Optuna HPO and train all candidate models for a dataset",
+        stage=4,
+        phase="training",
+        inputs_required=[
+            {"name": "db_connection", "type": "sqlite3.Connection",
+             "description": "Active database connection"},
+            {"name": "dataset_id", "type": "int",
+             "description": "Dataset to train"},
+        ],
+        inputs_optional=[
+            {"name": "model_keys", "type": "list[str]",
+             "description": "Specific models to train (default: all selected)"},
+        ],
+        inputs_environment=["OPTUNA_TIMEOUT", "OPTUNA_N_TRIALS"],
+        outputs=[
+            {"name": "experiment_ids", "type": "list[int]",
+             "description": "IDs of completed experiments"},
+        ],
+        trigger_command="python scripts/run_pipeline.py --stage train --dataset-id {ID}",
+        error_strategy="per-item-isolation",
+        code_primary="pipeline/train.py",
+        tags=["training", "optuna", "hpo"],
+        depends_on=["examine"],
+        blocks=["evaluate"],
+        runbook_purpose="Run Optuna hyperparameter optimization and train all candidate models for a dataset.",
+        runbook_when="- Dataset is at `classified` status\n- Resource limits met (CPU <70%, memory <75%)",
+        runbook_how="For each selected model:\n1. Preprocess data (framework-aware)\n2. Run Optuna HPO (TPESampler, MedianPruner)\n3. Train final model on best params\n4. Evaluate on held-out test set\n5. Save model in native format\n6. Log to MLflow and SQLite",
+        runbook_decision_tree="For each model_key in selected_models:\n  |- Preprocess fails? -> Mark experiment failed, continue\n  |- Optuna finds no good trial? -> Mark failed, continue\n  |- Training crashes? -> Mark failed with error_message, continue\n  \\- Success? -> Save model, log metrics, mark completed\n\nAfter all models:\n  |- At least 1 completed? -> Status: \"trained\"\n  \\- All failed? -> Status: \"rejected\"",
+        runbook_error_handling="- Each model trains independently (per-item-isolation)\n- One model failing doesn't affect others\n- Error messages stored in experiment.error_message",
+    ),
+]
+
+_ML_WORKFLOW = WorkflowDef(
+    id="dataset-pipeline",
+    entity="dataset",
+    description="Dataset lifecycle from discovery through publication",
+    states=[
+        WorkflowStateDef("discovered", "Found and registered in database", initial=True),
+        WorkflowStateDef("examined", "Downloaded, profiled, quality-scored"),
+        WorkflowStateDef("classified", "Problem type detected, models selected"),
+        WorkflowStateDef("training", "Models being trained", active=True),
+        WorkflowStateDef("trained", "All models trained, awaiting evaluation"),
+        WorkflowStateDef("packaged", "Best model packaged as zip"),
+        WorkflowStateDef("published", "Live on API and HuggingFace", terminal=True),
+        WorkflowStateDef("rejected", "Failed quality criteria", terminal=True),
+    ],
+    transitions=[
+        WorkflowTransitionDef("discovered", "examined", skill="examine",
+                              conditions=["Data file downloadable"], on_failure="rejected"),
+        WorkflowTransitionDef("examined", "classified", skill="classify",
+                              conditions=["quality_score >= 0.30"], on_failure="rejected"),
+        WorkflowTransitionDef("classified", "training", skill="train",
+                              conditions=["At least one model selected", "Resource limits met"]),
+        WorkflowTransitionDef("training", "trained", skill="train",
+                              conditions=["At least one experiment completed"],
+                              on_failure="rejected"),
+        WorkflowTransitionDef("trained", "packaged", skill="package",
+                              conditions=["Best experiment passes quality gates",
+                                          "Best experiment beats baseline"],
+                              on_failure="rejected"),
+        WorkflowTransitionDef("packaged", "published", skill="publish",
+                              conditions=["At least one platform succeeds"]),
+        WorkflowTransitionDef("trained", "classified", skill="reclassify",
+                              conditions=["All models below quality gates"],
+                              description="Reframe problem type when all models fail"),
+    ],
+)
+
+ML_CONFIG = DomainConfig(
+    instructions_description="Automated ML pipeline that discovers public datasets, trains models via Optuna HPO, packages winners, and serves them via a metered prediction API.",
+    instructions_quick_ref="python scripts/run_pipeline.py --stage all\npython scripts/run_pipeline.py --stage train --dataset-id 42\npython -m pytest tests/ -v",
+    instructions_project_structure="pipeline/          # discover, examine, classify, train, evaluate, package, publish\ntrainers/          # gradient_boost, sklearn_models, time_series, anomaly, clustering\nconfig/            # settings, model_registry (THE BRAIN), metrics\nserving/           # FastAPI metered prediction API",
+    instructions_rules=[
+        "**Python 3.9** -- always use `from __future__ import annotations`.",
+        "**SQLite raw** -- no ORM. Parameterized queries only.",
+        "**Native serialization** -- CatBoost `.cbm`, XGBoost `.json`, LightGBM `.txt`, sklearn `.joblib`.",
+        "**model_registry.py is the brain** -- adding a model = adding a dict entry.",
+        "**Resource limits** -- CPU <70%, memory <75%.",
+        "**Fail graceful** -- each dataset/model wrapped in try/except, log error, continue.",
+    ],
+    instructions_workflow_phases=[
+        {"title": "Find Data", "content": "Search OpenML/Kaggle or ingest user-provided CSV."},
+        {"title": "Run Pipeline", "content": "Execute discover -> examine -> classify -> train -> evaluate stages."},
+        {"title": "Analyze Results (DO NOT SKIP)", "content": "Check for: overfitting (train-val gap >0.15), underfitting (below quality gates), all models failed, baseline not beaten, problem type mismatch."},
+        {"title": "Iterate", "content": "Levers in order: env vars (more trials/time) -> model tuning (search space) -> problem reframing -> preprocessing changes -> quality gate adjustment."},
+        {"title": "Package and Publish", "content": "Only after quality is confirmed. Run evaluate -> package -> publish."},
+    ],
+    instructions_key_principle="The agent's job is NOT just to run commands. It is to understand, analyze, iterate, and deliver quality.",
+    instructions_gotchas=[
+        "`insert_dataset()` only takes basic fields. Use `update_dataset_status()` for extras.",
+        "Model keys are full names like `random_forest_classifier`, not `random_forest`.",
+        "In Pydantic models, use `Optional[List[float]]` not `list[float] | None`.",
+    ],
+    skills=_ML_SKILLS,
+    orchestrator_pipeline="discover -> examine -> classify -> train -> evaluate -> package -> publish",
+    orchestrator_status_flow="discovered -> examined -> classified -> training -> trained -> packaged -> published\n    |            |                                 |\n    v            v                                 v\n rejected     rejected                          rejected",
+    orchestrator_decision_tree="for each stage in [discover, examine, classify, train, evaluate, package, publish]:\n  1. Check resource limits (CPU <70%, memory <75%)\n  2. Get datasets at current status (or single dataset if --dataset-id)\n  3. For each dataset:\n     a. Run stage function\n     b. On success: advance status to next stage\n     c. On failure: log error, mark rejected if unrecoverable\n  4. Report: N processed, N failed, N skipped\n\nSpecial: after train stage, run ANALYSIS before evaluate:\n  - Check overfitting (train-val gap >0.15)\n  - Check underfitting (all below quality gates)\n  - Check baseline (better than random?)\n  - If all fail: consider reframe (trained -> classified)",
+    orchestrator_when_to_stop="- All datasets at terminal status (published or rejected)\n- Resource limits exceeded\n- User requests stop\n- No datasets to process",
+    workflow=_ML_WORKFLOW,
+    permissions_shell_read=[
+        "scripts/job.sh status *",
+        "scripts/job.sh logs *",
+        "scripts/job.sh list",
+        "scripts/job.sh results *",
+    ],
+    permissions_shell_execute=[
+        "python scripts/run_pipeline.py *",
+        "python -m pytest *",
+        "scripts/job.sh start *",
+    ],
+    permissions_file_write=[
+        "config/**/*.py",
+        "pipeline/**/*.py",
+        "trainers/**/*.py",
+    ],
+    permissions_deny_shell=[
+        "rm -rf *",
+        "docker rm *",
+        "systemctl *",
+        "kill *",
+    ],
+    permissions_confirm_shell=[
+        "scripts/job.sh stop *",
+        "git push *",
+    ],
+    permissions_confirm_actions=["publish_model", "create_api_key", "lower_quality_gates"],
+    permissions_resource_limits={
+        "max_cpu_percent": 70,
+        "max_memory_percent": 75,
+        "check_before": ["train", "evaluate"],
+        "on_exceeded": "warn_and_skip",
+    },
+    env_required=[
+        {"name": "OPENML_APIKEY", "description": "OpenML API key for dataset discovery"},
+        {"name": "HF_TOKEN", "description": "HuggingFace token for model publishing"},
+    ],
+    env_optional=[
+        {"name": "OPTUNA_TIMEOUT", "default": "300", "description": "Seconds per model for HPO"},
+        {"name": "OPTUNA_N_TRIALS", "default": "50", "description": "Max trials per model"},
+    ],
+)
+
+
+# ---------------------------------------------------------------------------
+# Web domain config — drawn from examples/web-app
+# ---------------------------------------------------------------------------
+
+_WEB_SKILLS = [
+    SkillDef(
+        id="scaffold",
+        name="Scaffold Feature",
+        version="1.0.0",
+        description="Generate boilerplate for a new feature: migration, route, component, test",
+        stage=1,
+        phase="setup",
+        inputs_required=[
+            {"name": "feature_name", "type": "string",
+             "description": "Name of the feature to scaffold"},
+            {"name": "needs_db", "type": "bool",
+             "description": "Whether a database migration is needed"},
+        ],
+        outputs=[
+            {"name": "files_created", "type": "list[str]",
+             "description": "Paths of generated files"},
+        ],
+        trigger_command="npx plop feature {name}",
+        error_strategy="fail-fast",
+        code_primary="plopfile.ts",
+        tags=["scaffolding", "code-generation"],
+        runbook_purpose="Generate all boilerplate files for a new feature: migration, API route, UI component, and test stubs.",
+        runbook_when="- Starting a new feature\n- User says \"add feature X\"",
+        runbook_how="1. Create migration file if DB changes needed\n2. Create API route with auth middleware\n3. Create React component (server or client)\n4. Create test files (unit + integration)\n5. Update feature flag env var",
+        runbook_decision_tree="New feature request:\n  |- Needs DB? -> Create migration first\n  |- Needs API? -> Create route with withAuth middleware\n  |- Needs UI? -> Create component (server-first)\n  \\- Always -> Create test stubs",
+        runbook_error_handling="- **Template error**: Fail fast, fix template\n- **Migration conflict**: Resolve before continuing",
+    ),
+    SkillDef(
+        id="test",
+        name="Run Tests",
+        version="1.0.0",
+        description="Run unit, integration, and e2e test suites",
+        stage=3,
+        phase="quality",
+        inputs_optional=[
+            {"name": "suite", "type": "string", "default": "all",
+             "description": "Which suite: unit, integration, e2e, or all"},
+        ],
+        outputs=[
+            {"name": "results", "type": "object",
+             "description": "Test pass/fail counts"},
+        ],
+        trigger_command="npm run test",
+        error_strategy="fail-fast",
+        code_primary="jest.config.ts",
+        tags=["testing", "quality"],
+        runbook_purpose="Run the full test suite to verify feature quality before deployment.",
+        runbook_when="- After implementation complete\n- Before deployment",
+        runbook_how="1. Unit tests: Jest + React Testing Library\n2. Integration tests: Supertest against Express API\n3. E2E tests: Playwright against running dev server",
+        runbook_decision_tree="Run unit tests\n  |- Fails? -> Fix before continuing\n  \\- Passes? -> Run integration tests\n      |- Fails? -> Fix API route or middleware\n      \\- Passes? -> Run e2e tests\n          |- Fails? -> Fix UI interaction\n          \\- All pass? -> Ready for deployment",
+        runbook_error_handling="- **Test failure**: Fix before continuing to next suite\n- **Timeout**: Check for hanging async operations",
+    ),
+    SkillDef(
+        id="deploy",
+        name="Deploy",
+        version="1.0.0",
+        description="Deploy to staging or production environment",
+        stage=5,
+        phase="delivery",
+        inputs_required=[
+            {"name": "environment", "type": "string",
+             "description": "Target: staging or production"},
+        ],
+        trigger_command="npm run deploy:{environment}",
+        error_strategy="fail-fast",
+        code_primary="deploy.config.ts",
+        tags=["deployment", "ci-cd"],
+        depends_on=["test"],
+        runbook_purpose="Deploy the application to staging or production.",
+        runbook_when="- All tests pass\n- Feature reviewed and approved",
+        runbook_how="1. Build production bundle\n2. Run database migrations\n3. Deploy to target environment\n4. Verify health check\n5. Monitor error rates for 15 minutes",
+        runbook_decision_tree="Deploy to staging\n  |- Health check fails? -> Rollback, investigate\n  |- Error rate spikes? -> Rollback, investigate\n  \\- Stable for 15 min? -> Promote to production (with confirmation)",
+        runbook_error_handling="- **Build failure**: Abort deploy\n- **Health check failure**: Rollback immediately\n- **Error rate spike**: Rollback and investigate",
+    ),
+]
+
+_WEB_WORKFLOW = WorkflowDef(
+    id="feature-lifecycle",
+    entity="feature",
+    description="Feature development from planning through deployment",
+    states=[
+        WorkflowStateDef("planned", "Requirements understood, ready to build", initial=True),
+        WorkflowStateDef("in-progress", "Implementation underway", active=True),
+        WorkflowStateDef("testing", "All tests running"),
+        WorkflowStateDef("staging", "Deployed to staging for verification"),
+        WorkflowStateDef("deployed", "Live in production", terminal=True),
+        WorkflowStateDef("blocked", "Cannot proceed due to dependency or issue", terminal=True),
+    ],
+    transitions=[
+        WorkflowTransitionDef("planned", "in-progress", skill="scaffold",
+                              conditions=["Requirements are clear"]),
+        WorkflowTransitionDef("in-progress", "testing", skill="test",
+                              conditions=["Implementation complete", "Code compiles without errors"]),
+        WorkflowTransitionDef("testing", "staging", skill="deploy",
+                              conditions=["All tests pass"]),
+        WorkflowTransitionDef("staging", "deployed", skill="deploy",
+                              conditions=["Health check passes", "Error rate normal",
+                                          "User confirms promotion"]),
+        WorkflowTransitionDef("testing", "in-progress",
+                              conditions=["Tests fail"],
+                              description="Fix failing tests"),
+    ],
+)
+
+WEB_CONFIG = DomainConfig(
+    instructions_description="Full-stack web application with authentication, subscription billing, and real-time updates.",
+    instructions_quick_ref="npm run dev                    # start dev server\nnpm run test                   # run test suite\nnpm run db:migrate             # run pending migrations\nnpm run deploy:staging         # deploy to staging",
+    instructions_project_structure="src/\n  app/               # Next.js app router pages\n  components/        # React components\n  api/               # Express API routes\n  lib/\n    db/              # Drizzle ORM + migrations\n    auth/            # NextAuth.js config\n    billing/         # Stripe integration\n    ws/              # WebSocket server\n  hooks/             # React hooks\ntests/\n  unit/              # Component + utility tests\n  integration/       # API endpoint tests\n  e2e/               # Playwright tests",
+    instructions_rules=[
+        "**TypeScript strict** -- no `any` types, no `@ts-ignore`.",
+        "**Server components by default** -- only use `'use client'` when needed.",
+        "**Drizzle ORM** -- no raw SQL. Use query builder.",
+        "**Auth on every API route** -- use `withAuth` middleware.",
+        "**Feature flags** -- new features behind `FEATURE_*` env vars until stable.",
+    ],
+    instructions_workflow_phases=[
+        {"title": "Understand Requirements", "content": "What does the feature do? What data does it need? How does billing interact?"},
+        {"title": "Implement", "content": "Schema migration -> API route -> UI component -> tests."},
+        {"title": "Test (DO NOT SKIP)", "content": "Unit tests pass, integration tests pass, manual QA on staging."},
+        {"title": "Deploy", "content": "Staging first, verify metrics, then production."},
+    ],
+    instructions_key_principle="Ship incrementally. Every feature has a migration, tests, and feature flag before going to production.",
+    instructions_gotchas=[
+        "Server components can't use hooks -- add `'use client'` directive first.",
+        "Drizzle migrations are auto-generated -- never edit migration files directly.",
+        "Stripe webhooks need signature verification -- use the middleware.",
+    ],
+    skills=_WEB_SKILLS,
+    orchestrator_pipeline="scaffold -> implement -> test -> review -> deploy",
+    orchestrator_status_flow="planned -> in_progress -> testing -> staging -> deployed\n                                                 /\n                                          blocked (any stage)",
+    orchestrator_decision_tree="1. Understand feature requirements\n2. Create migration if schema change needed\n3. Implement API route with auth middleware\n4. Implement UI component (server-first, client when interactive)\n5. Write tests (unit + integration + e2e)\n6. Deploy to staging\n7. Verify on staging (manual + automated checks)\n8. Deploy to production behind feature flag\n9. Monitor metrics, then remove flag",
+    orchestrator_when_to_stop="- Feature deployed and stable in production\n- Feature flag removed after verification\n- All tests passing on main branch",
+    workflow=_WEB_WORKFLOW,
+    permissions_shell_read=[],
+    permissions_shell_execute=[
+        "npm run *",
+        "npx *",
+        "node *",
+    ],
+    permissions_file_write=[
+        "src/**",
+        "tests/**",
+    ],
+    permissions_deny_shell=[
+        "rm -rf *",
+        "DROP DATABASE *",
+    ],
+    permissions_confirm_shell=[
+        "npm run deploy:*",
+        "git push *",
+        "npx drizzle-kit push *",
+    ],
+    permissions_confirm_actions=["deploy_production", "modify_billing"],
+    env_required=[
+        {"name": "DATABASE_URL", "description": "PostgreSQL connection string"},
+        {"name": "STRIPE_SECRET_KEY", "description": "Stripe API key for billing"},
+    ],
+    env_optional=[
+        {"name": "NODE_ENV", "default": "development", "description": "Runtime environment"},
+    ],
+)
+
+
+# ---------------------------------------------------------------------------
+# DevOps domain config — drawn from examples/devops
+# ---------------------------------------------------------------------------
+
+_DEVOPS_SKILLS = [
+    SkillDef(
+        id="provision",
+        name="Provision Infrastructure",
+        version="1.0.0",
+        description="Create or update cloud infrastructure via Terraform",
+        stage=1,
+        phase="infrastructure",
+        inputs_required=[
+            {"name": "service", "type": "string",
+             "description": "Service to provision"},
+        ],
+        inputs_environment=["AWS_PROFILE"],
+        trigger_command="terraform plan && terraform apply",
+        error_strategy="fail-fast",
+        code_primary="terraform/",
+        tags=["terraform", "infrastructure", "aws"],
+        runbook_purpose="Create or update cloud infrastructure using Terraform.",
+        runbook_when="- New service needs infrastructure\n- Existing service needs scaling or config change",
+        runbook_how="1. `terraform plan -out=plan.tfplan` -- preview all changes\n2. Review plan for destructive actions (destroy, replace)\n3. `terraform apply plan.tfplan` -- apply only after review\n4. Verify resources created via `terraform state list`",
+        runbook_decision_tree="terraform plan\n  |- No changes? -> Skip (already up to date)\n  |- Only additions? -> Safe to apply\n  |- Modifications? -> Review carefully, apply if benign\n  \\- Destructions? -> STOP -- confirm with user before applying",
+        runbook_error_handling="- **Plan error**: Fix config before proceeding\n- **Apply error**: Check state, do NOT retry blindly",
+    ),
+    SkillDef(
+        id="deploy",
+        name="Deploy Service",
+        version="1.0.0",
+        description="Blue-green deploy with health checks and monitoring",
+        stage=3,
+        phase="delivery",
+        inputs_required=[
+            {"name": "service", "type": "string",
+             "description": "Service to deploy"},
+            {"name": "environment", "type": "string",
+             "description": "Target: staging or production"},
+        ],
+        inputs_environment=["DEPLOY_ENV"],
+        trigger_command="python scripts/manage.py deploy --service {service} --env {environment}",
+        error_strategy="fail-fast",
+        code_primary="scripts/manage.py",
+        tags=["deployment", "blue-green"],
+        depends_on=["provision"],
+        runbook_purpose="Deploy a service using blue-green strategy with health checks.",
+        runbook_when="- Infrastructure provisioned\n- New version ready to ship\n- Staging verified (for production deploys)",
+        runbook_how="1. Build new container image\n2. Deploy to \"green\" target\n3. Run health checks against green\n4. Switch traffic from blue to green\n5. Monitor for 5 minutes\n6. Tear down old blue (or keep for rollback)",
+        runbook_decision_tree="Deploy green instance\n  |- Build fails? -> Abort, fix build\n  |- Health check fails? -> Abort, keep blue\n  |- Traffic switch\n  |   |- Error rate spikes? -> Rollback to blue immediately\n  |   \\- All healthy for 5 min? -> Confirm deploy, tear down blue",
+        runbook_error_handling="- **Build failure**: Abort immediately\n- **Health check failure**: Keep previous deployment\n- **Error rate spike**: Rollback to blue",
+    ),
+    SkillDef(
+        id="rollback",
+        name="Rollback Service",
+        version="1.0.0",
+        description="Rollback a service to the previous known-good deployment",
+        stage=4,
+        phase="recovery",
+        inputs_required=[
+            {"name": "service", "type": "string",
+             "description": "Service to rollback"},
+            {"name": "environment", "type": "string",
+             "description": "Target environment"},
+        ],
+        trigger_command="python scripts/manage.py rollback --service {service} --env {environment}",
+        error_strategy="fail-fast",
+        code_primary="scripts/manage.py",
+        tags=["rollback", "recovery", "incident-response"],
+        runbook_purpose="Revert a service to the previous known-good deployment immediately.",
+        runbook_when="- Error rate spikes after deploy\n- Health checks fail after deploy\n- User requests emergency rollback",
+        runbook_how="1. Identify previous deployment (blue instance)\n2. Switch traffic back to previous\n3. Verify health of reverted service\n4. Log rollback event with reason\n5. Keep failed deployment for debugging",
+        runbook_decision_tree="Rollback initiated\n  |- Previous deployment available? -> Switch traffic\n  |   |- Health check passes? -> Rollback successful\n  |   \\- Health check fails? -> ESCALATE to human\n  \\- No previous deployment? -> ESCALATE to human",
+        runbook_error_handling="- **No previous deployment**: Escalate to human\n- **Health check failure after rollback**: Escalate immediately",
+    ),
+]
+
+_DEVOPS_WORKFLOW = WorkflowDef(
+    id="service-lifecycle",
+    entity="service",
+    description="Service deployment lifecycle with monitoring and rollback",
+    states=[
+        WorkflowStateDef("planned", "Infrastructure design approved", initial=True),
+        WorkflowStateDef("provisioning", "Terraform creating resources", active=True),
+        WorkflowStateDef("configured", "Ansible config applied"),
+        WorkflowStateDef("deploying", "Blue-green deploy in progress", active=True),
+        WorkflowStateDef("deployed", "Service live and receiving traffic", terminal=True),
+        WorkflowStateDef("degraded", "Service live but metrics abnormal"),
+        WorkflowStateDef("rolled-back", "Reverted to previous version"),
+        WorkflowStateDef("failed", "Deployment failed, no traffic switched", terminal=True),
+    ],
+    transitions=[
+        WorkflowTransitionDef("planned", "provisioning", skill="provision",
+                              conditions=["Terraform plan reviewed"]),
+        WorkflowTransitionDef("provisioning", "configured",
+                              conditions=["All resources created", "Health checks pass"],
+                              on_failure="failed"),
+        WorkflowTransitionDef("configured", "deploying", skill="deploy",
+                              conditions=["Tests pass in staging"]),
+        WorkflowTransitionDef("deploying", "deployed",
+                              conditions=["Health check passes",
+                                          "Error rate < 1% for 5 min"],
+                              on_failure="failed"),
+        WorkflowTransitionDef("deployed", "degraded",
+                              conditions=["Error rate > 1% or latency p99 > threshold"]),
+        WorkflowTransitionDef("degraded", "rolled-back", skill="rollback",
+                              conditions=["Degradation confirmed"]),
+        WorkflowTransitionDef("rolled-back", "deploying", skill="deploy",
+                              conditions=["Fix applied and tested"],
+                              description="Re-deploy after fixing the issue"),
+    ],
+)
+
+DEVOPS_CONFIG = DomainConfig(
+    instructions_description="Infrastructure automation for cloud services. Provision, configure, deploy, monitor, and rollback. Uses Terraform for infra, Ansible for config, and Docker for services.",
+    instructions_quick_ref="terraform plan -out=plan.tfplan    # preview changes\nterraform apply plan.tfplan         # apply changes\nansible-playbook -i inventory configure.yml\npython scripts/manage.py deploy --service api --env staging\npython scripts/manage.py rollback --service api --env staging",
+    instructions_project_structure="terraform/         # Infrastructure as code\nansible/           # Configuration management\nscripts/           # Deployment and management scripts\nmonitoring/        # Alerting rules and dashboards\ndocker/            # Dockerfiles and compose files",
+    instructions_rules=[
+        "**Never apply without plan** -- always `terraform plan` before `terraform apply`.",
+        "**Staging first** -- every change hits staging before production.",
+        "**Rollback ready** -- every deploy must have a rollback path tested.",
+        "**No hardcoded secrets** -- use AWS Secrets Manager or Vault.",
+        "**Tag everything** -- all resources tagged with service, env, owner, cost-center.",
+    ],
+    instructions_workflow_phases=[
+        {"title": "Verify Prerequisites", "content": "Check: image built, tests pass, staging healthy, rollback tested."},
+        {"title": "Deploy to Staging", "content": "Blue-green deployment, health check, smoke tests."},
+        {"title": "Monitor (DO NOT SKIP)", "content": "Watch error rates, latency p99, CPU/memory for 5 minutes."},
+        {"title": "Promote or Rollback", "content": "If metrics stable -> promote to production. If metrics degrade -> immediate rollback."},
+    ],
+    instructions_key_principle="Infrastructure changes are permanent and visible. Measure twice, apply once. Always have a rollback plan.",
+    instructions_gotchas=[
+        "Terraform state is shared -- always run `terraform plan` to see what others changed.",
+        "Ansible playbooks are NOT idempotent by default -- test with `--check` first.",
+        "Docker images must be tagged with git SHA -- never use `latest` in production.",
+    ],
+    skills=_DEVOPS_SKILLS,
+    orchestrator_pipeline="provision -> configure -> deploy -> monitor -> verify",
+    orchestrator_status_flow="planned -> provisioning -> configured -> deploying -> deployed -> monitored\n                                          |            |\n                                       failed      degraded -> rollback -> deployed",
+    orchestrator_decision_tree="1. Provision infrastructure (Terraform)\n   |- Plan shows destructive changes? -> STOP, confirm with user\n   \\- Plan is additive? -> Apply\n2. Configure services (Ansible)\n   |- Dry-run shows unexpected changes? -> STOP, investigate\n   \\- Dry-run clean? -> Apply\n3. Deploy service (blue-green)\n   |- Health check fails? -> Rollback immediately\n   |- Error rate > 1%? -> Rollback immediately\n   \\- All healthy? -> Mark deployed\n4. Monitor for 5 minutes\n   |- Metrics degrade? -> Rollback\n   \\- Stable? -> Confirm deployment",
+    orchestrator_when_to_stop="- Service deployed and metrics stable\n- Rollback completed successfully\n- Escalation required (human intervention needed)",
+    workflow=_DEVOPS_WORKFLOW,
+    permissions_shell_read=[
+        "terraform plan *",
+        "terraform state list *",
+        "ansible-inventory *",
+        "docker ps *",
+        "kubectl get *",
+    ],
+    permissions_shell_execute=[
+        "python scripts/manage.py *",
+        "ansible-playbook --check *",
+    ],
+    permissions_file_write=[
+        "terraform/**/*.tf",
+        "ansible/**/*.yml",
+    ],
+    permissions_deny_shell=[
+        "terraform destroy *",
+        "rm -rf *",
+        "kubectl delete namespace *",
+    ],
+    permissions_confirm_shell=[
+        "terraform apply *",
+        "ansible-playbook *",
+        "python scripts/manage.py deploy --env production *",
+        "python scripts/manage.py rollback *",
+    ],
+    permissions_confirm_actions=["deploy_production", "scale_down", "destroy_resource"],
+    env_required=[
+        {"name": "AWS_PROFILE", "description": "AWS credentials profile"},
+        {"name": "DEPLOY_ENV", "description": "Target environment (staging/production)"},
+    ],
+    env_optional=[
+        {"name": "ROLLBACK_WINDOW", "default": "300", "description": "Seconds to monitor before confirming deploy"},
+    ],
+)
+
+
+# ---------------------------------------------------------------------------
+# Public mapping
+# ---------------------------------------------------------------------------
+
+DOMAIN_CONFIGS: Dict[str, DomainConfig] = {
+    "ml": ML_CONFIG,
+    "web": WEB_CONFIG,
+    "devops": DEVOPS_CONFIG,
+}

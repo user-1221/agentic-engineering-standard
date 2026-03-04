@@ -1,0 +1,122 @@
+{% if domain_config %}
+# .agent/agent.yaml — AES Manifest
+aes: "1.0"
+
+name: "{{ name }}"
+version: "0.1.0"
+description: "{{ domain_config.instructions_description }}"
+domain: "{{ domain }}"
+license: "MIT"
+
+runtime:
+  language: "{{ language }}"
+
+agent:
+  instructions: "instructions.md"
+  permissions: "permissions.yaml"
+{% if has_skills %}
+  orchestrator: "skills/ORCHESTRATOR.md"
+
+skills:
+{% for skill in domain_config.skills %}
+  - id: "{{ skill.id }}"
+    manifest: "skills/{{ skill.id }}.skill.yaml"
+    runbook: "skills/{{ skill.id }}.md"
+{% endfor %}
+{% endif %}
+{% if has_workflows and domain_config.workflow %}
+
+workflows:
+  - id: "{{ domain_config.workflow.id }}"
+    path: "workflows/{{ domain_config.workflow.id }}.yaml"
+{% endif %}
+
+commands:
+  - id: "setup"
+    path: "commands/setup.md"
+    trigger: "/setup"
+    description: "Review and customize .agent/ files for your project"
+
+environment:
+{% if domain_config.env_required %}
+  required:
+{% for env in domain_config.env_required %}
+    - name: "{{ env.name }}"
+      description: "{{ env.description }}"
+{% endfor %}
+{% else %}
+  required: []
+{% endif %}
+{% if domain_config.env_optional %}
+  optional:
+{% for env in domain_config.env_optional %}
+    - name: "{{ env.name }}"
+      default: "{{ env.default }}"
+      description: "{{ env.description }}"
+{% endfor %}
+{% else %}
+  optional: []
+{% endif %}
+{% else %}
+# .agent/agent.yaml — AES Manifest
+aes: "1.0"
+
+name: "{{ name }}"
+version: "0.1.0"
+# <!-- AGENT: Describe what this agentic system does in one sentence.
+#      If code exists: read README + entry point + package config.
+#      If greenfield: ask the user what they're building. -->
+description: "TODO: describe what this agentic system does"
+domain: "{{ domain }}"
+license: "MIT"
+
+runtime:
+  language: "{{ language }}"
+
+agent:
+  instructions: "instructions.md"
+  permissions: "permissions.yaml"
+{% if has_skills %}
+  orchestrator: "skills/ORCHESTRATOR.md"
+
+skills: []
+  # - id: "example"
+  #   manifest: "skills/example.skill.yaml"
+  #   runbook: "skills/example.md"
+{% endif %}
+{% if has_registry %}
+
+registries: []
+  # - id: "components"
+  #   path: "registry/components.yaml"
+  #   description: "Component definitions"
+{% endif %}
+{% if has_workflows %}
+
+workflows: []
+  # - id: "pipeline"
+  #   path: "workflows/pipeline.yaml"
+{% endif %}
+
+commands:
+  - id: "setup"
+    path: "commands/setup.md"
+    trigger: "/setup"
+    description: "Populate .agent/ files by analyzing the codebase"
+  # - id: "run"
+  #   path: "commands/run.md"
+  #   trigger: "/run"
+  #   description: "Run the main workflow"
+
+environment:
+  # <!-- AGENT: List required and optional environment variables.
+  #      If code exists: scan for os.environ, process.env, .env, .env.example.
+  #      If greenfield: ask "any API keys or config vars needed?" -->
+  required: []
+    # - name: "API_KEY"
+    #   description: "Main API key"
+  optional: []
+    # - name: "TIMEOUT"
+    #   default: "300"
+    #   description: "Operation timeout"
+{% endif %}

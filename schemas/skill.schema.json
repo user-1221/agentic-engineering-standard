@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aes.dev/schemas/skill/v1",
+  "title": "AES Skill Manifest",
+  "description": "Validates .agent/skills/*.skill.yaml",
+  "type": "object",
+  "required": ["aes_skill", "id", "name", "version", "description"],
+  "properties": {
+    "aes_skill": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "phase": {
+      "type": "string"
+    },
+    "inputs": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/input_field" }
+        },
+        "optional": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/input_field_optional" }
+        },
+        "environment": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/output_field" }
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "triggers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/trigger" }
+    },
+    "error_handling": {
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["per-item-isolation", "fail-fast", "retry-with-backoff", "skip-on-error"]
+        },
+        "retries": { "type": "integer", "minimum": 0 },
+        "on_network_error": { "type": "string" },
+        "on_rate_limit": { "type": "string" },
+        "on_invalid_data": { "type": "string" }
+      }
+    },
+    "code": {
+      "type": "object",
+      "properties": {
+        "primary": { "type": "string" },
+        "config": { "type": "string" },
+        "db": { "type": "string" },
+        "functions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "depends_on": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "required": ["skill"],
+            "properties": {
+              "skill": { "type": "string" },
+              "version": { "type": "string" }
+            }
+          }
+        ]
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "input_field": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "input_field_optional": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "default": {},
+        "description": { "type": "string" }
+      }
+    },
+    "output_field": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "description": { "type": "string" },
+        "state_change": {
+          "type": "object",
+          "properties": {
+            "entity": { "type": "string" },
+            "from_status": { "type": ["string", "null"] },
+            "to_status": { "type": "string" }
+          }
+        }
+      }
+    },
+    "trigger": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["manual", "schedule", "condition", "event"]
+        },
+        "command": { "type": "string" },
+        "cron": { "type": "string" },
+        "when": { "type": "string" },
+        "event": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+aes_workflow: "1.0"
+
+id: "feature-lifecycle"
+entity: "feature"
+description: "Feature development from planning through deployment"
+
+states:
+  planned:
+    description: "Requirements understood, ready to build"
+    initial: true
+  in-progress:
+    description: "Implementation underway"
+    active: true
+  testing:
+    description: "All tests running"
+  staging:
+    description: "Deployed to staging for verification"
+  deployed:
+    description: "Live in production"
+    terminal: true
+  blocked:
+    description: "Cannot proceed due to dependency or issue"
+    terminal: true
+
+transitions:
+  - from: "planned"
+    to: "in-progress"
+    skill: "scaffold"
+    conditions:
+      - "Requirements are clear"
+
+  - from: "in-progress"
+    to: "testing"
+    skill: "test"
+    conditions:
+      - "Implementation complete"
+      - "Code compiles without errors"
+
+  - from: "testing"
+    to: "staging"
+    skill: "deploy"
+    conditions:
+      - "All tests pass"
+
+  - from: "staging"
+    to: "deployed"
+    skill: "deploy"
+    conditions:
+      - "Health check passes"
+      - "Error rate normal"
+      - "User confirms promotion"
+
+  - from: "testing"
+    to: "in-progress"
+    description: "Fix failing tests"
+    conditions:
+      - "Tests fail"

@@ -1,0 +1,61 @@
+# .agentignore — Files agents should never read or modify
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+credentials.json
+
+# Databases
+*.sqlite3
+*.db
+
+# Binary artifacts
+{% if language == "python" %}
+*.joblib
+*.pkl
+*.h5
+*.pt
+{% elif language == "javascript" or language == "typescript" %}
+*.wasm
+{% endif %}
+
+# Large data
+data/**/*.parquet
+data/**/*.csv
+
+# Build artifacts
+{% if language == "python" %}
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.pyc
+.venv/
+{% elif language == "javascript" or language == "typescript" %}
+node_modules/
+dist/
+.next/
+{% elif language == "go" %}
+vendor/
+{% elif language == "rust" %}
+target/
+{% elif language == "java" %}
+target/
+build/
+*.class
+*.jar
+{% endif %}
+
+# System
+.git/
+.DS_Store
+Thumbs.db
+
+# Agent session data
+.agent/memory/sessions/
+
+# Local config (not committed)
+.agent/local.yaml

@@ -1,0 +1,139 @@
+{% if domain_config %}
+# .agent/permissions.yaml — Agent Capability Boundaries
+aes_permissions: "1.0"
+
+allow:
+  shell:
+    read:
+      - "git status"
+      - "git log *"
+      - "git diff *"
+      - "ls *"
+{% for cmd in domain_config.permissions_shell_read %}
+      - "{{ cmd }}"
+{% endfor %}
+    execute:
+{% for cmd in domain_config.permissions_shell_execute %}
+      - "{{ cmd }}"
+{% endfor %}
+
+  files:
+    read: "**/*"
+    write:
+{% for pattern in domain_config.permissions_file_write %}
+      - "{{ pattern }}"
+{% endfor %}
+      - ".agent/memory/**"
+
+deny:
+  shell:
+{% for cmd in domain_config.permissions_deny_shell %}
+    - "{{ cmd }}"
+{% endfor %}
+  files:
+    write:
+      - ".env"
+      - ".env.*"
+      - "*.pem"
+      - "*.key"
+      - ".git/**"
+
+confirm:
+  shell:
+{% for cmd in domain_config.permissions_confirm_shell %}
+    - "{{ cmd }}"
+{% endfor %}
+  files:
+    delete: "**/*"
+{% if domain_config.permissions_confirm_actions %}
+  actions:
+{% for action in domain_config.permissions_confirm_actions %}
+    - "{{ action }}"
+{% endfor %}
+{% else %}
+  actions: []
+{% endif %}
+{% if domain_config.permissions_resource_limits %}
+
+resource_limits:
+  max_cpu_percent: {{ domain_config.permissions_resource_limits.max_cpu_percent }}
+  max_memory_percent: {{ domain_config.permissions_resource_limits.max_memory_percent }}
+{% if domain_config.permissions_resource_limits.check_before is defined %}
+  check_before:
+{% for stage in domain_config.permissions_resource_limits.check_before %}
+    - "{{ stage }}"
+{% endfor %}
+{% endif %}
+{% if domain_config.permissions_resource_limits.on_exceeded is defined %}
+  on_exceeded: "{{ domain_config.permissions_resource_limits.on_exceeded }}"
+{% endif %}
+{% endif %}
+{% else %}
+# .agent/permissions.yaml — Agent Capability Boundaries
+aes_permissions: "1.0"
+
+allow:
+  shell:
+    read:
+      - "git status"
+      - "git log *"
+      - "git diff *"
+      - "ls *"
+    execute:
+{% if language == "python" %}
+      - "python *"
+      - "python -m pytest *"
+      - "pip install *"
+{% elif language == "javascript" or language == "typescript" %}
+      - "node *"
+      - "npm *"
+      - "npx *"
+{% elif language == "go" %}
+      - "go build *"
+      - "go test *"
+      - "go run *"
+{% elif language == "rust" %}
+      - "cargo build *"
+      - "cargo test *"
+      - "cargo run *"
+{% else %}
+      # <!-- AGENT: Add execute permissions for your build/test/run tools.
+      #      If code exists: check package config, Makefile, scripts/ directory.
+      #      If greenfield: infer from tech stack or ask the user. -->
+{% endif %}
+
+  files:
+    read: "**/*"
+    write:
+      # <!-- AGENT: List source directories the agent should be allowed to modify.
+      #      If code exists: identify src/, lib/, app/, tests/, scripts/ directories.
+      #      If greenfield: ask "where will your source code live?" -->
+      - "src/**"
+      - ".agent/memory/**"
+
+deny:
+  shell:
+    # <!-- AGENT: Add project-specific destructive commands to deny.
+    #      If code exists: check for database CLIs, cloud CLIs, or other dangerous tools.
+    #      If greenfield: ask about infrastructure or deployment tools that could be destructive. -->
+    - "rm -rf *"
+    - "chmod 777 *"
+  files:
+    write:
+      - ".env"
+      - ".env.*"
+      - "*.pem"
+      - "*.key"
+      - ".git/**"
+
+confirm:
+  shell:
+    # <!-- AGENT: Add high-impact commands that should require confirmation.
+    #      If code exists: look for deploy, publish, push, or migration commands.
+    #      If greenfield: ask about deployment and release processes. -->
+    - "git push *"
+    - "git reset *"
+  files:
+    delete: "**/*"
+  actions: []
+{% endif %}

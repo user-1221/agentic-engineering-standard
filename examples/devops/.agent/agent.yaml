@@ -1,0 +1,43 @@
+aes: "1.0"
+
+name: "infra-autopilot"
+version: "1.0.0"
+description: "Infrastructure automation: provision, configure, deploy, monitor, and rollback services"
+domain: "devops"
+license: "MIT"
+
+runtime:
+  language: "python"
+  version: "3.11"
+  entry_point: "scripts/manage.py"
+
+agent:
+  instructions: "instructions.md"
+  permissions: "permissions.yaml"
+  orchestrator: "skills/ORCHESTRATOR.md"
+
+skills:
+  - id: "provision"
+    manifest: "skills/provision.skill.yaml"
+    runbook: "skills/provision.md"
+  - id: "deploy"
+    manifest: "skills/deploy.skill.yaml"
+    runbook: "skills/deploy.md"
+  - id: "rollback"
+    manifest: "skills/rollback.skill.yaml"
+    runbook: "skills/rollback.md"
+
+workflows:
+  - id: "service-lifecycle"
+    path: "workflows/service.yaml"
+
+environment:
+  required:
+    - name: "AWS_PROFILE"
+      description: "AWS credentials profile"
+    - name: "DEPLOY_ENV"
+      description: "Target environment (staging/production)"
+  optional:
+    - name: "ROLLBACK_WINDOW"
+      default: "300"
+      description: "Seconds to monitor before confirming deploy"

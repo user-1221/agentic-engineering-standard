@@ -1,0 +1,91 @@
+aes_registry: "1.0"
+
+id: "models"
+description: "27 ML models across 7 problem types"
+
+entry_schema:
+  required:
+    - name: "class"
+      type: "string"
+      description: "Class name to instantiate"
+    - name: "module"
+      type: "string"
+      description: "Python import path"
+    - name: "handler"
+      type: "string"
+      description: "Trainer module"
+    - name: "serialize_fmt"
+      type: "string"
+      description: "Native file extension"
+  optional:
+    - name: "capabilities"
+      type: "object"
+      description: "Framework capabilities"
+  dynamic:
+    - name: "search_space"
+      type: "object"
+      description: "Optuna hyperparameter ranges"
+
+interface:
+  description: "Every trainer module implements these 5 functions"
+  functions:
+    - name: "create_objective"
+      signature: "(model_key, config, problem_type, X_train, y_train, X_val, y_val, meta) -> callable"
+    - name: "train_final"
+      signature: "(model_key, config, problem_type, best_params, X_train, y_train, X_val, y_val, meta) -> model"
+    - name: "save_model"
+      signature: "(model, model_key, config, dataset_id) -> Path"
+    - name: "load_model"
+      signature: "(model_key, config, path) -> model"
+    - name: "evaluate"
+      signature: "(model, X_test, y_test, problem_type, meta) -> dict"
+
+categories:
+  binary_classification:
+    catboost_classifier:
+      class: "CatBoostClassifier"
+      module: "catboost"
+      handler: "trainers.gradient_boost"
+      serialize_fmt: ".cbm"
+      capabilities:
+        handles_categorical: true
+        handles_missing: true
+      search_space:
+        iterations: { type: "int", low: 200, high: 2000 }
+        depth: { type: "int", low: 4, high: 10 }
+        learning_rate: { type: "float_log", low: 0.01, high: 0.3 }
+    xgboost_classifier:
+      class: "XGBClassifier"
+      module: "xgboost"
+      handler: "trainers.gradient_boost"
+      serialize_fmt: ".json"
+      capabilities:
+        handles_categorical: true
+        handles_missing: true
+    random_forest_classifier:
+      class: "RandomForestClassifier"
+      module: "sklearn.ensemble"
+      handler: "trainers.sklearn_models"
+      serialize_fmt: ".joblib"
+      capabilities:
+        handles_categorical: false
+        handles_missing: false
+
+  regression:
+    catboost_regressor:
+      class: "CatBoostRegressor"
+      module: "catboost"
+      handler: "trainers.gradient_boost"
+      serialize_fmt: ".cbm"
+    xgboost_regressor:
+      class: "XGBRegressor"
+      module: "xgboost"
+      handler: "trainers.gradient_boost"
+      serialize_fmt: ".json"
+
+  time_series:
+    prophet:
+      class: "Prophet"
+      module: "prophet"
+      handler: "trainers.time_series"
+      serialize_fmt: ".json"

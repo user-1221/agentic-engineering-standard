@@ -1,0 +1,35 @@
+aes_skill: "1.0"
+
+id: "scaffold"
+name: "Scaffold Feature"
+version: "1.0.0"
+description: "Generate boilerplate for a new feature: migration, route, component, test"
+
+stage: 1
+phase: "setup"
+
+inputs:
+  required:
+    - name: "feature_name"
+      type: "string"
+      description: "Name of the feature to scaffold"
+    - name: "needs_db"
+      type: "bool"
+      description: "Whether a database migration is needed"
+
+outputs:
+  - name: "files_created"
+    type: "list[str]"
+    description: "Paths of generated files"
+
+triggers:
+  - type: "manual"
+    command: "npx plop feature {name}"
+
+error_handling:
+  strategy: "fail-fast"
+
+code:
+  primary: "plopfile.ts"
+
+tags: ["scaffolding", "code-generation"]

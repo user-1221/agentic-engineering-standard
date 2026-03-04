@@ -1,0 +1,130 @@
+{% if skill %}
+# .agent/skills/{{ skill.id }}.skill.yaml
+aes_skill: "1.0"
+
+id: "{{ skill.id }}"
+name: "{{ skill.name }}"
+version: "{{ skill.version }}"
+description: "{{ skill.description }}"
+
+stage: {{ skill.stage }}
+phase: "{{ skill.phase }}"
+
+inputs:
+{% if skill.inputs_required %}
+  required:
+{% for inp in skill.inputs_required %}
+    - name: "{{ inp.name }}"
+      type: "{{ inp.type }}"
+      description: "{{ inp.description }}"
+{% endfor %}
+{% else %}
+  required: []
+{% endif %}
+{% if skill.inputs_optional %}
+  optional:
+{% for inp in skill.inputs_optional %}
+    - name: "{{ inp.name }}"
+      type: "{{ inp.type }}"
+{% if inp.default is defined %}
+      default: {{ inp.default }}
+{% endif %}
+      description: "{{ inp.description }}"
+{% endfor %}
+{% else %}
+  optional: []
+{% endif %}
+{% if skill.inputs_environment %}
+  environment:
+{% for env in skill.inputs_environment %}
+    - "{{ env }}"
+{% endfor %}
+{% else %}
+  environment: []
+{% endif %}
+
+{% if skill.outputs %}
+outputs:
+{% for out in skill.outputs %}
+  - name: "{{ out.name }}"
+    type: "{{ out.type }}"
+    description: "{{ out.description }}"
+{% endfor %}
+{% else %}
+outputs: []
+{% endif %}
+
+prerequisites: []
+
+triggers:
+  - type: "manual"
+    command: "{{ skill.trigger_command }}"
+
+error_handling:
+  strategy: "{{ skill.error_strategy }}"
+
+code:
+  primary: "{{ skill.code_primary }}"
+{% if skill.depends_on %}
+
+depends_on:
+{% for dep in skill.depends_on %}
+  - "{{ dep }}"
+{% endfor %}
+{% endif %}
+{% if skill.blocks %}
+blocks:
+{% for b in skill.blocks %}
+  - "{{ b }}"
+{% endfor %}
+{% endif %}
+
+tags:
+{% for tag in skill.tags %}
+  - "{{ tag }}"
+{% endfor %}
+{% else %}
+# .agent/skills/{{ skill_id }}.skill.yaml
+aes_skill: "1.0"
+
+id: "{{ skill_id }}"
+name: "{{ skill_name }}"
+version: "1.0.0"
+# <!-- AGENT: Describe what this skill does in one sentence.
+#      If code exists: read the primary source file and summarize its purpose.
+#      If greenfield: ask the user what this operation does. -->
+description: "TODO: describe what this skill does"
+
+inputs:
+  # <!-- AGENT: Define required and optional inputs for this skill.
+  #      If code exists: look at function signatures, CLI args, config params.
+  #      If greenfield: ask "what does this operation need to run?" -->
+  required: []
+  optional: []
+  environment: []
+
+# <!-- AGENT: Define what this skill produces.
+#      If code exists: look at return values, output files, side effects.
+#      If greenfield: ask "what does this operation produce?" -->
+outputs: []
+
+prerequisites: []
+
+triggers:
+  - type: "manual"
+    # <!-- AGENT: Set the trigger command.
+    #      If code exists: use the actual CLI command or script path.
+    #      If greenfield: infer from tech stack or ask. -->
+    command: "# TODO: add trigger command"
+
+error_handling:
+  strategy: "per-item-isolation"
+
+code:
+  # <!-- AGENT: Set the path to the primary source file for this skill.
+  #      If code exists: identify the main file that implements this operation.
+  #      If greenfield: set to the planned file path. -->
+  primary: "# TODO: path to primary source file"
+
+tags: []
+{% endif %}

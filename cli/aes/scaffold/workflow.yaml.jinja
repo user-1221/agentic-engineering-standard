@@ -1,0 +1,44 @@
+aes_workflow: "1.0"
+
+id: "{{ workflow.id }}"
+entity: "{{ workflow.entity }}"
+description: "{{ workflow.description }}"
+
+states:
+{% for state in workflow.states %}
+  {{ state.id }}:
+    description: "{{ state.description }}"
+{% if state.initial %}
+    initial: true
+{% endif %}
+{% if state.terminal %}
+    terminal: true
+{% endif %}
+{% if state.active %}
+    active: true
+{% endif %}
+{% endfor %}
+
+transitions:
+{% for t in workflow.transitions %}
+  - from: "{{ t.from_state }}"
+    to: "{{ t.to_state }}"
+{% if t.skill %}
+    skill: "{{ t.skill }}"
+{% endif %}
+{% if t.conditions %}
+    conditions:
+{% for c in t.conditions %}
+      - "{{ c }}"
+{% endfor %}
+{% endif %}
+{% if t.on_failure %}
+    on_failure: "{{ t.on_failure }}"
+{% endif %}
+{% if t.description %}
+    description: "{{ t.description }}"
+{% endif %}
+{% endfor %}
+
+idempotency:
+  pattern: "status-gated"

@@ -1,0 +1,46 @@
+# ML Pipeline — AES Template
+aes: "1.0"
+
+name: "ml-pipeline"
+version: "1.0.0"
+description: "Automated ML pipeline: discover datasets, train models via Optuna HPO, serve via metered API"
+domain: "ml"
+
+runtime:
+  language: "python"
+  version: "3.9"
+  entry_point: "scripts/run_pipeline.py"
+
+agent:
+  instructions: "instructions.md"
+  permissions: "permissions.yaml"
+  orchestrator: "skills/ORCHESTRATOR.md"
+
+skills:
+  - id: "discover"
+    manifest: "skills/discover.skill.yaml"
+    runbook: "skills/discover.md"
+  - id: "examine"
+    manifest: "skills/examine.skill.yaml"
+    runbook: "skills/examine.md"
+  - id: "train"
+    manifest: "skills/train.skill.yaml"
+    runbook: "skills/train.md"
+
+workflows:
+  - id: "dataset-pipeline"
+    path: "workflows/pipeline.yaml"
+
+environment:
+  required:
+    - name: "OPENML_APIKEY"
+      description: "OpenML API key for dataset discovery"
+    - name: "HF_TOKEN"
+      description: "HuggingFace token for model publishing"
+  optional:
+    - name: "OPTUNA_TIMEOUT"
+      default: "300"
+      description: "Seconds per model for HPO"
+    - name: "OPTUNA_N_TRIALS"
+      default: "50"
+      description: "Max trials per model"

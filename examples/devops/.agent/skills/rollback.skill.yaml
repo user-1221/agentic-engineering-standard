@@ -1,0 +1,32 @@
+aes_skill: "1.0"
+
+id: "rollback"
+name: "Rollback Service"
+version: "1.0.0"
+description: "Rollback a service to the previous known-good deployment"
+
+stage: 4
+phase: "recovery"
+
+inputs:
+  required:
+    - name: "service"
+      type: "string"
+      description: "Service to rollback"
+    - name: "environment"
+      type: "string"
+      description: "Target environment"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/manage.py rollback --service {service} --env {environment}"
+  - type: "condition"
+    when: "error_rate > 1% for 2 minutes"
+
+error_handling:
+  strategy: "fail-fast"
+
+code:
+  primary: "scripts/manage.py"
+
+tags: ["rollback", "recovery", "incident-response"]

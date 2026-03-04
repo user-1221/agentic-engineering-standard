@@ -1,0 +1,33 @@
+aes_skill: "1.0"
+
+id: "test"
+name: "Run Tests"
+version: "1.0.0"
+description: "Run unit, integration, and e2e test suites"
+
+stage: 3
+phase: "quality"
+
+inputs:
+  optional:
+    - name: "suite"
+      type: "string"
+      default: "all"
+      description: "Which suite: unit, integration, e2e, or all"
+
+outputs:
+  - name: "results"
+    type: "object"
+    description: "Test pass/fail counts"
+
+triggers:
+  - type: "manual"
+    command: "npm run test"
+
+error_handling:
+  strategy: "fail-fast"
+
+code:
+  primary: "jest.config.ts"
+
+tags: ["testing", "quality"]

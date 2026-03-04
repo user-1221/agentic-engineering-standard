@@ -1,0 +1,37 @@
+[Unit]
+Description=AES Package Registry
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=aes-registry
+Group=aes-registry
+ExecStart=/usr/local/bin/aes-registry serve
+Restart=always
+RestartSec=5
+
+# Environment
+EnvironmentFile=/etc/aes-registry/env
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/aes-registry
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+MemoryDenyWriteExecute=yes
+LockPersonality=yes
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,46 @@
+aes_skill: "1.0"
+
+id: "examine"
+name: "Examine Dataset"
+version: "1.0.0"
+description: "Download, profile, and compute quality score for a dataset"
+
+stage: 2
+phase: "profiling"
+
+inputs:
+  required:
+    - name: "db_connection"
+      type: "sqlite3.Connection"
+      description: "Active database connection"
+    - name: "dataset_id"
+      type: "int"
+      description: "Dataset to examine"
+
+outputs:
+  - name: "quality_score"
+    type: "float"
+    description: "0.0–1.0 weighted quality score"
+    state_change:
+      entity: "dataset"
+      from_status: "discovered"
+      to_status: "examined"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/run_pipeline.py --stage examine --dataset-id {ID}"
+
+error_handling:
+  strategy: "per-item-isolation"
+  on_network_error: "log_and_continue"
+  on_invalid_data: "skip_with_log"
+
+code:
+  primary: "pipeline/examine.py"
+  functions:
+    - "examine_dataset(conn, dataset_id) -> dict"
+
+depends_on:
+  - "discover"
+
+tags: ["data-quality", "profiling"]

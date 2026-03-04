@@ -1,0 +1,76 @@
+aes_workflow: "1.0"
+
+id: "service-lifecycle"
+entity: "service"
+description: "Service deployment lifecycle with monitoring and rollback"
+
+states:
+  planned:
+    description: "Infrastructure design approved"
+    initial: true
+  provisioning:
+    description: "Terraform creating resources"
+    active: true
+  configured:
+    description: "Ansible config applied"
+  deploying:
+    description: "Blue-green deploy in progress"
+    active: true
+  deployed:
+    description: "Service live and receiving traffic"
+    terminal: true
+  degraded:
+    description: "Service live but metrics abnormal"
+  rolled-back:
+    description: "Reverted to previous version"
+  failed:
+    description: "Deployment failed, no traffic switched"
+    terminal: true
+
+transitions:
+  - from: "planned"
+    to: "provisioning"
+    skill: "provision"
+    conditions:
+      - "Terraform plan reviewed"
+
+  - from: "provisioning"
+    to: "configured"
+    conditions:
+      - "All resources created"
+      - "Health checks pass"
+    on_failure: "failed"
+
+  - from: "configured"
+    to: "deploying"
+    skill: "deploy"
+    conditions:
+      - "Tests pass in staging"
+
+  - from: "deploying"
+    to: "deployed"
+    conditions:
+      - "Health check passes"
+      - "Error rate < 1% for 5 min"
+    on_failure: "failed"
+
+  - from: "deployed"
+    to: "degraded"
+    conditions:
+      - "Error rate > 1% or latency p99 > threshold"
+
+  - from: "degraded"
+    to: "rolled-back"
+    skill: "rollback"
+    conditions:
+      - "Degradation confirmed"
+
+  - from: "rolled-back"
+    to: "deploying"
+    skill: "deploy"
+    conditions:
+      - "Fix applied and tested"
+    description: "Re-deploy after fixing the issue"
+
+idempotency:
+  pattern: "status-gated"

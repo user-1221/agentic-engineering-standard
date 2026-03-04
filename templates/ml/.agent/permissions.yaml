@@ -1,0 +1,53 @@
+aes_permissions: "1.0"
+
+allow:
+  shell:
+    read:
+      - "git status"
+      - "git log *"
+      - "git diff *"
+      - "scripts/job.sh status *"
+      - "scripts/job.sh logs *"
+      - "scripts/job.sh list"
+      - "scripts/job.sh results *"
+    execute:
+      - "python scripts/run_pipeline.py *"
+      - "python -m pytest *"
+      - "scripts/job.sh start *"
+
+  files:
+    read: "**/*"
+    write:
+      - "config/**/*.py"
+      - "pipeline/**/*.py"
+      - "trainers/**/*.py"
+      - ".agent/memory/**"
+
+deny:
+  shell:
+    - "rm -rf *"
+    - "docker rm *"
+    - "systemctl *"
+    - "kill *"
+  files:
+    write:
+      - ".env"
+      - "*.sqlite3"
+      - ".git/**"
+
+confirm:
+  shell:
+    - "scripts/job.sh stop *"
+    - "git push *"
+  actions:
+    - "publish_model"
+    - "create_api_key"
+    - "lower_quality_gates"
+
+resource_limits:
+  max_cpu_percent: 70
+  max_memory_percent: 75
+  check_before:
+    - "train"
+    - "evaluate"
+  on_exceeded: "warn_and_skip"

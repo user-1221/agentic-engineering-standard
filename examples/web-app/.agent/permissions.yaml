@@ -1,0 +1,38 @@
+aes_permissions: "1.0"
+
+allow:
+  shell:
+    read:
+      - "git status"
+      - "git log *"
+      - "git diff *"
+    execute:
+      - "npm run *"
+      - "npx *"
+      - "node *"
+
+  files:
+    read: "**/*"
+    write:
+      - "src/**"
+      - "tests/**"
+      - ".agent/memory/**"
+
+deny:
+  shell:
+    - "rm -rf *"
+    - "DROP DATABASE *"
+  files:
+    write:
+      - ".env"
+      - ".env.*"
+      - "*.pem"
+
+confirm:
+  shell:
+    - "npm run deploy:*"
+    - "git push *"
+    - "npx drizzle-kit push *"
+  actions:
+    - "deploy_production"
+    - "modify_billing"

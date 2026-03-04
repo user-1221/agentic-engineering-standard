@@ -1,0 +1,29 @@
+# .agent/local.yaml — Local overrides (NOT committed to git)
+#
+# This file contains project-specific settings that should NOT be shared:
+# SSH keys, server IPs, API key values, resource limits for your machine.
+#
+# Merged on top of permissions.yaml during `aes sync`.
+
+permissions:
+  allow:
+    shell:
+      remote: []
+        # - "ssh -i ~/.ssh/my_key user@myhost *"
+
+resources: {}
+  # max_cpu_percent: 70
+  # max_memory_percent: 75
+  # notes: "Shared VPS — respect other processes"
+
+environment:
+{% if domain_config and domain_config.env_required %}
+{% for env in domain_config.env_required %}
+  # {{ env.name }}: "your-{{ env.name | lower | replace('_', '-') }}-here"
+{% endfor %}
+{% endif %}
+{% if domain_config and domain_config.env_optional %}
+{% for env in domain_config.env_optional %}
+  # {{ env.name }}: "{{ env.default }}"
+{% endfor %}
+{% endif %}

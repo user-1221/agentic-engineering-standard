@@ -1,0 +1,76 @@
+{% if domain_config %}
+# {{ name }} — Orchestrator
+
+## Pipeline
+
+```
+{{ domain_config.orchestrator_pipeline }}
+```
+
+## Status Flow
+
+```
+{{ domain_config.orchestrator_status_flow }}
+```
+
+## Decision Tree
+
+```
+{{ domain_config.orchestrator_decision_tree }}
+```
+
+## When to Stop
+
+{{ domain_config.orchestrator_when_to_stop }}
+{% else %}
+# {{ name }} — Orchestrator
+
+## Pipeline
+
+<!-- AGENT: Define the execution order of skills for this project.
+     If code exists: identify major operations from CLI commands, API endpoints,
+     scripts/, pipeline stages, scheduled jobs. Order them by dependency.
+     If greenfield: ask "What are the main steps in your workflow, in order?" -->
+
+```
+skill_1 → skill_2 → skill_3 → ... → skill_n
+```
+
+## Status Flow
+
+<!-- AGENT: Define entity status transitions.
+     If code exists: look for status columns in models, enums, state machines,
+     workflow definitions, or status fields in database schemas.
+     If greenfield: ask "What states does your primary entity move through?" -->
+
+```
+status_1 → status_2 → ... → status_n
+                               ↗
+                         rejected (any stage)
+```
+
+## Decision Tree
+
+<!-- AGENT: Define the decision logic for processing items.
+     If code exists: trace the main processing loop — what checks happen,
+     what branches exist, what determines success vs failure.
+     If greenfield: ask about decision points and error handling. -->
+
+```
+for each pending_stage:
+  1. Check prerequisites
+  2. Get items at current status
+  3. For each item:
+     a. Run stage skill
+     b. On success: advance status
+     c. On failure: log error, mark rejected if unrecoverable
+  4. Report results
+```
+
+## When to Stop
+
+- All items at terminal status
+- Resource limits exceeded
+- User requests stop
+- No items to process
+{% endif %}

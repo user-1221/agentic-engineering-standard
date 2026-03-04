@@ -1,0 +1,35 @@
+aes_skill: "1.0"
+
+id: "deploy"
+name: "Deploy Service"
+version: "1.0.0"
+description: "Blue-green deploy with health checks and monitoring"
+
+stage: 3
+phase: "delivery"
+
+inputs:
+  required:
+    - name: "service"
+      type: "string"
+      description: "Service to deploy"
+    - name: "environment"
+      type: "string"
+      description: "Target: staging or production"
+  environment:
+    - "DEPLOY_ENV"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/manage.py deploy --service {service} --env {environment}"
+
+error_handling:
+  strategy: "fail-fast"
+
+code:
+  primary: "scripts/manage.py"
+
+depends_on:
+  - "provision"
+
+tags: ["deployment", "blue-green"]

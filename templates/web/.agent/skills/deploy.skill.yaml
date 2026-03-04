@@ -1,0 +1,30 @@
+aes_skill: "1.0"
+
+id: "deploy"
+name: "Deploy"
+version: "1.0.0"
+description: "Deploy to staging or production environment"
+
+stage: 5
+phase: "delivery"
+
+inputs:
+  required:
+    - name: "environment"
+      type: "string"
+      description: "Target: staging or production"
+
+triggers:
+  - type: "manual"
+    command: "npm run deploy:{environment}"
+
+error_handling:
+  strategy: "fail-fast"
+
+code:
+  primary: "deploy.config.ts"
+
+depends_on:
+  - "test"
+
+tags: ["deployment", "ci-cd"]

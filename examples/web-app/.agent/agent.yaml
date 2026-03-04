@@ -1,0 +1,48 @@
+aes: "1.0"
+
+name: "saas-dashboard"
+version: "1.0.0"
+description: "SaaS analytics dashboard with auth, billing, and real-time updates"
+domain: "web"
+license: "MIT"
+
+runtime:
+  language: "typescript"
+  version: "5.0"
+  entry_point: "src/index.ts"
+
+agent:
+  instructions: "instructions.md"
+  permissions: "permissions.yaml"
+  orchestrator: "skills/ORCHESTRATOR.md"
+
+skills:
+  - id: "scaffold"
+    manifest: "skills/scaffold.skill.yaml"
+    runbook: "skills/scaffold.md"
+  - id: "test"
+    manifest: "skills/test.skill.yaml"
+    runbook: "skills/test.md"
+  - id: "deploy"
+    manifest: "skills/deploy.skill.yaml"
+    runbook: "skills/deploy.md"
+
+workflows:
+  - id: "feature-lifecycle"
+    path: "workflows/feature.yaml"
+
+commands:
+  - id: "feature"
+    path: "commands/feature.md"
+    trigger: "/feature"
+    description: "End-to-end feature development with testing"
+
+environment:
+  required:
+    - name: "DATABASE_URL"
+      description: "PostgreSQL connection string"
+    - name: "STRIPE_SECRET_KEY"
+      description: "Stripe API key for billing"
+  optional:
+    - name: "NODE_ENV"
+      default: "development"

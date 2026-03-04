@@ -1,0 +1,43 @@
+aes_permissions: "1.0"
+
+allow:
+  shell:
+    read:
+      - "terraform plan *"
+      - "terraform state list *"
+      - "ansible-inventory *"
+      - "docker ps *"
+      - "kubectl get *"
+    execute:
+      - "python scripts/manage.py *"
+      - "ansible-playbook --check *"
+
+  files:
+    read: "**/*"
+    write:
+      - "terraform/**/*.tf"
+      - "ansible/**/*.yml"
+      - ".agent/memory/**"
+
+deny:
+  shell:
+    - "terraform destroy *"
+    - "rm -rf *"
+    - "kubectl delete namespace *"
+  files:
+    write:
+      - ".env"
+      - "*.pem"
+      - "*.key"
+      - "secrets/**"
+
+confirm:
+  shell:
+    - "terraform apply *"
+    - "ansible-playbook *"
+    - "python scripts/manage.py deploy --env production *"
+    - "python scripts/manage.py rollback *"
+  actions:
+    - "deploy_production"
+    - "scale_down"
+    - "destroy_resource"

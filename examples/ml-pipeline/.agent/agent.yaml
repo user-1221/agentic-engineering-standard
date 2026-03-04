@@ -1,0 +1,76 @@
+# ML Model Factory — AES Manifest
+aes: "1.0"
+
+name: "ml-model-factory"
+version: "2.1.0"
+description: "Automated ML pipeline: discover datasets, train models via Optuna HPO, serve via metered API"
+domain: "ml"
+license: "MIT"
+
+author:
+  name: "Hiro"
+
+runtime:
+  language: "python"
+  version: "3.9"
+  entry_point: "scripts/run_pipeline.py"
+  setup: "setup.sh"
+
+agent:
+  instructions: "instructions.md"
+  permissions: "permissions.yaml"
+  orchestrator: "skills/ORCHESTRATOR.md"
+
+skills:
+  - id: "discover"
+    manifest: "skills/discover.skill.yaml"
+    runbook: "skills/discover.md"
+  - id: "examine"
+    manifest: "skills/examine.skill.yaml"
+    runbook: "skills/examine.md"
+  - id: "train"
+    manifest: "skills/train.skill.yaml"
+    runbook: "skills/train.md"
+
+registries:
+  - id: "models"
+    path: "registry/models.yaml"
+    description: "27 ML models across 7 problem types"
+  - id: "metrics"
+    path: "registry/metrics.yaml"
+    description: "Evaluation metrics and quality gates"
+
+workflows:
+  - id: "dataset-pipeline"
+    path: "workflows/pipeline.yaml"
+
+commands:
+  - id: "train"
+    path: "commands/train.md"
+    trigger: "/train"
+    description: "End-to-end model training with analysis and iteration"
+
+environment:
+  required:
+    - name: "OPENML_APIKEY"
+      description: "OpenML API key for dataset discovery"
+    - name: "HF_TOKEN"
+      description: "HuggingFace token for model publishing"
+    - name: "ADMIN_API_KEY"
+      description: "Admin API key for key management"
+  optional:
+    - name: "OPTUNA_TIMEOUT"
+      default: "300"
+      description: "Seconds per model for HPO"
+    - name: "OPTUNA_N_TRIALS"
+      default: "50"
+      description: "Max trials per model"
+    - name: "MAX_CPU_PERCENT"
+      default: "70"
+      description: "CPU usage limit"
+
+resources:
+  max_cpu_percent: 70
+  max_memory_percent: 75
+  max_concurrent_jobs: 2
+  coexistence_note: "Crypto bot has priority on VPS"

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aes.dev/schemas/permissions/v1",
+  "title": "AES Permissions Model",
+  "description": "Validates .agent/permissions.yaml",
+  "type": "object",
+  "required": ["aes_permissions"],
+  "properties": {
+    "aes_permissions": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "allow": {
+      "$ref": "#/$defs/permission_set"
+    },
+    "deny": {
+      "$ref": "#/$defs/permission_set"
+    },
+    "confirm": {
+      "type": "object",
+      "properties": {
+        "shell": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "files": {
+          "type": "object",
+          "properties": {
+            "read": { "$ref": "#/$defs/pattern_or_patterns" },
+            "write": { "$ref": "#/$defs/pattern_or_patterns" },
+            "create": { "$ref": "#/$defs/pattern_or_patterns" },
+            "delete": { "$ref": "#/$defs/pattern_or_patterns" }
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "resource_limits": {
+      "type": "object",
+      "properties": {
+        "max_cpu_percent": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "max_memory_percent": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "check_before": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "on_exceeded": {
+          "type": "string",
+          "enum": ["warn_and_skip", "wait_and_retry", "abort"]
+        }
+      }
+    },
+    "overrides": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "permission_set": {
+      "type": "object",
+      "properties": {
+        "shell": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "read": { "type": "array", "items": { "type": "string" } },
+                "execute": { "type": "array", "items": { "type": "string" } },
+                "remote": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          ]
+        },
+        "files": {
+          "type": "object",
+          "properties": {
+            "read": { "$ref": "#/$defs/pattern_or_patterns" },
+            "write": { "$ref": "#/$defs/pattern_or_patterns" },
+            "create": { "$ref": "#/$defs/pattern_or_patterns" },
+            "delete": { "$ref": "#/$defs/pattern_or_patterns" }
+          }
+        }
+      }
+    },
+    "pattern_or_patterns": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" } }
+      ]
+    }
+  }
+}

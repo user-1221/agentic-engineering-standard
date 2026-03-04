@@ -1,0 +1,40 @@
+aes_registry: "1.0"
+
+id: "metrics"
+description: "Evaluation metrics and quality gates per problem type"
+
+categories:
+  binary_classification:
+    primary: "roc_auc"
+    secondary: ["accuracy", "f1", "precision", "recall", "log_loss"]
+    direction: "maximize"
+    baseline: "majority_class"
+    quality_gate:
+      min_threshold: 0.75
+      overfitting_max_gap: 0.15
+
+  multiclass_classification:
+    primary: "f1_macro"
+    secondary: ["accuracy", "precision_macro", "recall_macro"]
+    direction: "maximize"
+    baseline: "majority_class"
+    quality_gate:
+      min_threshold: 0.60
+      overfitting_max_gap: 0.15
+
+  regression:
+    primary: "rmse"
+    secondary: ["mae", "r2", "mape"]
+    direction: "minimize"
+    baseline: "predict_mean"
+    quality_gate:
+      min_r2: 0.50
+      overfitting_max_gap_relative: 0.30
+
+  time_series:
+    primary: "mape"
+    secondary: ["rmse", "mae"]
+    direction: "minimize"
+    baseline: "naive_forecast"
+    quality_gate:
+      max_mape: 0.20

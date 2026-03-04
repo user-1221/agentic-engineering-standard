@@ -1,0 +1,47 @@
+aes_skill: "1.0"
+
+id: "train"
+name: "Train Models"
+version: "1.0.0"
+description: "Run Optuna HPO and train all candidate models for a dataset"
+
+stage: 4
+phase: "training"
+
+inputs:
+  required:
+    - name: "db_connection"
+      type: "sqlite3.Connection"
+      description: "Active database connection"
+    - name: "dataset_id"
+      type: "int"
+      description: "Dataset to train"
+  optional:
+    - name: "model_keys"
+      type: "list[str]"
+      description: "Specific models to train (default: all selected)"
+  environment:
+    - "OPTUNA_TIMEOUT"
+    - "OPTUNA_N_TRIALS"
+
+outputs:
+  - name: "experiment_ids"
+    type: "list[int]"
+    description: "IDs of completed experiments"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/run_pipeline.py --stage train --dataset-id {ID}"
+
+error_handling:
+  strategy: "per-item-isolation"
+  retries: 0
+
+code:
+  primary: "pipeline/train.py"
+
+depends_on:
+  - "examine"
+blocks: ["evaluate"]
+
+tags: ["training", "optuna", "hpo"]

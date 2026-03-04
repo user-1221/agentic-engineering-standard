@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aes.dev/schemas/workflow/v1",
+  "title": "AES Workflow Definition",
+  "description": "Validates .agent/workflows/*.yaml state machine definitions",
+  "type": "object",
+  "required": ["aes_workflow", "id", "entity", "states", "transitions"],
+  "properties": {
+    "aes_workflow": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "entity": {
+      "type": "string",
+      "description": "The entity type this workflow tracks"
+    },
+    "description": {
+      "type": "string"
+    },
+    "states": {
+      "type": "object",
+      "minProperties": 2,
+      "additionalProperties": {
+        "$ref": "#/$defs/state"
+      }
+    },
+    "transitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/transition" }
+    },
+    "rejection": {
+      "type": "object",
+      "properties": {
+        "any_state_can_reject": { "type": "boolean" },
+        "requires_reason": { "type": "boolean" },
+        "column": { "type": "string" }
+      }
+    },
+    "idempotency": {
+      "type": "object",
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "enum": ["status-gated", "timestamp-based", "version-based", "none"]
+        },
+        "description": { "type": "string" }
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "properties": {
+        "backend": { "type": "string" },
+        "table": { "type": "string" },
+        "status_column": { "type": "string" },
+        "updated_at": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "state": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string" },
+        "initial": { "type": "boolean" },
+        "active": { "type": "boolean" },
+        "terminal": { "type": "boolean" }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "required": ["from", "to"],
+      "properties": {
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "skill": { "type": "string" },
+        "conditions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "on_failure": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    }
+  }
+}
