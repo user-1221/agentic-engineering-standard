@@ -173,4 +173,4 @@ Validation schemas in [`schemas/`](schemas/) enable IDE autocompletion and CI va
 
 ## License
 
-MIT
+Apache 2.0 — see [LICENSE](LICENSE)
