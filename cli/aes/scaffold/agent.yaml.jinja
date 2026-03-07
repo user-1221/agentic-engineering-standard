@@ -4,7 +4,7 @@ aes: "1.0"
 
 name: "{{ name }}"
 version: "0.1.0"
-description: "{{ domain_config.instructions_description }}"
+description: "{{ domain_config.instructions_description or 'TODO: describe what this agentic system does' }}"
 domain: "{{ domain }}"
 license: "MIT"
 
@@ -16,6 +16,7 @@ agent:
   permissions: "permissions.yaml"
 {% if has_skills %}
   orchestrator: "skills/ORCHESTRATOR.md"
+{% if domain_config.skills %}
 
 skills:
 {% for skill in domain_config.skills %}
@@ -23,6 +24,10 @@ skills:
     manifest: "skills/{{ skill.id }}.skill.yaml"
     runbook: "skills/{{ skill.id }}.md"
 {% endfor %}
+{% else %}
+
+skills: []
+{% endif %}
 {% endif %}
 {% if has_workflows and domain_config.workflow %}
 

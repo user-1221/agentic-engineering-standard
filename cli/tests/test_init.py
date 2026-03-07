@@ -305,6 +305,27 @@ class TestWorkflowCommands:
         assert "/train" in content
         assert "operations.md" in content
 
+    def test_ml_build_command(self, tmp_path):
+        _init(tmp_path, name="test-ml", domain="ml")
+        cmd_path = tmp_path / ".agent" / "commands" / "build.md"
+        assert cmd_path.exists()
+        content = cmd_path.read_text()
+        assert "/build" in content
+        assert "Project Structure" in content
+        assert "Model Registry" in content
+
+    def test_ml_build_is_first_command(self, tmp_path):
+        """ML /build should be the first workflow command (shown in post-init hint)."""
+        _init(tmp_path, name="test-ml", domain="ml")
+        with open(tmp_path / ".agent" / "agent.yaml") as f:
+            data = yaml.safe_load(f)
+        commands = data.get("commands", [])
+        # Filter to workflow commands (exclude setup)
+        wf_cmds = [c for c in commands if c.get("id") != "setup"]
+        assert len(wf_cmds) >= 2
+        assert wf_cmds[0]["id"] == "build"
+        assert wf_cmds[0]["trigger"] == "/build"
+
     def test_web_build_command(self, tmp_path):
         _init(tmp_path, name="test-web", domain="web", language="typescript")
         cmd_path = tmp_path / ".agent" / "commands" / "build.md"
@@ -326,6 +347,26 @@ class TestWorkflowCommands:
         content = cmd_path.read_text()
         assert "/process" in content
 
+    def test_research_build_command(self, tmp_path):
+        _init(tmp_path, name="test-research", domain="research")
+        cmd_path = tmp_path / ".agent" / "commands" / "build.md"
+        assert cmd_path.exists()
+        content = cmd_path.read_text()
+        assert "/build" in content
+        assert "Source Adapters" in content
+        assert "Topic Taxonomy" in content
+
+    def test_research_build_is_first_command(self, tmp_path):
+        """Research /build should be the first workflow command."""
+        _init(tmp_path, name="test-research", domain="research")
+        with open(tmp_path / ".agent" / "agent.yaml") as f:
+            data = yaml.safe_load(f)
+        commands = data.get("commands", [])
+        wf_cmds = [c for c in commands if c.get("id") != "setup"]
+        assert len(wf_cmds) >= 2
+        assert wf_cmds[0]["id"] == "build"
+        assert wf_cmds[0]["trigger"] == "/build"
+
     def test_workflow_command_registered_in_agent_yaml(self, tmp_path):
         _init(tmp_path, name="test-ml", domain="ml")
         with open(tmp_path / ".agent" / "agent.yaml") as f:
@@ -335,13 +376,20 @@ class TestWorkflowCommands:
         assert len(train_cmds) == 1
         assert train_cmds[0]["trigger"] == "/train"
 
-    def test_no_workflow_command_for_other_domain(self, tmp_path):
+    def test_other_domain_gets_build_command(self, tmp_path):
         _init(tmp_path, name="test-other", domain="other")
         commands_dir = tmp_path / ".agent" / "commands"
-        # Only setup.md should exist, no workflow commands
-        cmd_files = list(commands_dir.glob("*.md"))
-        assert len(cmd_files) == 1
-        assert cmd_files[0].name == "setup.md"
+        # Should get setup.md + build.md from DEV_ASSIST_BASE_CONFIG
+        cmd_files = sorted(f.name for f in commands_dir.glob("*.md"))
+        assert cmd_files == ["build.md", "setup.md"]
+
+    def test_explicit_domain_other_gets_build(self, tmp_path):
+        """--domain other (explicit CLI, non-interactive) gets /build."""
+        _init(tmp_path, name="test-explicit", domain="other")
+        build_path = tmp_path / ".agent" / "commands" / "build.md"
+        assert build_path.exists()
+        content = build_path.read_text()
+        assert "build" in content.lower()
 
 
 class TestOperationsMemory:
@@ -420,7 +468,8 @@ class TestSetupCommand:
         content = setup_path.read_text()
         assert "Phase 0: Detect Context" in content
         assert "Phase 1: Understand the Project" in content
-        assert "Fill Instructions" in content
+        # With DEV_ASSIST_BASE_CONFIG, "other" now gets domain-style setup
+        assert "Review and customize" in content or "Refine Instructions" in content
 
     def test_setup_md_generated_for_ml_domain(self, tmp_path):
         result = _init(tmp_path, name="test-ml", domain="ml")
@@ -488,11 +537,11 @@ class TestSetupCommand:
         _init(tmp_path, name="test-other", domain="other")
         assert (tmp_path / ".aes-sync.json").exists()
 
-    def test_setup_md_fallback_has_populate_language(self, tmp_path):
-        """Fallback /setup says 'Populate' while domain says 'Review and customize'."""
+    def test_setup_md_other_domain_has_review_language(self, tmp_path):
+        """With DEV_ASSIST_BASE_CONFIG fallback, 'other' gets domain-style setup."""
         _init(tmp_path, name="test-other", domain="other")
         content = (tmp_path / ".agent" / "commands" / "setup.md").read_text()
-        assert "Populate" in content
+        assert "Review and customize" in content
 
     def test_init_output_mentions_setup(self, tmp_path):
         result = _init(tmp_path, name="test-other", domain="other")
@@ -728,12 +777,30 @@ class TestInteractivePicker:
         assert "TODO" not in content
 
     def test_picker_agent_integrated_custom(self, tmp_path):
-        """Pick Agent-Integrated -> Custom produces TODO scaffolding."""
+        """Pick Agent-Integrated -> Custom produces TODO scaffolding with /build + /run."""
         # 2=Agent-Integrated, 3=Custom
         result = self._run_interactive(tmp_path, "2\n3\n")
         assert result.exit_code == 0
         content = (tmp_path / ".agent" / "instructions.md").read_text()
         assert "TODO" in content
+        # Should have /build and /run commands despite TODO instructions
+        build_path = tmp_path / ".agent" / "commands" / "build.md"
+        assert build_path.exists()
+        assert "/build" in build_path.read_text()
+        run_path = tmp_path / ".agent" / "commands" / "run.md"
+        assert run_path.exists()
+        assert "/run" in run_path.read_text()
+
+    def test_picker_dev_assist_skip_gets_build_only(self, tmp_path):
+        """Pick Dev-Assist -> Skip produces /build but not /run."""
+        # 1=Dev-Assist, 6=Skip
+        result = self._run_interactive(tmp_path, "1\n6\n")
+        assert result.exit_code == 0
+        commands_dir = tmp_path / ".agent" / "commands"
+        assert (commands_dir / "build.md").exists()
+        assert "/build" in (commands_dir / "build.md").read_text()
+        # No /run for dev-assist
+        assert not (commands_dir / "run.md").exists()
 
     def test_picker_mode_prompt_shown(self, tmp_path):
         """Mode selection prompt is displayed."""

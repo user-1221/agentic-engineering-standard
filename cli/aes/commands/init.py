@@ -32,7 +32,7 @@ from aes.config import (
 )
 from aes.commands.install import _safe_extract
 from aes.commands.sync import run_sync
-from aes.domains import DOMAIN_CONFIGS
+from aes.domains import AGENT_INTEGRATED_BASE_CONFIG, DEV_ASSIST_BASE_CONFIG, DOMAIN_CONFIGS
 from aes.analyzer import analyze_project, ProjectAnalysis
 from aes.frameworks import resolve_config
 
@@ -271,7 +271,7 @@ def _interactive_pick(analysis: ProjectAnalysis) -> tuple:
     Step 1: Choose mode (dev-assist vs agent-integrated).
     Step 2: Choose project type within the selected mode.
 
-    Returns ``(project_type, language, frameworks)`` chosen by the user.
+    Returns ``(project_type, language, frameworks, mode)`` chosen by the user.
     """
     console.print()
     console.print("[bold]How will the agent work with this project?[/]\n")
@@ -305,12 +305,12 @@ def _interactive_pick(analysis: ProjectAnalysis) -> tuple:
     chosen_label, chosen_type = type_choices[type_idx - 1]
 
     if chosen_type == "other":
-        return ("other", analysis.language, [])
+        return ("other", analysis.language, [], chosen_mode)
 
     # Domain configs (ml, web, devops, research) skip language/framework
     if chosen_type in DOMAIN_CONFIGS:
         lang = analysis.language if analysis.language != "other" else "python"
-        return (chosen_type, lang, [])
+        return (chosen_type, lang, [], chosen_mode)
 
     # --- Language ---
     console.print()
@@ -346,7 +346,7 @@ def _interactive_pick(analysis: ProjectAnalysis) -> tuple:
         if fw_idx <= len(fw_options):
             chosen_frameworks = [fw_options[fw_idx - 1]]
 
-    return (chosen_type, chosen_lang, chosen_frameworks)
+    return (chosen_type, chosen_lang, chosen_frameworks, chosen_mode)
 
 
 def _format_detection_summary(analysis: ProjectAnalysis) -> str:
@@ -561,7 +561,7 @@ def init_cmd(
 
         elif is_interactive:
             # Nothing detected — show interactive picker
-            picked_type, picked_lang, picked_frameworks = _interactive_pick(analysis)
+            picked_type, picked_lang, picked_frameworks, picked_mode = _interactive_pick(analysis)
 
             language = picked_lang
             if picked_type in DOMAIN_CONFIGS:
@@ -572,6 +572,10 @@ def init_cmd(
                     frameworks=picked_frameworks,
                     language=picked_lang,
                 )
+            elif picked_mode == "agent-integrated":
+                detected_domain_config = AGENT_INTEGRATED_BASE_CONFIG
+            else:
+                detected_domain_config = DEV_ASSIST_BASE_CONFIG
             # Update analysis so post-init summary is correct
             analysis = ProjectAnalysis(
                 name=analysis.name,
@@ -595,7 +599,7 @@ def init_cmd(
             raise SystemExit(1)
 
     # Look up domain config: framework-resolved > explicit domain > None
-    domain_config = detected_domain_config or DOMAIN_CONFIGS.get(domain)
+    domain_config = detected_domain_config or DOMAIN_CONFIGS.get(domain) or DEV_ASSIST_BASE_CONFIG
 
     # Create directory structure
     agent_dir.mkdir(exist_ok=True)

@@ -394,6 +394,21 @@ ML_CONFIG = DomainConfig(
     mode="agent-integrated",
     workflow_commands=[
         CommandDef(
+            id="build",
+            trigger="/build",
+            description="Build the ML pipeline codebase from scratch: project structure, database, pipeline stages, model registry, config, scripts, tests",
+            runbook_purpose="Construct the complete ML pipeline codebase. The agent creates project structure, sets up the database, implements each pipeline stage, builds the model registry, writes configuration, adds CLI scripts, and verifies with tests.",
+            runbook_phases=[
+                {"title": "Project Structure", "content": "Create directory layout: pipeline/, trainers/, config/, serving/, scripts/, tests/. Set up pyproject.toml, __init__.py files, and virtual environment."},
+                {"title": "Database & Storage", "content": "Implement SQLite schema for datasets, models, and runs. Create migration scripts and helper functions (insert, update, query)."},
+                {"title": "Pipeline Stages", "content": "Build each stage module: discover.py, examine.py, classify.py, train.py, evaluate.py, package.py, publish.py. Each reads from DB, processes, writes results back."},
+                {"title": "Model Registry", "content": "Create config/model_registry.py — the brain. Define model entries (name, class, search space, metrics). Adding a model = adding a dict entry."},
+                {"title": "Configuration", "content": "Create config/settings.py with environment-based config. Define quality gates, thresholds, resource limits, and API endpoints."},
+                {"title": "Scripts & CLI", "content": "Build scripts/run_pipeline.py with --stage and --dataset-id flags. Add convenience scripts for common operations."},
+                {"title": "Tests & Verification", "content": "Write unit tests for each pipeline stage. Add integration test that runs discover->examine->classify on a small dataset. Verify all imports and CLI commands work."},
+            ],
+        ),
+        CommandDef(
             id="train",
             trigger="/train",
             description="Run the full ML pipeline: discover, examine, classify, train, evaluate, package, publish",
@@ -1174,6 +1189,21 @@ RESEARCH_CONFIG = DomainConfig(
     mode="agent-integrated",
     workflow_commands=[
         CommandDef(
+            id="build",
+            trigger="/build",
+            description="Build the research pipeline codebase from scratch: project structure, source adapters, storage, pipeline stages, taxonomy, scripts, tests",
+            runbook_purpose="Construct the complete research content pipeline codebase. The agent creates project structure, implements source adapters, sets up storage, builds each pipeline stage, defines the topic taxonomy, adds CLI scripts, and verifies with tests.",
+            runbook_phases=[
+                {"title": "Project Structure", "content": "Create directory layout: pipeline/, sources/, config/, output/, data/, scripts/, tests/. Set up pyproject.toml, __init__.py files, and virtual environment."},
+                {"title": "Source Adapters", "content": "Implement source adapters: arxiv.py, semantic_scholar.py, rss.py, web.py. Each adapter handles authentication, rate limiting, and returns normalized content objects."},
+                {"title": "Storage Layer", "content": "Set up SQLite or file-based storage for raw and processed content. Create schema for items, metadata, citations, and topic assignments. Add helper functions."},
+                {"title": "Pipeline Stages", "content": "Build each stage module: ingest.py, parse.py, analyze.py, organize.py, display.py. Each reads items at current status, processes them, and advances status."},
+                {"title": "Topic Taxonomy", "content": "Create config/topic_taxonomy.py — the classification hierarchy. Define top-level categories, subcategories, and keyword mappings. Taxonomy evolves as content is processed."},
+                {"title": "Scripts & CLI", "content": "Build scripts/pipeline.py with --stage and --sources flags. Add convenience scripts for common operations (search, report generation)."},
+                {"title": "Tests & Verification", "content": "Write unit tests for each pipeline stage and source adapter. Add integration test that runs ingest->parse->analyze on sample content. Verify all imports and CLI commands work."},
+            ],
+        ),
+        CommandDef(
             id="process",
             trigger="/process",
             description="Run the content pipeline: ingest, parse, analyze, organize, display",
@@ -1243,6 +1273,53 @@ RESEARCH_CONFIG = DomainConfig(
         {"name": "SEMANTIC_SCHOLAR_API_KEY", "default": "", "description": "Semantic Scholar API key (optional, increases rate limits)"},
         {"name": "MAX_ITEMS_PER_RUN", "default": "50", "description": "Maximum items to process per pipeline run"},
     ],
+)
+
+
+# ---------------------------------------------------------------------------
+# Generic agent-integrated base (used for Custom type in interactive picker)
+# ---------------------------------------------------------------------------
+
+_BUILD_COMMAND = CommandDef(
+    id="build",
+    trigger="/build",
+    description="Build the project codebase: structure, core modules, storage, configuration, scripts, tests",
+    runbook_purpose="Construct the project codebase from scratch. The agent creates directory structure, implements core modules, sets up storage, writes configuration, adds scripts, and verifies with tests.",
+    runbook_phases=[
+        {"title": "Project Structure", "content": "Create directory layout, set up package config, __init__.py files, and virtual environment or package manager."},
+        {"title": "Core Modules", "content": "Implement the primary modules that define the system's behavior. Each module has a clear responsibility and interface."},
+        {"title": "Storage & State", "content": "Set up database, file storage, or state management. Create schemas, migrations, and helper functions."},
+        {"title": "Configuration", "content": "Create settings module with environment-based config. Define thresholds, endpoints, and operational parameters."},
+        {"title": "Integration Layer", "content": "Wire modules together. Implement the main entry point and any API or CLI interfaces."},
+        {"title": "Scripts & CLI", "content": "Build run scripts with appropriate flags and options. Add convenience scripts for common operations."},
+        {"title": "Tests & Verification", "content": "Write unit tests for each module. Add integration test for the primary workflow. Verify all imports and commands work."},
+    ],
+)
+
+DEV_ASSIST_BASE_CONFIG = DomainConfig(
+    mode="dev-assist",
+    workflow_commands=[_BUILD_COMMAND],
+    instructions_description="",   # empty -> falls through to TODO scaffolding in template
+)
+
+AGENT_INTEGRATED_BASE_CONFIG = DomainConfig(
+    mode="agent-integrated",
+    workflow_commands=[
+        _BUILD_COMMAND,
+        CommandDef(
+            id="run",
+            trigger="/run",
+            description="Execute the primary pipeline or workflow end-to-end",
+            runbook_purpose="Run the project's main workflow from start to finish. The agent executes each stage, monitors progress, handles errors, and reports results.",
+            runbook_phases=[
+                {"title": "Pre-flight Check", "content": "Verify environment, dependencies, and configuration. Ensure storage is accessible and previous state is consistent."},
+                {"title": "Execute Pipeline", "content": "Run each stage of the pipeline in order. Monitor progress and resource usage. Handle per-item errors gracefully."},
+                {"title": "Analyze Results", "content": "Check output quality, verify expected outcomes, and flag anomalies or failures."},
+                {"title": "Report & Clean Up", "content": "Generate summary of results. Archive artifacts. Update state for next run."},
+            ],
+        ),
+    ],
+    instructions_description="",   # empty -> falls through to TODO scaffolding in template
 )
 
 

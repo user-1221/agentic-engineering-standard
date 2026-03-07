@@ -12,10 +12,14 @@ allow:
 {% for cmd in domain_config.permissions_shell_read %}
       - "{{ cmd }}"
 {% endfor %}
+{% if domain_config.permissions_shell_execute %}
     execute:
 {% for cmd in domain_config.permissions_shell_execute %}
       - "{{ cmd }}"
 {% endfor %}
+{% else %}
+    execute: []
+{% endif %}
 
   files:
     read: "**/*"
@@ -26,10 +30,14 @@ allow:
       - ".agent/memory/**"
 
 deny:
+{% if domain_config.permissions_deny_shell %}
   shell:
 {% for cmd in domain_config.permissions_deny_shell %}
     - "{{ cmd }}"
 {% endfor %}
+{% else %}
+  shell: []
+{% endif %}
   files:
     write:
       - ".env"
@@ -39,10 +47,14 @@ deny:
       - ".git/**"
 
 confirm:
+{% if domain_config.permissions_confirm_shell %}
   shell:
 {% for cmd in domain_config.permissions_confirm_shell %}
     - "{{ cmd }}"
 {% endfor %}
+{% else %}
+  shell: []
+{% endif %}
   files:
     delete: "**/*"
 {% if domain_config.permissions_confirm_actions %}
