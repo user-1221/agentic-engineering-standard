@@ -39,6 +39,96 @@
 {% for gotcha in domain_config.instructions_gotchas %}
 - {{ gotcha }}
 {% endfor %}
+
+## AES File Formats
+
+When creating or editing `.agent/` files, follow these formats exactly.
+
+### Skill manifest (`.skill.yaml`)
+
+```yaml
+aes_skill: "1.0"
+
+id: "my-skill"
+name: "My Skill"
+version: "1.0.0"
+description: "What this skill does"
+
+stage: 1
+phase: "processing"
+
+inputs:
+  required:
+    - name: "input_name"
+      type: "string"
+      description: "What this input is"
+  optional:
+    - name: "limit"
+      type: "int"
+      default: 50
+      description: "Max items"
+  environment:
+    - "API_KEY"
+
+outputs:
+  - name: "result"
+    type: "list[str]"
+    description: "What this produces"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/run.py --stage my-skill"
+
+error_handling:
+  strategy: "per-item-isolation"   # or: fail-fast, retry-with-backoff, skip-on-error
+
+code:
+  primary: "pipeline/my_skill.py"
+
+depends_on:
+  - "previous-skill"
+blocks:
+  - "next-skill"
+tags:
+  - "my-tag"
+```
+
+### Workflow (`.yaml`)
+
+```yaml
+aes_workflow: "1.0"
+
+id: "my-workflow"
+entity: "item"
+description: "What this workflow tracks"
+
+states:
+  pending:
+    description: "Awaiting processing"
+    initial: true
+  processed:
+    description: "Successfully processed"
+    terminal: true
+  failed:
+    description: "Processing failed"
+    terminal: true
+
+transitions:
+  - from: "pending"
+    to: "processed"
+    skill: "process"
+    conditions:
+      - "Input is valid"
+  - from: "pending"
+    to: "failed"
+    conditions:
+      - "Processing error"
+
+idempotency:
+  pattern: "status-gated"
+```
+
+Key rules: `aes_skill`/`aes_workflow` version key is **required**. `inputs` is an **object** with `required`/`optional`/`environment` arrays, not a flat list. `states` is an **object** keyed by state ID, not an array. Use `triggers` (array of objects with `type`), not `trigger` (string). Use `error_handling.strategy`, not `error_strategy`. Use `code.primary`, not `code_location`.
 {% else %}
 # {{ name }} — Agent Instructions
 
@@ -124,4 +214,94 @@ The agent's job is NOT just to run commands. It is to understand, analyze, itera
      If code exists: look for workarounds in comments, TODO/FIXME/HACK markers,
      error-prone patterns, and .env.example for config gotchas.
      If greenfield: ask "anything that's bitten you before?" -->
+
+## AES File Formats
+
+When creating or editing `.agent/` files, follow these formats exactly.
+
+### Skill manifest (`.skill.yaml`)
+
+```yaml
+aes_skill: "1.0"
+
+id: "my-skill"
+name: "My Skill"
+version: "1.0.0"
+description: "What this skill does"
+
+stage: 1
+phase: "processing"
+
+inputs:
+  required:
+    - name: "input_name"
+      type: "string"
+      description: "What this input is"
+  optional:
+    - name: "limit"
+      type: "int"
+      default: 50
+      description: "Max items"
+  environment:
+    - "API_KEY"
+
+outputs:
+  - name: "result"
+    type: "list[str]"
+    description: "What this produces"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/run.py --stage my-skill"
+
+error_handling:
+  strategy: "per-item-isolation"   # or: fail-fast, retry-with-backoff, skip-on-error
+
+code:
+  primary: "pipeline/my_skill.py"
+
+depends_on:
+  - "previous-skill"
+blocks:
+  - "next-skill"
+tags:
+  - "my-tag"
+```
+
+### Workflow (`.yaml`)
+
+```yaml
+aes_workflow: "1.0"
+
+id: "my-workflow"
+entity: "item"
+description: "What this workflow tracks"
+
+states:
+  pending:
+    description: "Awaiting processing"
+    initial: true
+  processed:
+    description: "Successfully processed"
+    terminal: true
+  failed:
+    description: "Processing failed"
+    terminal: true
+
+transitions:
+  - from: "pending"
+    to: "processed"
+    skill: "process"
+    conditions:
+      - "Input is valid"
+  - from: "pending"
+    to: "failed"
+    conditions:
+      - "Processing error"
+
+idempotency:
+  pattern: "status-gated"
+```
+
+Key rules: `aes_skill`/`aes_workflow` version key is **required**. `inputs` is an **object** with `required`/`optional`/`environment` arrays, not a flat list. `states` is an **object** keyed by state ID, not an array. Use `triggers` (array of objects with `type`), not `trigger` (string). Use `error_handling.strategy`, not `error_strategy`. Use `code.primary`, not `code_location`.
 {% endif %}
