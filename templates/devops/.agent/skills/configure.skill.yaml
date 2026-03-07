@@ -1,0 +1,41 @@
+aes_skill: "1.0"
+
+id: "configure"
+name: "Configure Service"
+version: "1.0.0"
+description: "Apply service configuration via Ansible with dry-run verification"
+
+stage: 2
+phase: "configuration"
+
+inputs:
+  required:
+    - name: "service"
+      type: "string"
+      description: "Service to configure"
+    - name: "environment"
+      type: "string"
+      description: "Target environment"
+  environment:
+    - "ANSIBLE_VAULT_PASSWORD"
+
+outputs:
+  - name: "configured_services"
+    type: "list[str]"
+    description: "Services that were successfully configured"
+
+triggers:
+  - type: "manual"
+    command: "ansible-playbook -i inventory configure.yml --limit {service}"
+
+error_handling:
+  strategy: "fail-fast"
+
+code:
+  primary: "ansible/"
+
+depends_on:
+  - "provision"
+blocks: ["deploy"]
+
+tags: ["ansible", "configuration", "automation"]

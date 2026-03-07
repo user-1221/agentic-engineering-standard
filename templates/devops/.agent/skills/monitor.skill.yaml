@@ -1,0 +1,47 @@
+aes_skill: "1.0"
+
+id: "monitor"
+name: "Monitor Service"
+version: "1.0.0"
+description: "Check health endpoints, error rates, latency, and resource usage"
+
+stage: 5
+phase: "observability"
+
+inputs:
+  required:
+    - name: "service"
+      type: "string"
+      description: "Service to monitor"
+    - name: "environment"
+      type: "string"
+      description: "Target environment"
+  optional:
+    - name: "duration_seconds"
+      type: "int"
+      default: 300
+      description: "How long to monitor in seconds"
+
+outputs:
+  - name: "health_status"
+    type: "str"
+    description: "Overall health: healthy, degraded, or unhealthy"
+  - name: "metrics_summary"
+    type: "object"
+    description: "Summary of collected metrics"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/manage.py monitor --service {service} --env {environment}"
+
+error_handling:
+  strategy: "per-item-isolation"
+  retries: 0
+
+code:
+  primary: "monitoring/"
+
+depends_on:
+  - "deploy"
+
+tags: ["monitoring", "observability", "health-checks"]

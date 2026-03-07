@@ -144,6 +144,16 @@ func loggingMiddleware(logger *Logger, next http.Handler) http.Handler {
 	})
 }
 
+// securityHeaders adds standard security headers to all responses.
+func securityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+		next.ServeHTTP(w, r)
+	})
+}
+
 // corsMiddleware adds CORS headers to all responses.
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -192,18 +202,25 @@ func (rw *responseWriter) Write(b []byte) (int, error) {
 	return n, err
 }
 
-// clientIP extracts the client IP from the request, checking X-Real-IP (set by nginx).
+// clientIP extracts the client IP from the request.
+// Proxy headers (X-Real-IP, X-Forwarded-For) are only trusted when the
+// request comes from loopback (i.e. via nginx reverse proxy).
 func clientIP(r *http.Request) string {
-	if ip := r.Header.Get("X-Real-IP"); ip != "" {
-		return ip
-	}
-	if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
-		return strings.Split(ip, ",")[0]
-	}
 	// Strip port from RemoteAddr
 	addr := r.RemoteAddr
 	if idx := strings.LastIndex(addr, ":"); idx != -1 {
-		return addr[:idx]
+		addr = addr[:idx]
 	}
+
+	// Only trust proxy headers from loopback (nginx)
+	if addr == "127.0.0.1" || addr == "::1" {
+		if ip := r.Header.Get("X-Real-IP"); ip != "" {
+			return ip
+		}
+		if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
+			return strings.TrimSpace(strings.Split(ip, ",")[0])
+		}
+	}
+
 	return addr
 }

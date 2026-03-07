@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 # Default registry URL (R2/S3 public bucket)
-REGISTRY_URL = os.environ.get("AES_REGISTRY_URL", "https://registry.aes.dev")
+REGISTRY_URL = os.environ.get("AES_REGISTRY_URL", "https://registry.aes-official.com")
 INDEX_PATH = "index.json"
 PACKAGES_PATH = "packages"
 
@@ -79,10 +79,14 @@ def resolve_version(spec: str, available: List[str]) -> Optional[str]:
     return matches[-1]
 
 
+_NAME_RE = re.compile(r"^[a-z][a-z0-9_-]{0,63}$")
+
+
 def parse_registry_source(source: str) -> Tuple[str, str]:
     """Parse ``aes-hub/deploy@^1.2.0`` into (name, version_spec).
 
     Returns (name, "*") if no version constraint given.
+    Raises ValueError if name is invalid.
     """
     # Strip prefix
     name_ver = source
@@ -94,6 +98,12 @@ def parse_registry_source(source: str) -> Tuple[str, str]:
     else:
         name = name_ver
         version_spec = "*"
+
+    if not _NAME_RE.match(name):
+        raise ValueError(
+            f"Invalid package name {name!r}: must be 1-64 lowercase chars "
+            "starting with a letter (a-z, 0-9, _, -)"
+        )
 
     return name, version_spec
 
@@ -176,7 +186,15 @@ def upload_package(
     req = urllib.request.Request(upload_url, data=tarball_data, method="PUT")
     req.add_header("Authorization", f"Bearer {token}")
     req.add_header("Content-Type", "application/gzip")
-    urllib.request.urlopen(req, timeout=120)
+    try:
+        urllib.request.urlopen(req, timeout=120)
+    except urllib.error.HTTPError as exc:
+        if exc.code == 409:
+            raise RuntimeError(
+                f"Version {version} of '{name}' already exists in the registry. "
+                "Bump the version in your skill manifest and try again."
+            ) from None
+        raise
 
     # Fetch current index
     try:

@@ -89,25 +89,25 @@ func TestTokenPersistence(t *testing.T) {
 }
 
 func TestTokenPackageAccess(t *testing.T) {
-	entry := &TokenEntry{
+	entry := TokenEntry{
 		AllowedPackages: []string{"train-*", "evaluate-*"},
 	}
 
 	ts := &TokenStore{}
 
-	if !ts.CheckPackageAccess(entry, "train-v2") {
+	if !ts.CheckPackageAccess(&entry, "train-v2") {
 		t.Error("train-v2 should match train-*")
 	}
-	if !ts.CheckPackageAccess(entry, "evaluate-ml") {
+	if !ts.CheckPackageAccess(&entry, "evaluate-ml") {
 		t.Error("evaluate-ml should match evaluate-*")
 	}
-	if ts.CheckPackageAccess(entry, "deploy") {
+	if ts.CheckPackageAccess(&entry, "deploy") {
 		t.Error("deploy should not match restricted patterns")
 	}
 
 	// No restrictions
-	openEntry := &TokenEntry{}
-	if !ts.CheckPackageAccess(openEntry, "anything") {
+	openEntry := TokenEntry{}
+	if !ts.CheckPackageAccess(&openEntry, "anything") {
 		t.Error("empty allowed_packages should allow everything")
 	}
 }

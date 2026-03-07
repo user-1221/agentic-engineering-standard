@@ -89,7 +89,7 @@ The `aes` CLI (`cli/`) provides:
 
 | Command | Description |
 |---------|-------------|
-| `aes init` | Scaffold a `.agent/` directory with domain-specific templates |
+| `aes init` | Scaffold a `.agent/` directory (auto-detects framework and project type) |
 | `aes validate [path]` | Validate files against JSON schemas + dependency graph checks |
 | `aes inspect [path]` | Show project structure, skills, workflows |
 | `aes sync [path]` | Generate tool-specific configs (Claude, Cursor, Copilot, Windsurf) |
@@ -98,6 +98,24 @@ The `aes` CLI (`cli/`) provides:
 | `aes publish --template` | Package entire `.agent/` directory as a shareable template |
 | `aes install [source]` | Install skills from tarballs, local dirs, or the AES registry |
 | `aes search [query]` | Search the AES package registry by keyword, tag, domain, or type |
+
+## MCP Server
+
+The `aes-mcp` command exposes the AES registry as a [Model Context Protocol](https://modelcontextprotocol.io/) tool server, letting MCP-compatible agents search, install, and publish packages directly.
+
+```bash
+# Install with MCP extras
+cd cli && pip install -e ".[mcp]"
+
+# Run the MCP server
+aes-mcp
+```
+
+`aes init` auto-generates a `.mcp.json` config file so MCP-compatible tools discover the server automatically.
+
+## Web Dashboard
+
+A GitHub OAuth dashboard for managing registry API tokens lives in `web/`. It provides a self-service UI at `aes-official.com` where users authenticate with GitHub and create/revoke tokens for `aes publish`.
 
 ## Examples & Templates
 
@@ -109,11 +127,11 @@ Three reference implementations in [`examples/`](examples/) and installable doma
 | [web-app](examples/web-app/) | Web Development | scaffold, test, deploy | feature lifecycle |
 | [devops](examples/devops/) | Infrastructure | provision, deploy, rollback | service lifecycle |
 
-The `templates/` directory contains the same domain configs as validated AES skill packages that can be used as starting points for new projects.
+The `templates/` directory contains validated AES skill packages that can be used as starting points for new projects. Templates have expanded skill suites — ML has a full 7-stage pipeline, web has 5 skills, and devops has 5 skills.
 
 ## Registry
 
-AES includes a static registry (S3/R2-compatible) for sharing skills and templates:
+AES includes a package registry at `registry.aes-official.com` for sharing skills and templates:
 
 ```bash
 # Search for skills and templates

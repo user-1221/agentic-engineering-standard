@@ -32,4 +32,6 @@ error_handling:
 code:
   primary: "plopfile.ts"
 
+blocks: ["implement"]
+
 tags: ["scaffolding", "code-generation"]

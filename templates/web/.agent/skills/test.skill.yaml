@@ -30,4 +30,8 @@ error_handling:
 code:
   primary: "jest.config.ts"
 
+depends_on:
+  - "implement"
+blocks: ["review"]
+
 tags: ["testing", "quality"]

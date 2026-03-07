@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error — AES</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=3">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo">AES</a>
+            <div class="nav-links">
+                <a href="/docs">Docs</a>
+                <a href="/">Home</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="error-page">
+            <h1>Something went wrong</h1>
+            <p class="error-message">{{.Error}}</p>
+            <a href="/" class="btn">Go Home</a>
+        </div>
+    </main>
+
+    <footer>
+        <p>Apache 2.0 &middot; <a href="https://github.com/user-1221/agentic-engineering-standard">GitHub</a></p>
+    </footer>
+</body>
+</html>

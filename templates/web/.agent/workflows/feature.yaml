@@ -31,16 +31,17 @@ transitions:
 
   - from: "in-progress"
     to: "testing"
-    skill: "test"
+    skill: "implement"
     conditions:
       - "Implementation complete"
       - "Code compiles without errors"
 
   - from: "testing"
     to: "staging"
-    skill: "deploy"
+    skill: "review"
     conditions:
       - "All tests pass"
+      - "Code review passes"
 
   - from: "staging"
     to: "deployed"

@@ -16,6 +16,9 @@ var (
 
 	// SHA256 hex digest.
 	sha256Pattern = regexp.MustCompile(`^[a-f0-9]{64}$`)
+
+	// Validates that URL fields in the index point to expected package paths.
+	urlPattern = regexp.MustCompile(`^packages/[a-z][a-z0-9_-]{0,63}/\d{1,5}\.\d{1,5}\.\d{1,5}\.tar\.gz$`)
 )
 
 // ValidateName checks that a package name is safe and valid.
@@ -100,9 +103,14 @@ func ValidateIndexJSON(data []byte) (map[string]interface{}, error) {
 				return nil, fmt.Errorf("package %q version %q must be an object", name, ver)
 			}
 
-			// url is required
-			if _, ok := vEntryMap["url"]; !ok {
+			// url is required and must match expected path pattern
+			urlVal, ok := vEntryMap["url"]
+			if !ok {
 				return nil, fmt.Errorf("package %q version %q: missing required field: url", name, ver)
+			}
+			urlStr, ok := urlVal.(string)
+			if !ok || !urlPattern.MatchString(urlStr) {
+				return nil, fmt.Errorf("package %q version %q: url must match packages/{name}/{version}.tar.gz pattern", name, ver)
 			}
 
 			// sha256 is required and must be valid hex

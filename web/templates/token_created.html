@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Created — AES</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=3">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo">AES</a>
+            <div class="nav-links">
+                <a href="/docs">Docs</a>
+                <a href="/dashboard">Dashboard</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="token-created">
+            <h1>Token Created</h1>
+            <p class="warning">Copy this token now. It will not be shown again.</p>
+
+            <div class="token-display">
+                <code id="token-value">{{.RawToken}}</code>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('token-value').textContent)" class="btn btn-small">Copy</button>
+            </div>
+
+            <div class="usage-info">
+                <h3>Set up your environment</h3>
+                <pre><code>export AES_REGISTRY_KEY={{.RawToken}}
+export AES_REGISTRY_URL=https://registry.aes-official.com</code></pre>
+            </div>
+
+            <a href="/dashboard" class="btn btn-primary">Back to Dashboard</a>
+        </div>
+    </main>
+
+    <footer>
+        <p>Apache 2.0 &middot; <a href="https://github.com/user-1221/agentic-engineering-standard">GitHub</a></p>
+    </footer>
+</body>
+</html>

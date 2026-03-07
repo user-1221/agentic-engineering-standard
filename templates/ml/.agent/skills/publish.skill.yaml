@@ -1,0 +1,41 @@
+aes_skill: "1.0"
+
+id: "publish"
+name: "Publish Model"
+version: "1.0.0"
+description: "Upload model to HuggingFace and register with the prediction API"
+
+stage: 7
+phase: "distribution"
+
+inputs:
+  required:
+    - name: "db_connection"
+      type: "sqlite3.Connection"
+      description: "Active database connection"
+    - name: "dataset_id"
+      type: "int"
+      description: "Dataset whose packaged model to publish"
+  environment:
+    - "HF_TOKEN"
+
+outputs:
+  - name: "published_urls"
+    type: "list[str]"
+    description: "URLs where the model is now available"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/run_pipeline.py --stage publish --dataset-id {ID}"
+
+error_handling:
+  strategy: "per-item-isolation"
+  retries: 1
+
+code:
+  primary: "pipeline/publish.py"
+
+depends_on:
+  - "package"
+
+tags: ["publishing", "huggingface", "api-registration"]

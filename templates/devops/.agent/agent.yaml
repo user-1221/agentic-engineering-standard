@@ -20,12 +20,18 @@ skills:
   - id: "provision"
     manifest: "skills/provision.skill.yaml"
     runbook: "skills/provision.md"
+  - id: "configure"
+    manifest: "skills/configure.skill.yaml"
+    runbook: "skills/configure.md"
   - id: "deploy"
     manifest: "skills/deploy.skill.yaml"
     runbook: "skills/deploy.md"
   - id: "rollback"
     manifest: "skills/rollback.skill.yaml"
     runbook: "skills/rollback.md"
+  - id: "monitor"
+    manifest: "skills/monitor.skill.yaml"
+    runbook: "skills/monitor.md"
 
 workflows:
   - id: "service-lifecycle"

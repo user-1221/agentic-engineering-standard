@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — AES</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=3">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo">AES</a>
+            <div class="nav-links">
+                <a href="/docs">Docs</a>
+                <span class="user-info">
+                    {{if .User.AvatarURL}}<img src="{{.User.AvatarURL}}" alt="" class="avatar">{{end}}
+                    {{.User.GitHubLogin}}
+                </span>
+                <form method="POST" action="/logout" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                    <button type="submit" class="btn btn-small">Logout</button>
+                </form>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Registry Tokens</h1>
+        <p class="subtitle">Tokens let you publish skills and templates to the AES registry.</p>
+
+        {{if .Tokens}}
+        <table class="tokens-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Created</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Tokens}}
+                <tr>
+                    <td><code>{{.TokenName}}</code></td>
+                    <td>{{.CreatedAt}}</td>
+                    <td>
+                        <form method="POST" action="/dashboard/tokens/revoke" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                            <input type="hidden" name="name" value="{{.TokenName}}">
+                            <button type="submit" class="btn btn-small btn-danger" onclick="return confirm('Revoke token {{.TokenName}}?')">Revoke</button>
+                        </form>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{else}}
+        <p class="empty">No tokens yet. Create one below.</p>
+        {{end}}
+
+        {{if lt (len .Tokens) .MaxTokens}}
+        <div class="create-token">
+            <h2>Create New Token</h2>
+            <form method="POST" action="/dashboard/tokens/new">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                <div class="form-group">
+                    <label for="name">Token name</label>
+                    <div class="input-prefix">
+                        <span class="prefix">{{.User.GitHubLogin}}-</span>
+                        <input type="text" id="name" name="name" placeholder="my-project" required pattern="[a-zA-Z0-9][a-zA-Z0-9_-]*" maxlength="63">
+                    </div>
+                    <small>Letters, numbers, hyphens, and underscores. Prefixed with your GitHub username.</small>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Token</button>
+            </form>
+        </div>
+        {{else}}
+        <p>You've reached the maximum of {{.MaxTokens}} tokens. Revoke one to create a new one.</p>
+        {{end}}
+
+        <div class="usage-info">
+            <h2>Usage</h2>
+            <pre><code># Set your token
+export AES_REGISTRY_KEY=aes_tok_...
+
+# Set the registry URL
+export AES_REGISTRY_URL=https://registry.aes-official.com
+
+# Publish a skill
+aes publish --skill deploy --registry -o dist/
+
+# Publish a template
+aes publish --template --registry -o dist/</code></pre>
+        </div>
+    </main>
+
+    <footer>
+        <p>Apache 2.0 &middot; <a href="https://github.com/user-1221/agentic-engineering-standard">GitHub</a></p>
+    </footer>
+</body>
+</html>

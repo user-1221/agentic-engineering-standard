@@ -98,6 +98,24 @@ func runServe() {
 		IdleTimeout:  120 * time.Second,
 	}
 
+	// SIGHUP reloads tokens from disk (used by the web service after creating/revoking tokens)
+	sighup := make(chan os.Signal, 1)
+	signal.Notify(sighup, syscall.SIGHUP)
+	go func() {
+		for range sighup {
+			if err := tokens.Reload(); err != nil {
+				logger.Log("error", map[string]interface{}{
+					"event": "token_reload_failed",
+					"error": err.Error(),
+				})
+			} else {
+				logger.Log("info", map[string]interface{}{
+					"event": "tokens_reloaded",
+				})
+			}
+		}
+	}()
+
 	// Graceful shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)

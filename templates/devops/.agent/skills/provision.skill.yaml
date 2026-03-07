@@ -26,4 +26,6 @@ error_handling:
 code:
   primary: "terraform/"
 
+blocks: ["configure"]
+
 tags: ["terraform", "infrastructure", "aws"]

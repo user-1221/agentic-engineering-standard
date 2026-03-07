@@ -11,6 +11,15 @@ The AES registry is an authenticated file server. It stores two things:
 
 The `aes` CLI handles all the complexity (version resolution, search filtering, SHA256 verification). The server just stores and serves files.
 
+## Live Instance
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| Registry API | `https://registry.aes-official.com` | Package storage and retrieval (`aes` CLI target) |
+| Web Dashboard | `https://aes-official.com` | GitHub OAuth login and token management |
+
+Both services run on a single Hetzner VPS (Ubuntu 24.04) behind nginx with Let's Encrypt TLS. See the [web service README](../web/README.md) for the dashboard.
+
 ## Documentation
 
 | Document | Audience | Description |
@@ -18,6 +27,7 @@ The `aes` CLI handles all the complexity (version resolution, search filtering, 
 | [Getting Started](../GETTING-STARTED.md) | End users | Full workflow from zero: init, customize, sync, install, publish |
 | [Admin Guide](docs/user-guide.md) | Server operators | VPS setup, deployment, token management, monitoring, backups |
 | [Architecture](docs/architecture.md) | Contributors | System design, security model, internals, threat analysis |
+| [Web Service](../web/README.md) | Contributors | Web dashboard architecture, routes, deployment |
 
 ## Quick Start
 
@@ -251,4 +261,4 @@ See [Architecture](docs/architecture.md) for the full security analysis.
 
 ## License
 
-MIT
+Apache 2.0

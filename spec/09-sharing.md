@@ -224,7 +224,7 @@ registry/
 ```
 
 Environment variables:
-- `AES_REGISTRY_URL` — override default registry URL (default: `https://registry.aes.dev`)
+- `AES_REGISTRY_URL` — override default registry URL (default: `https://registry.aes-official.com`)
 - `AES_REGISTRY_KEY` — auth token for publish (bearer token)
 
 ### As a Git Repository

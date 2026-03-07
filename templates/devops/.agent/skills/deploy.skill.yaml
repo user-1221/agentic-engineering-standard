@@ -30,6 +30,6 @@ code:
   primary: "scripts/manage.py"
 
 depends_on:
-  - "provision"
+  - "configure"
 
 tags: ["deployment", "blue-green"]

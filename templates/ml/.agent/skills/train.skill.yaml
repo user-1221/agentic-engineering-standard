@@ -41,7 +41,7 @@ code:
   primary: "pipeline/train.py"
 
 depends_on:
-  - "examine"
+  - "classify"
 blocks: ["evaluate"]
 
 tags: ["training", "optuna", "hpo"]

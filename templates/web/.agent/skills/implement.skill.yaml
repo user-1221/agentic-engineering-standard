@@ -1,0 +1,39 @@
+aes_skill: "1.0"
+
+id: "implement"
+name: "Implement Feature"
+version: "1.0.0"
+description: "Write migration, routes, components, and feature flag integration"
+
+stage: 2
+phase: "development"
+
+inputs:
+  required:
+    - name: "feature_name"
+      type: "string"
+      description: "Name of the feature to implement"
+    - name: "files_created"
+      type: "list[str]"
+      description: "Scaffold output files to populate"
+
+outputs:
+  - name: "files_modified"
+    type: "list[str]"
+    description: "Paths of files modified during implementation"
+
+triggers:
+  - type: "manual"
+    command: "npm run dev"
+
+error_handling:
+  strategy: "fail-fast"
+
+code:
+  primary: "src/"
+
+depends_on:
+  - "scaffold"
+blocks: ["test"]
+
+tags: ["development", "implementation"]

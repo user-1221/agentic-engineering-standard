@@ -1,0 +1,39 @@
+aes_skill: "1.0"
+
+id: "package"
+name: "Package Model"
+version: "1.0.0"
+description: "Export best model in native format and create deployment zip bundle"
+
+stage: 6
+phase: "packaging"
+
+inputs:
+  required:
+    - name: "db_connection"
+      type: "sqlite3.Connection"
+      description: "Active database connection"
+    - name: "dataset_id"
+      type: "int"
+      description: "Dataset whose best model to package"
+
+outputs:
+  - name: "package_path"
+    type: "str"
+    description: "Path to the created zip bundle"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/run_pipeline.py --stage package --dataset-id {ID}"
+
+error_handling:
+  strategy: "fail-fast"
+
+code:
+  primary: "pipeline/package.py"
+
+depends_on:
+  - "evaluate"
+blocks: ["publish"]
+
+tags: ["packaging", "serialization", "deployment"]

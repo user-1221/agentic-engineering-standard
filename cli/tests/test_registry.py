@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
+import urllib.error
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -15,6 +17,7 @@ from aes.registry import (
     resolve_version,
     parse_registry_source,
     search_packages,
+    upload_package,
 )
 
 
@@ -236,3 +239,55 @@ class TestSearchType:
         assert by_name["deploy"]["type"] == "skill"
         assert by_name["ml-pipeline"]["type"] == "template"
         assert by_name["old-skill"]["type"] == "skill"  # default
+
+
+# ---------------------------------------------------------------------------
+# Upload — HTTP error handling
+# ---------------------------------------------------------------------------
+
+class TestUploadPackage:
+    """Tests for upload_package — especially duplicate (409) handling."""
+
+    def test_409_raises_friendly_error(self, tmp_path):
+        tarball = tmp_path / "deploy-1.0.0.tar.gz"
+        tarball.write_bytes(b"fake tarball content")
+
+        err_409 = urllib.error.HTTPError(
+            url="https://registry.aes-official.com/packages/deploy/1.0.0.tar.gz",
+            code=409,
+            msg="Conflict",
+            hdrs={},
+            fp=None,
+        )
+
+        with patch.dict(os.environ, {"AES_REGISTRY_KEY": "test-token"}):
+            with patch("aes.registry.urllib.request.urlopen", side_effect=err_409):
+                with pytest.raises(RuntimeError, match=r"Version 1\.0\.0 of 'deploy' already exists"):
+                    upload_package(
+                        tarball_path=tarball,
+                        name="deploy",
+                        version="1.0.0",
+                        description="Deploy skill",
+                    )
+
+    def test_500_still_raises_httperror(self, tmp_path):
+        tarball = tmp_path / "deploy-1.0.0.tar.gz"
+        tarball.write_bytes(b"fake tarball content")
+
+        err_500 = urllib.error.HTTPError(
+            url="https://registry.aes-official.com/packages/deploy/1.0.0.tar.gz",
+            code=500,
+            msg="Internal Server Error",
+            hdrs={},
+            fp=None,
+        )
+
+        with patch.dict(os.environ, {"AES_REGISTRY_KEY": "test-token"}):
+            with patch("aes.registry.urllib.request.urlopen", side_effect=err_500):
+                with pytest.raises(urllib.error.HTTPError):
+                    upload_package(
+                        tarball_path=tarball,
+                        name="deploy",
+                        version="1.0.0",
+                        description="Deploy skill",
+                    )

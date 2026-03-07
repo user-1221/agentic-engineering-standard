@@ -71,7 +71,7 @@ transitions:
 
   - from: "trained"
     to: "classified"
-    skill: "reclassify"
+    skill: "classify"
     conditions:
       - "All models below quality gates"
     description: "Reframe problem type when all models fail"

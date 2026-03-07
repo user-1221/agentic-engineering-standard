@@ -105,7 +105,7 @@ func TestValidateIndexJSON(t *testing.T) {
 		"packages": {
 			"deploy": {
 				"versions": {
-					"bad": {"url":"x","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
+					"bad": {"url":"packages/deploy/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
 				}
 			}
 		}
@@ -118,7 +118,7 @@ func TestValidateIndexJSON(t *testing.T) {
 		"packages": {
 			"deploy": {
 				"versions": {
-					"1.0.0": {"url":"x"}
+					"1.0.0": {"url":"packages/deploy/1.0.0.tar.gz"}
 				}
 			}
 		}
@@ -131,7 +131,7 @@ func TestValidateIndexJSON(t *testing.T) {
 		"packages": {
 			"deploy": {
 				"versions": {
-					"1.0.0": {"url":"x","sha256":"tooshort"}
+					"1.0.0": {"url":"packages/deploy/1.0.0.tar.gz","sha256":"tooshort"}
 				}
 			}
 		}
@@ -145,7 +145,7 @@ func TestValidateIndexJSON(t *testing.T) {
 			"deploy": {
 				"type": "skill",
 				"versions": {
-					"1.0.0": {"url":"x","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
+					"1.0.0": {"url":"packages/deploy/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
 				}
 			}
 		}
@@ -159,7 +159,7 @@ func TestValidateIndexJSON(t *testing.T) {
 			"ml-pipeline": {
 				"type": "template",
 				"versions": {
-					"2.0.0": {"url":"x","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
+					"2.0.0": {"url":"packages/deploy/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
 				}
 			}
 		}
@@ -172,7 +172,7 @@ func TestValidateIndexJSON(t *testing.T) {
 		"packages": {
 			"deploy": {
 				"versions": {
-					"1.0.0": {"url":"x","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
+					"1.0.0": {"url":"packages/deploy/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
 				}
 			}
 		}
@@ -186,12 +186,25 @@ func TestValidateIndexJSON(t *testing.T) {
 			"deploy": {
 				"type": "invalid",
 				"versions": {
-					"1.0.0": {"url":"x","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
+					"1.0.0": {"url":"packages/deploy/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
 				}
 			}
 		}
 	}`)); err == nil {
 		t.Error("invalid type value should be rejected")
+	}
+
+	// Invalid: url with path traversal
+	if _, err := ValidateIndexJSON([]byte(`{
+		"packages": {
+			"deploy": {
+				"versions": {
+					"1.0.0": {"url":"../../etc/passwd","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
+				}
+			}
+		}
+	}`)); err == nil {
+		t.Error("path traversal url should be rejected")
 	}
 
 	// Invalid: type is a number
@@ -200,7 +213,7 @@ func TestValidateIndexJSON(t *testing.T) {
 			"deploy": {
 				"type": 123,
 				"versions": {
-					"1.0.0": {"url":"x","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
+					"1.0.0": {"url":"packages/deploy/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
 				}
 			}
 		}

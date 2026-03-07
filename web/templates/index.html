@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AES — Agentic Engineering Standard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=3">
+</head>
+<body class="page-home">
+    <header>
+        <nav>
+            <div class="nav-left">
+                <a href="/" class="logo">AES</a>
+                <span class="nav-version">v1.0</span>
+            </div>
+            <div class="nav-links">
+                <a href="/docs">Docs</a>
+                <a href="https://github.com/user-1221/agentic-engineering-standard" class="nav-icon" aria-label="GitHub">
+                    <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                </a>
+                {{if .User}}
+                    <a href="/dashboard" class="btn btn-primary btn-small">Dashboard</a>
+                {{else}}
+                    <a href="/login" class="btn btn-primary btn-small">Sign in with GitHub</a>
+                {{end}}
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="home-hero">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="hero-badge">
+                        <span class="badge-dot"></span>
+                        <span>Open Standard &middot; v1.0</span>
+                    </div>
+                    <h1>Ship your agents<br>like you ship <span class="hero-gradient">code</span></h1>
+                    <p class="hero-tagline">The open standard for structuring, sharing, and discovering agentic engineering projects.</p>
+                    <div class="cta-buttons">
+                        <a href="/docs" class="btn btn-large btn-ghost">Read the Docs</a>
+                        {{if not .User}}
+                            <a href="/login" class="btn btn-large btn-primary">Try in 60s</a>
+                        {{else}}
+                            <a href="/dashboard" class="btn btn-large btn-primary">Dashboard</a>
+                        {{end}}
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="hero-tree-card">
+                        <div class="hero-tree-header">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                            <span>.agent/</span>
+                        </div>
+                        <ul class="hero-tree-list">
+                            <li class="tree-item-file"><span class="tree-dot yaml"></span>agent.yaml</li>
+                            <li class="tree-item-file"><span class="tree-dot md"></span>instructions.md</li>
+                            <li class="tree-item-file"><span class="tree-dot yaml"></span>permissions.yaml</li>
+                            <li class="tree-item-dir"><span class="tree-dot dir"></span>skills/</li>
+                            <li class="tree-item-dir"><span class="tree-dot dir"></span>workflows/</li>
+                            <li class="tree-item-dir"><span class="tree-dot dir"></span>memory/</li>
+                            <li class="tree-item-dir"><span class="tree-dot dir"></span>commands/</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-why">
+            <div class="why-grid">
+                <div class="why-card why-problem">
+                    <span class="why-label">The problem</span>
+                    <p>Agent instructions, skills, and permissions are scattered across tool-specific configs. Nothing is portable. Nothing composes.</p>
+                </div>
+                <div class="why-arrow">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                </div>
+                <div class="why-card why-solution">
+                    <span class="why-label">The standard</span>
+                    <p>AES gives your agentic projects a single, structured directory &mdash; portable across tools, shareable via registry, composable by design.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-terminal">
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <span class="terminal-title">terminal</span>
+                </div>
+                <pre class="terminal-body"><code><span class="t-comment"># Install the CLI</span>
+<span class="t-prompt">$</span> pip install aes-cli
+
+<span class="t-comment"># Scaffold a new AES project</span>
+<span class="t-prompt">$</span> aes init
+
+<span class="t-comment"># Validate your .agent/ directory</span>
+<span class="t-prompt">$</span> aes validate
+
+<span class="t-comment"># Search the registry</span>
+<span class="t-prompt">$</span> aes search <span class="t-string">"deploy"</span>
+
+<span class="t-comment"># Install a skill from the registry</span>
+<span class="t-prompt">$</span> aes install aes-hub/deploy@^1.0.0</code></pre>
+            </div>
+        </section>
+
+        <section class="home-anatomy">
+            <span class="section-label">How it works</span>
+            <h2>Everything lives in <code>.agent/</code></h2>
+            <p class="anatomy-desc">A single directory. Every agent artifact &mdash; instructions, skills, permissions, memory &mdash; organized and portable.</p>
+            <div class="anatomy-tree">
+                <pre class="tree-block"><code><span class="tree-dir">.agent/</span>
+  <span class="tree-file">agent.yaml</span>          <span class="tree-ann"># Project manifest</span>
+  <span class="tree-file">instructions.md</span>     <span class="tree-ann"># Agent instructions</span>
+  <span class="tree-file">permissions.yaml</span>    <span class="tree-ann"># Tool access rules</span>
+  <span class="tree-dir">skills/</span>             <span class="tree-ann"># Composable capabilities</span>
+    <span class="tree-file">deploy.skill.yaml</span>
+    <span class="tree-file">deploy.md</span>
+  <span class="tree-dir">workflows/</span>          <span class="tree-ann"># State machines</span>
+  <span class="tree-dir">memory/</span>             <span class="tree-ann"># Persistent context</span>
+  <span class="tree-dir">commands/</span>           <span class="tree-ann"># Runbook triggers</span>
+  <span class="tree-dir">registry/</span>           <span class="tree-ann"># Vendored packages</span></code></pre>
+            </div>
+        </section>
+
+        <section class="home-features">
+            <span class="section-label">What you can do</span>
+            <h2>Built for the agentic era</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                    </div>
+                    <h3>Start like a pro</h3>
+                    <p>One command. Full agent project &mdash; instructions, skills, permissions, memory &mdash; all structured and ready to go.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                    </div>
+                    <h3>Share your flows</h3>
+                    <p>Package your entire agentic setup and publish it to the registry. Anyone can install it with one command.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </div>
+                    <h3>Plug &amp; play skills</h3>
+                    <p>Install skills and templates built by others. Drop them into your project and they just work &mdash; with any AI tool.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-cta">
+            <h2>Get started in seconds</h2>
+            <div class="install-command">
+                <code>pip install aes-cli</code>
+                <button data-copy="pip install aes-cli" class="copy-btn" aria-label="Copy install command">Copy</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-badges">
+                <span class="footer-badge">Open Source</span>
+                <span class="footer-badge">Apache 2.0</span>
+                <span class="footer-badge">Tool Agnostic</span>
+            </div>
+            <p><a href="https://github.com/user-1221/agentic-engineering-standard">GitHub</a> &middot; <a href="/docs">Docs</a></p>
+            <p class="footer-tagline">Built for the agentic era.</p>
+        </div>
+    </footer>
+
+    <script>
+    document.querySelectorAll('[data-copy]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var text = btn.getAttribute('data-copy');
+            navigator.clipboard.writeText(text).then(function() {
+                btn.textContent = 'Copied!';
+                setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+            });
+        });
+    });
+    </script>
+</body>
+</html>

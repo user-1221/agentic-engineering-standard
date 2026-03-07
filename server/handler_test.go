@@ -221,22 +221,23 @@ func TestNonexistentPackageReturns404(t *testing.T) {
 	}
 }
 
-func TestCORSHeaders(t *testing.T) {
+func TestSecurityHeaders(t *testing.T) {
 	srv, _ := setupTestServer(t)
 
-	// OPTIONS preflight
-	req := httptest.NewRequest("OPTIONS", "/index.json", nil)
+	req := httptest.NewRequest("GET", "/health", nil)
 	w := httptest.NewRecorder()
 	srv.Router().ServeHTTP(w, req)
 
-	if w.Code != 204 {
-		t.Errorf("OPTIONS: got %d, want 204", w.Code)
+	if w.Header().Get("X-Content-Type-Options") != "nosniff" {
+		t.Error("missing X-Content-Type-Options header")
 	}
-	if w.Header().Get("Access-Control-Allow-Origin") != "*" {
-		t.Error("missing CORS Allow-Origin header")
+	if w.Header().Get("X-Frame-Options") != "DENY" {
+		t.Error("missing X-Frame-Options header")
 	}
-	if w.Header().Get("Access-Control-Allow-Methods") == "" {
-		t.Error("missing CORS Allow-Methods header")
+
+	// CORS should NOT be present (registry is CLI-only)
+	if w.Header().Get("Access-Control-Allow-Origin") != "" {
+		t.Error("CORS headers should not be present on CLI-only registry")
 	}
 }
 

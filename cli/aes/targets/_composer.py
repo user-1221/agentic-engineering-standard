@@ -112,6 +112,89 @@ def translate_permissions_to_claude(permissions: dict) -> dict:
     return result
 
 
+def translate_permissions_to_markdown(permissions: dict) -> str:
+    """Translate AES permissions.yaml into a markdown restrictions section.
+
+    Used by Cursor, Copilot, and Windsurf targets which don't have structured
+    permission formats — they rely on markdown instructions instead.
+    """
+    sections: List[str] = []
+
+    # --- Allow: file scope ---
+    allow = permissions.get("allow", {})
+    allow_files = allow.get("files", {})
+    write_patterns = _normalize_patterns(allow_files.get("write"))
+    if write_patterns:
+        sections.append("### File Scope\n")
+        sections.append("Focus edits on these directories/patterns:\n")
+        for p in write_patterns:
+            sections.append(f"- `{p}`")
+        sections.append("")
+
+    # --- Allow: shell commands ---
+    allow_shell = allow.get("shell", {})
+    allowed_cmds: List[str] = []
+    if isinstance(allow_shell, dict):
+        for category in ("read", "execute", "remote"):
+            allowed_cmds.extend(_normalize_patterns(allow_shell.get(category)))
+    elif isinstance(allow_shell, list):
+        allowed_cmds.extend(allow_shell)
+    if allowed_cmds:
+        sections.append("### Allowed Commands\n")
+        for cmd in allowed_cmds:
+            sections.append(f"- `{cmd}`")
+        sections.append("")
+
+    # --- Deny ---
+    deny = permissions.get("deny", {})
+    deny_shell = deny.get("shell", [])
+    deny_cmds: List[str] = []
+    if isinstance(deny_shell, list):
+        deny_cmds.extend(deny_shell)
+    elif isinstance(deny_shell, dict):
+        for category in ("read", "execute", "remote"):
+            deny_cmds.extend(_normalize_patterns(deny_shell.get(category)))
+
+    deny_files = deny.get("files", {})
+    deny_write = _normalize_patterns(deny_files.get("write"))
+    deny_delete = _normalize_patterns(deny_files.get("delete"))
+
+    if deny_cmds or deny_write or deny_delete:
+        sections.append("### Never Do These\n")
+        for cmd in deny_cmds:
+            sections.append(f"- Never run: `{cmd}`")
+        for p in deny_write:
+            sections.append(f"- Never write to: `{p}`")
+        for p in deny_delete:
+            sections.append(f"- Never delete: `{p}`")
+        sections.append("")
+
+    # --- Confirm ---
+    confirm = permissions.get("confirm", {})
+    confirm_shell = confirm.get("shell", [])
+    confirm_actions = confirm.get("actions", [])
+    if confirm_shell or confirm_actions:
+        sections.append("### Ask Before Running\n")
+        for cmd in (confirm_shell if isinstance(confirm_shell, list) else []):
+            sections.append(f"- `{cmd}`")
+        for action in (confirm_actions if isinstance(confirm_actions, list) else []):
+            sections.append(f"- Action: {action}")
+        sections.append("")
+
+    # --- Resource limits ---
+    resource_limits = permissions.get("resource_limits", {})
+    if resource_limits:
+        sections.append("### Resource Limits\n")
+        for key, val in resource_limits.items():
+            sections.append(f"- {key}: {val}")
+        sections.append("")
+
+    if not sections:
+        return ""
+
+    return "\n## Permissions\n\n" + "\n".join(sections) + "\n"
+
+
 def _normalize_patterns(value: object) -> List[str]:
     """Normalize a single pattern or list of patterns to a list."""
     if value is None:

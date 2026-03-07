@@ -68,7 +68,7 @@ You'll see the scaffolded structure printed out, and the agent config files (`CL
 If your project fits a known domain, tell `aes init` and it will scaffold domain-specific skills, workflows, and instructions:
 
 ```bash
-# Machine learning project — gives you discover, examine, train skills
+# Machine learning project — full 7-stage pipeline (discover, examine, train, classify, evaluate, package, publish)
 aes init --domain ml
 
 # Web application — gives you scaffold, test, deploy skills
@@ -78,7 +78,7 @@ aes init --domain web
 aes init --domain devops
 ```
 
-Without `--domain`, you get a blank scaffold that you fill in yourself.
+Without `--domain`, the CLI auto-detects your framework (FastAPI, Next.js, Django, Rails, etc.) and generates framework-aware scaffolding with relevant skills and configurations. If no framework is detected, you get a generic scaffold that you fill in yourself.
 
 ### Initialize from a shared template
 
@@ -105,6 +105,18 @@ aes init --no-workflows
 
 # Force a specific language
 aes init --language python
+```
+
+### MCP Integration
+
+`aes init` also generates a `.mcp.json` config file, which lets MCP-compatible tools (Claude Desktop, etc.) automatically discover the `aes-mcp` server. The MCP server exposes registry operations — search, install, publish — as tools the agent can call directly.
+
+```bash
+# Install with MCP support
+pip install aes-cli[mcp]
+
+# Or from source
+cd cli && pip install -e ".[mcp]"
 ```
 
 ---

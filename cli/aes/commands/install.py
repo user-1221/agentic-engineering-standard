@@ -92,7 +92,7 @@ def _place_in_vendor(
             )
         shutil.rmtree(vendor_dir)
 
-    shutil.copytree(src_dir, vendor_dir)
+    shutil.copytree(src_dir, vendor_dir, symlinks=False)
     return vendor_dir
 
 

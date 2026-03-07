@@ -25,6 +25,6 @@ code:
   primary: "deploy.config.ts"
 
 depends_on:
-  - "test"
+  - "review"
 
 tags: ["deployment", "ci-cd"]

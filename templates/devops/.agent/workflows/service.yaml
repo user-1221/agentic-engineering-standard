@@ -36,6 +36,7 @@ transitions:
 
   - from: "provisioning"
     to: "configured"
+    skill: "configure"
     conditions:
       - "All resources created"
       - "Health checks pass"

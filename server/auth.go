@@ -60,6 +60,14 @@ func NewTokenStore(path, auditLog string) (*TokenStore, error) {
 	return ts, nil
 }
 
+// Reload re-reads the tokens file from disk. Called on SIGHUP so that
+// tokens created by the web service are picked up without restarting.
+func (ts *TokenStore) Reload() error {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.load()
+}
+
 func (ts *TokenStore) load() error {
 	data, err := os.ReadFile(ts.path)
 	if err != nil {
@@ -148,8 +156,8 @@ func (ts *TokenStore) RevokeToken(name string) error {
 }
 
 // Validate checks a raw bearer token against stored hashes.
-// Returns the matching TokenEntry and true if valid.
-func (ts *TokenStore) Validate(rawToken string) (*TokenEntry, bool) {
+// Returns a copy of the matching TokenEntry and true if valid.
+func (ts *TokenStore) Validate(rawToken string) (TokenEntry, bool) {
 	ts.mu.RLock()
 	defer ts.mu.RUnlock()
 
@@ -157,12 +165,15 @@ func (ts *TokenStore) Validate(rawToken string) (*TokenEntry, bool) {
 	for i := range ts.tokens {
 		storedHash := strings.TrimPrefix(ts.tokens[i].Hash, "sha256:")
 		if constantTimeEqual(hash, storedHash) {
+			// Copy before releasing lock to avoid data race
+			entry := ts.tokens[i]
+			name := entry.Name
 			// Update last_used (best effort, don't fail the request)
-			go ts.updateLastUsed(ts.tokens[i].Name)
-			return &ts.tokens[i], true
+			go ts.updateLastUsed(name)
+			return entry, true
 		}
 	}
-	return nil, false
+	return TokenEntry{}, false
 }
 
 // CheckPackageAccess verifies the token is allowed to publish to this package name.

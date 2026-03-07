@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from typing import List
-
 from aes.targets._base import AES_SENTINEL_MD, AgentContext, GeneratedFile, SyncPlan, SyncTarget
-from aes.targets._composer import compose_instructions
+from aes.targets._composer import compose_instructions, translate_permissions_to_markdown
 
 
 class CursorTarget(SyncTarget):
@@ -33,9 +31,9 @@ class CursorTarget(SyncTarget):
         )
 
         if ctx.permissions:
-            deny_section = _build_deny_section(ctx.permissions)
-            if deny_section:
-                content += "\n" + deny_section
+            perms_md = translate_permissions_to_markdown(ctx.permissions)
+            if perms_md:
+                content += "\n" + perms_md
 
         action = self._check_conflict(ctx.project_root, ".cursorrules", force)
         plan.files.append(GeneratedFile(
@@ -46,29 +44,3 @@ class CursorTarget(SyncTarget):
         ))
 
         return plan
-
-
-def _build_deny_section(permissions: dict) -> str:
-    """Build a markdown section with deny/confirm rules for Cursor."""
-    deny = permissions.get("deny", {})
-    confirm = permissions.get("confirm", {})
-    if not deny and not confirm:
-        return ""
-
-    lines: List[str] = ["\n## Restrictions\n"]
-
-    deny_shell = deny.get("shell", [])
-    if isinstance(deny_shell, list) and deny_shell:
-        lines.append("### Never Run These Commands\n")
-        for cmd in deny_shell:
-            lines.append(f"- `{cmd}`")
-        lines.append("")
-
-    confirm_shell = confirm.get("shell", [])
-    if confirm_shell:
-        lines.append("### Ask Before Running\n")
-        for cmd in confirm_shell:
-            lines.append(f"- `{cmd}`")
-        lines.append("")
-
-    return "\n".join(lines) + "\n"

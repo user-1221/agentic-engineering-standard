@@ -55,9 +55,9 @@ func (s *Server) Router() http.Handler {
 	// PUT /packages/{name}/{version}.tar.gz — authenticated, rate limited
 	mux.Handle("PUT /packages/", rateLimitMiddleware(writeRL, http.HandlerFunc(s.handlePutPackage)))
 
-	// Wrap everything with CORS and logging
+	// Wrap everything with security headers and logging
 	var handler http.Handler = mux
-	handler = corsMiddleware(handler)
+	handler = securityHeaders(handler)
 	handler = loggingMiddleware(s.logger, handler)
 
 	return handler
@@ -282,7 +282,7 @@ func (s *Server) authenticate(w http.ResponseWriter, r *http.Request) (*TokenEnt
 		return nil, false
 	}
 
-	return entry, true
+	return &entry, true
 }
 
 // parsePackagePath extracts name and version from /packages/{name}/{version}.tar.gz

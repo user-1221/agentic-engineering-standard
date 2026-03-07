@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from aes.targets._base import AES_SENTINEL_MD, AgentContext, GeneratedFile, SyncPlan, SyncTarget
-from aes.targets._composer import compose_instructions
+from aes.targets._composer import compose_instructions, translate_permissions_to_markdown
 
 
 class WindsurfTarget(SyncTarget):
@@ -29,6 +29,11 @@ class WindsurfTarget(SyncTarget):
             memory_project=ctx.memory_project,
             header=header,
         )
+
+        if ctx.permissions:
+            perms_md = translate_permissions_to_markdown(ctx.permissions)
+            if perms_md:
+                content += "\n" + perms_md
 
         action = self._check_conflict(ctx.project_root, ".windsurfrules", force)
         plan.files.append(GeneratedFile(

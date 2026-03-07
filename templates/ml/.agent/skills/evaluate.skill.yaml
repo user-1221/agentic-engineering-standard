@@ -1,0 +1,47 @@
+aes_skill: "1.0"
+
+id: "evaluate"
+name: "Evaluate Models"
+version: "1.0.0"
+description: "Compare trained models, check overfitting, and apply quality gates"
+
+stage: 5
+phase: "evaluation"
+
+inputs:
+  required:
+    - name: "db_connection"
+      type: "sqlite3.Connection"
+      description: "Active database connection"
+    - name: "dataset_id"
+      type: "int"
+      description: "Dataset to evaluate"
+  optional:
+    - name: "quality_gates"
+      type: "dict"
+      description: "Custom quality gate thresholds (default: from config)"
+
+outputs:
+  - name: "best_experiment_id"
+    type: "int"
+    description: "ID of the best performing experiment"
+  - name: "passes_quality_gates"
+    type: "bool"
+    description: "Whether the best model meets quality criteria"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/run_pipeline.py --stage evaluate --dataset-id {ID}"
+
+error_handling:
+  strategy: "per-item-isolation"
+  retries: 0
+
+code:
+  primary: "pipeline/evaluate.py"
+
+depends_on:
+  - "train"
+blocks: ["package"]
+
+tags: ["evaluation", "quality-gates", "model-comparison"]

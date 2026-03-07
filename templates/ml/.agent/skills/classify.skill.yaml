@@ -1,0 +1,43 @@
+aes_skill: "1.0"
+
+id: "classify"
+name: "Classify Problem"
+version: "1.0.0"
+description: "Detect problem type and select candidate models from the registry"
+
+stage: 3
+phase: "classification"
+
+inputs:
+  required:
+    - name: "db_connection"
+      type: "sqlite3.Connection"
+      description: "Active database connection"
+    - name: "dataset_id"
+      type: "int"
+      description: "Dataset to classify"
+
+outputs:
+  - name: "problem_type"
+    type: "str"
+    description: "Detected problem type (binary, multiclass, regression, etc.)"
+  - name: "selected_models"
+    type: "list[str]"
+    description: "Model keys selected from the registry"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/run_pipeline.py --stage classify --dataset-id {ID}"
+
+error_handling:
+  strategy: "per-item-isolation"
+  retries: 0
+
+code:
+  primary: "pipeline/classify.py"
+
+depends_on:
+  - "examine"
+blocks: ["train"]
+
+tags: ["classification", "model-selection"]
