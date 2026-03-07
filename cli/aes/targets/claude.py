@@ -13,7 +13,10 @@ from aes.targets._base import (
     SyncPlan,
     SyncTarget,
 )
-from aes.targets._composer import compose_instructions, translate_permissions_to_claude
+from aes.targets._composer import (
+    compose_instructions_with_skill_index,
+    translate_permissions_to_claude,
+)
 
 
 class ClaudeTarget(SyncTarget):
@@ -25,18 +28,18 @@ class ClaudeTarget(SyncTarget):
     def plan(self, ctx: AgentContext, force: bool) -> SyncPlan:
         plan = SyncPlan(target_name=self.name)
 
-        # 1. CLAUDE.md
+        # 1. CLAUDE.md — with skill index (not inlined runbooks)
         header = (
             AES_SENTINEL_MD
             + "\n# "
             + ctx.manifest.get("name", "Project")
             + " \u2014 Agent Instructions"
         )
-        content = compose_instructions(
+        content = compose_instructions_with_skill_index(
             project_name=ctx.manifest.get("name", "Project"),
             instructions=ctx.instructions,
             orchestrator=ctx.orchestrator,
-            skill_runbooks=ctx.skill_runbooks,
+            skill_metadata=ctx.skill_metadata,
             memory_project=ctx.memory_project,
             header=header,
         )
@@ -70,7 +73,7 @@ class ClaudeTarget(SyncTarget):
                 action=action,
             ))
 
-        # 3. .claude/commands/*.md
+        # 3. .claude/commands/*.md (user-defined commands)
         for cmd in ctx.commands:
             rel_path = f".claude/commands/{cmd['id']}.md"
             cmd_content = AES_SENTINEL_MD + "\n" + cmd.get("content", "")
@@ -79,6 +82,18 @@ class ClaudeTarget(SyncTarget):
                 relative_path=rel_path,
                 content=cmd_content,
                 description=f"Claude slash command: /{cmd['id']}",
+                action=action,
+            ))
+
+        # 4. .claude/commands/skills/<id>.md (skill runbooks as slash commands)
+        for skill_id, runbook in ctx.skill_runbooks.items():
+            rel_path = f".claude/commands/skills/{skill_id}.md"
+            skill_content = AES_SENTINEL_MD + "\n" + runbook
+            action = self._check_conflict(ctx.project_root, rel_path, force)
+            plan.files.append(GeneratedFile(
+                relative_path=rel_path,
+                content=skill_content,
+                description=f"Skill slash command: /skills/{skill_id}",
                 action=action,
             ))
 

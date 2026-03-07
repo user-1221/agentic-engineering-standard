@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 def compose_instructions(
@@ -36,6 +36,50 @@ def compose_instructions(
         sections.append("# Skills Reference\n")
         for _skill_id, runbook in skill_runbooks.items():
             sections.append(runbook)
+
+    if memory_project:
+        sections.append("---\n")
+        sections.append(memory_project)
+
+    return "\n\n".join(sections) + "\n"
+
+
+def compose_instructions_with_skill_index(
+    project_name: str,
+    instructions: Optional[str],
+    orchestrator: Optional[str],
+    skill_metadata: Dict[str, Dict[str, Any]],
+    memory_project: Optional[str],
+    header: str,
+) -> str:
+    """Compose instructions with a skill index instead of inlined runbooks.
+
+    Skills are synced as separate command files; this just lists them
+    so the agent knows they exist and can be invoked as slash commands.
+    """
+    sections: List[str] = [header]
+
+    if instructions:
+        sections.append(instructions)
+
+    if orchestrator:
+        sections.append("---\n")
+        sections.append(orchestrator)
+
+    if skill_metadata:
+        sections.append("---\n")
+        lines: List[str] = [
+            "# Available Skills\n",
+            "The following skills are available as slash commands:\n",
+        ]
+        for skill_id, meta in skill_metadata.items():
+            name = meta.get("name", skill_id)
+            desc = meta.get("description", "")
+            line = f"- **/skills/{skill_id}** — {name}"
+            if desc:
+                line += f": {desc}"
+            lines.append(line)
+        sections.append("\n".join(lines))
 
     if memory_project:
         sections.append("---\n")

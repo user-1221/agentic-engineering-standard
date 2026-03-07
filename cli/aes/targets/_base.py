@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 # Sentinels embedded in generated files to detect aes sync output
@@ -26,6 +26,7 @@ class AgentContext:
     permissions: Optional[dict]
     commands: List[dict]
     memory_project: Optional[str]
+    skill_metadata: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     local_config: Optional[dict] = None
 
 

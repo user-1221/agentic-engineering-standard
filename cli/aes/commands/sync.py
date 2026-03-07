@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import click
 import yaml
@@ -115,8 +116,9 @@ def _load_agent_context(project_root: Path) -> AgentContext:
         if orchestrator_path.exists():
             orchestrator = orchestrator_path.read_text()
 
-    # Load skill runbooks in manifest order
+    # Load skill runbooks and metadata in manifest order
     skill_runbooks: Dict[str, str] = {}
+    skill_metadata: Dict[str, Dict[str, Any]] = {}
     for skill_ref in manifest.get("skills", []):
         skill_id = skill_ref.get("id", "unknown")
         runbook_rel = skill_ref.get("runbook")
@@ -124,6 +126,19 @@ def _load_agent_context(project_root: Path) -> AgentContext:
             runbook_path = agent_dir / runbook_rel
             if runbook_path.exists():
                 skill_runbooks[skill_id] = runbook_path.read_text()
+        # Load skill manifest for name/description metadata
+        manifest_rel = skill_ref.get("manifest")
+        if manifest_rel:
+            skill_manifest_path = agent_dir / manifest_rel
+            if skill_manifest_path.exists():
+                with open(skill_manifest_path) as f:
+                    skill_data = yaml.safe_load(f) or {}
+                skill_metadata[skill_id] = {
+                    "name": skill_data.get("name", skill_id),
+                    "description": skill_data.get("description", ""),
+                }
+        if skill_id not in skill_metadata:
+            skill_metadata[skill_id] = {"name": skill_id, "description": ""}
 
     # Load permissions
     permissions: Optional[dict] = None
@@ -173,6 +188,7 @@ def _load_agent_context(project_root: Path) -> AgentContext:
         permissions=permissions,
         commands=commands,
         memory_project=memory_project,
+        skill_metadata=skill_metadata,
         local_config=local_config,
     )
 
@@ -245,7 +261,12 @@ def sync_cmd(
     ctx = _load_agent_context(project_root)
 
     # Select targets
-    selected = list(target) if target else TARGET_NAMES
+    if target:
+        selected = list(target)
+    elif sys.stdin.isatty():
+        selected = _prompt_target_selection()
+    else:
+        selected = list(TARGET_NAMES)
     console.print(f"[bold]Syncing[/] {project_root}")
     console.print(f"  Targets: {', '.join(selected)}")
     console.print()
@@ -345,3 +366,39 @@ def _do_clean(project_root: Path, dry_run: bool) -> None:
         console.print(f"[dim]Dry run \u2014 would remove {len(files)} file(s).[/]")
     else:
         console.print(f"[green]Cleaned {removed} file(s).[/]")
+
+
+def _prompt_target_selection() -> List[str]:
+    """Interactively prompt the user to select sync target(s)."""
+    console.print("[bold]Select target(s) to sync:[/]\n")
+    for i, name in enumerate(TARGET_NAMES, 1):
+        console.print(f"  [bold cyan][{i}][/] {name}")
+    all_idx = len(TARGET_NAMES) + 1
+    console.print(f"  [bold cyan][{all_idx}][/] all")
+    console.print()
+
+    raw = click.prompt(
+        "Choice (comma-separated for multiple, e.g. 1,2)",
+        type=str,
+        default=str(all_idx),
+    )
+
+    choices = [c.strip() for c in raw.split(",")]
+    selected: List[str] = []
+    for c in choices:
+        try:
+            idx = int(c)
+        except ValueError:
+            if c.lower() in TARGET_NAMES:
+                selected.append(c.lower())
+            continue
+        if idx == all_idx:
+            return list(TARGET_NAMES)
+        if 1 <= idx <= len(TARGET_NAMES):
+            selected.append(TARGET_NAMES[idx - 1])
+
+    if not selected:
+        console.print("[yellow]No valid selection, defaulting to all.[/]")
+        return list(TARGET_NAMES)
+
+    return selected
