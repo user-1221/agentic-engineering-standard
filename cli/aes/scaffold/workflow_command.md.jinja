@@ -1,0 +1,22 @@
+# Command: {{ cmd.trigger }}
+
+{{ cmd.runbook_purpose }}
+
+## Operation Tracking
+
+Before starting, check `.agent/memory/operations.md` for current pipeline state.
+Resume from the last completed stage if a previous run was interrupted.
+Update `.agent/memory/operations.md` after each stage completes.
+
+## Phases
+{% for phase in cmd.runbook_phases %}
+
+### {{ loop.index }}. {{ phase.title }}
+
+{{ phase.content }}
+{% endfor %}
+
+## After Completion
+
+1. Update `.agent/memory/operations.md` with final status and run summary
+2. Report: stages completed, items processed, errors encountered

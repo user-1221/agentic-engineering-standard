@@ -250,6 +250,131 @@ class TestDomainAwareInitDevOps:
         assert len(data["states"]) >= 7
 
 
+class TestDomainAwareInitResearch:
+    """Test research domain generates real content."""
+
+    def test_research_instructions_have_real_content(self, tmp_path):
+        _init(tmp_path, name="test-research", domain="research")
+        content = (tmp_path / ".agent" / "instructions.md").read_text()
+        assert "content processing" in content.lower() or "ingests" in content.lower()
+        assert "TODO" not in content
+
+    def test_research_generates_skill_files(self, tmp_path):
+        _init(tmp_path, name="test-research", domain="research")
+        skills_dir = tmp_path / ".agent" / "skills"
+        assert (skills_dir / "ingest.skill.yaml").exists()
+        assert (skills_dir / "ingest.md").exists()
+        assert (skills_dir / "parse.skill.yaml").exists()
+        assert (skills_dir / "parse.md").exists()
+        assert (skills_dir / "analyze.skill.yaml").exists()
+        assert (skills_dir / "analyze.md").exists()
+        assert (skills_dir / "organize.skill.yaml").exists()
+        assert (skills_dir / "organize.md").exists()
+        assert (skills_dir / "display.skill.yaml").exists()
+        assert (skills_dir / "display.md").exists()
+
+    def test_research_generates_workflow(self, tmp_path):
+        _init(tmp_path, name="test-research", domain="research")
+        wf_path = tmp_path / ".agent" / "workflows" / "content-pipeline.yaml"
+        assert wf_path.exists()
+        with open(wf_path) as f:
+            data = yaml.safe_load(f)
+        assert data["id"] == "content-pipeline"
+        assert len(data["states"]) >= 5
+
+    def test_research_agent_yaml_references_skills(self, tmp_path):
+        _init(tmp_path, name="test-research", domain="research")
+        with open(tmp_path / ".agent" / "agent.yaml") as f:
+            data = yaml.safe_load(f)
+        skill_ids = [s["id"] for s in data.get("skills", [])]
+        assert "ingest" in skill_ids
+        assert "parse" in skill_ids
+        assert "analyze" in skill_ids
+        assert "organize" in skill_ids
+        assert "display" in skill_ids
+
+
+class TestWorkflowCommands:
+    """Test workflow command scaffolding for all domains."""
+
+    def test_ml_train_command(self, tmp_path):
+        _init(tmp_path, name="test-ml", domain="ml")
+        cmd_path = tmp_path / ".agent" / "commands" / "train.md"
+        assert cmd_path.exists()
+        content = cmd_path.read_text()
+        assert "/train" in content
+        assert "operations.md" in content
+
+    def test_web_build_command(self, tmp_path):
+        _init(tmp_path, name="test-web", domain="web", language="typescript")
+        cmd_path = tmp_path / ".agent" / "commands" / "build.md"
+        assert cmd_path.exists()
+        content = cmd_path.read_text()
+        assert "/build" in content
+
+    def test_devops_provision_command(self, tmp_path):
+        _init(tmp_path, name="test-devops", domain="devops")
+        cmd_path = tmp_path / ".agent" / "commands" / "provision.md"
+        assert cmd_path.exists()
+        content = cmd_path.read_text()
+        assert "/provision" in content
+
+    def test_research_process_command(self, tmp_path):
+        _init(tmp_path, name="test-research", domain="research")
+        cmd_path = tmp_path / ".agent" / "commands" / "process.md"
+        assert cmd_path.exists()
+        content = cmd_path.read_text()
+        assert "/process" in content
+
+    def test_workflow_command_registered_in_agent_yaml(self, tmp_path):
+        _init(tmp_path, name="test-ml", domain="ml")
+        with open(tmp_path / ".agent" / "agent.yaml") as f:
+            data = yaml.safe_load(f)
+        commands = data.get("commands", [])
+        train_cmds = [c for c in commands if c.get("id") == "train"]
+        assert len(train_cmds) == 1
+        assert train_cmds[0]["trigger"] == "/train"
+
+    def test_no_workflow_command_for_other_domain(self, tmp_path):
+        _init(tmp_path, name="test-other", domain="other")
+        commands_dir = tmp_path / ".agent" / "commands"
+        # Only setup.md should exist, no workflow commands
+        cmd_files = list(commands_dir.glob("*.md"))
+        assert len(cmd_files) == 1
+        assert cmd_files[0].name == "setup.md"
+
+
+class TestOperationsMemory:
+    """Test operations memory file generation."""
+
+    def test_ml_has_operations_md(self, tmp_path):
+        _init(tmp_path, name="test-ml", domain="ml")
+        ops_path = tmp_path / ".agent" / "memory" / "operations.md"
+        assert ops_path.exists()
+        content = ops_path.read_text()
+        assert "Operation Log" in content
+        assert "dataset-pipeline" in content
+        assert "Not started" in content
+
+    def test_research_has_operations_md(self, tmp_path):
+        _init(tmp_path, name="test-research", domain="research")
+        ops_path = tmp_path / ".agent" / "memory" / "operations.md"
+        assert ops_path.exists()
+        content = ops_path.read_text()
+        assert "content-pipeline" in content
+        assert "Ingest Content" in content
+
+    def test_other_domain_no_operations_md(self, tmp_path):
+        _init(tmp_path, name="test-other", domain="other")
+        ops_path = tmp_path / ".agent" / "memory" / "operations.md"
+        assert not ops_path.exists()
+
+    def test_orchestrator_references_operations(self, tmp_path):
+        _init(tmp_path, name="test-ml", domain="ml")
+        content = (tmp_path / ".agent" / "skills" / "ORCHESTRATOR.md").read_text()
+        assert "operations.md" in content
+
+
 class TestFallbackDomains:
     """Domains without domain config fall back to TODO templates."""
 
@@ -525,9 +650,9 @@ class TestInteractivePicker:
             )
 
     def test_picker_api_python_fastapi(self, tmp_path):
-        """Pick API service -> Python -> FastAPI produces real config."""
-        # 1=API, 1=Python, 1=FastAPI
-        result = self._run_interactive(tmp_path, "1\n1\n1\n")
+        """Pick Dev-Assist -> API service -> Python -> FastAPI produces real config."""
+        # 1=Dev-Assist, 1=API, 1=Python, 1=FastAPI
+        result = self._run_interactive(tmp_path, "1\n1\n1\n1\n")
         assert result.exit_code == 0
         content = (tmp_path / ".agent" / "instructions.md").read_text()
         assert "TODO" not in content
@@ -535,33 +660,33 @@ class TestInteractivePicker:
         assert (skills_dir / "test-runner.skill.yaml").exists()
 
     def test_picker_api_python_no_framework(self, tmp_path):
-        """Pick API service -> Python -> None still produces real config."""
-        # 1=API, 1=Python, 4=None (3 frameworks + None)
-        result = self._run_interactive(tmp_path, "1\n1\n4\n")
+        """Pick Dev-Assist -> API service -> Python -> None still produces real config."""
+        # 1=Dev-Assist, 1=API, 1=Python, 4=None (3 frameworks + None)
+        result = self._run_interactive(tmp_path, "1\n1\n1\n4\n")
         assert result.exit_code == 0
         content = (tmp_path / ".agent" / "instructions.md").read_text()
         assert "TODO" not in content
 
     def test_picker_cli_tool_go(self, tmp_path):
-        """Pick CLI tool -> Go produces cli-tool config."""
-        # 3=CLI tool, 4=Go, no framework picker for Go CLI
-        result = self._run_interactive(tmp_path, "3\n4\n")
+        """Pick Dev-Assist -> CLI tool -> Go produces cli-tool config."""
+        # 1=Dev-Assist, 3=CLI tool, 4=Go, no framework picker for Go CLI
+        result = self._run_interactive(tmp_path, "1\n3\n4\n")
         assert result.exit_code == 0
         content = (tmp_path / ".agent" / "instructions.md").read_text()
         assert "TODO" not in content
 
     def test_picker_library_rust(self, tmp_path):
-        """Pick Library -> Rust produces library config."""
-        # 4=Library, 5=Rust, no framework picker
-        result = self._run_interactive(tmp_path, "4\n5\n")
+        """Pick Dev-Assist -> Library -> Rust produces library config."""
+        # 1=Dev-Assist, 4=Library, 5=Rust, no framework picker
+        result = self._run_interactive(tmp_path, "1\n4\n5\n")
         assert result.exit_code == 0
         content = (tmp_path / ".agent" / "instructions.md").read_text()
         assert "TODO" not in content
 
     def test_picker_ml_pipeline(self, tmp_path):
-        """Pick ML pipeline uses DOMAIN_CONFIGS['ml'] directly."""
-        # 5=ML pipeline (no language/framework prompts)
-        result = self._run_interactive(tmp_path, "5\n")
+        """Pick Agent-Integrated -> ML pipeline uses DOMAIN_CONFIGS['ml']."""
+        # 2=Agent-Integrated, 1=ML pipeline
+        result = self._run_interactive(tmp_path, "2\n1\n")
         assert result.exit_code == 0
         skills_dir = tmp_path / ".agent" / "skills"
         assert (skills_dir / "discover.skill.yaml").exists()
@@ -569,28 +694,52 @@ class TestInteractivePicker:
         assert "TODO" not in content
 
     def test_picker_devops(self, tmp_path):
-        """Pick DevOps uses DOMAIN_CONFIGS['devops'] directly."""
-        # 6=DevOps (no language/framework prompts)
-        result = self._run_interactive(tmp_path, "6\n")
+        """Pick Dev-Assist -> DevOps uses DOMAIN_CONFIGS['devops']."""
+        # 1=Dev-Assist, 5=DevOps
+        result = self._run_interactive(tmp_path, "1\n5\n")
         assert result.exit_code == 0
         skills_dir = tmp_path / ".agent" / "skills"
         assert (skills_dir / "provision.skill.yaml").exists()
 
     def test_picker_skip(self, tmp_path):
-        """Pick Skip produces TODO scaffolding."""
-        # 7=Skip
-        result = self._run_interactive(tmp_path, "7\n")
+        """Pick Dev-Assist -> Skip produces TODO scaffolding."""
+        # 1=Dev-Assist, 6=Skip
+        result = self._run_interactive(tmp_path, "1\n6\n")
         assert result.exit_code == 0
         content = (tmp_path / ".agent" / "instructions.md").read_text()
         assert "TODO" in content
 
     def test_picker_web_app_typescript_nextjs(self, tmp_path):
-        """Pick Web app -> TypeScript -> Next.js."""
-        # 2=Web app, 2=TypeScript, 1=Nextjs
-        result = self._run_interactive(tmp_path, "2\n2\n1\n")
+        """Pick Dev-Assist -> Web app -> TypeScript -> Next.js."""
+        # 1=Dev-Assist, 2=Web app, 2=TypeScript, 1=Nextjs
+        result = self._run_interactive(tmp_path, "1\n2\n2\n1\n")
         assert result.exit_code == 0
         content = (tmp_path / ".agent" / "instructions.md").read_text()
         assert "TODO" not in content
+
+    def test_picker_research(self, tmp_path):
+        """Pick Agent-Integrated -> Research uses DOMAIN_CONFIGS['research']."""
+        # 2=Agent-Integrated, 2=Research
+        result = self._run_interactive(tmp_path, "2\n2\n")
+        assert result.exit_code == 0
+        skills_dir = tmp_path / ".agent" / "skills"
+        assert (skills_dir / "ingest.skill.yaml").exists()
+        content = (tmp_path / ".agent" / "instructions.md").read_text()
+        assert "TODO" not in content
+
+    def test_picker_agent_integrated_custom(self, tmp_path):
+        """Pick Agent-Integrated -> Custom produces TODO scaffolding."""
+        # 2=Agent-Integrated, 3=Custom
+        result = self._run_interactive(tmp_path, "2\n3\n")
+        assert result.exit_code == 0
+        content = (tmp_path / ".agent" / "instructions.md").read_text()
+        assert "TODO" in content
+
+    def test_picker_mode_prompt_shown(self, tmp_path):
+        """Mode selection prompt is displayed."""
+        # 1=Dev-Assist, 6=Skip
+        result = self._run_interactive(tmp_path, "1\n6\n")
+        assert "How will the agent work" in result.output
 
     def test_picker_not_shown_when_detected(self, tmp_path):
         """When project files exist, picker is NOT shown — detection works."""

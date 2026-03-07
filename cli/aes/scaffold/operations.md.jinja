@@ -1,0 +1,23 @@
+# {{ name }} — Operation Log
+
+## Current Workflow
+{% if domain_config.workflow %}
+**Workflow:** {{ domain_config.workflow.id }}
+{% else %}
+**Workflow:** --
+{% endif %}
+**Status:** Not started
+**Current Stage:** --
+
+## Stage Progress
+{% for skill in domain_config.skills %}
+- [ ] **{{ skill.name }}** (stage {{ skill.stage }}) — Pending
+{% endfor %}
+
+## Run History
+
+_No runs recorded yet._
+
+## Errors / Blockers
+
+_None._

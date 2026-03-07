@@ -25,7 +25,7 @@ my-project/
       train.md              # Agent-readable runbook
     registry/               # Extensible component definitions
     workflows/              # State machine definitions
-    commands/               # Multi-phase workflow automation
+    commands/               # Slash commands (/setup, /train, /build, /process)
     permissions.yaml        # Agent capability boundaries
     memory/                 # Persistent agent learning
   .agentignore              # Files agents should never touch
@@ -43,7 +43,7 @@ aes init
 # Validate your .agent/ directory
 aes validate
 
-# Generate tool-specific configs (Claude, Cursor, Copilot, Windsurf)
+# Generate tool-specific configs (prompts you to pick your tool)
 aes sync
 
 # Check what changed since last sync
@@ -89,10 +89,10 @@ The `aes` CLI (`cli/`) provides:
 
 | Command | Description |
 |---------|-------------|
-| `aes init` | Scaffold a `.agent/` directory (auto-detects framework and project type) |
+| `aes init` | Scaffold a `.agent/` directory (two-step picker: mode + type, or auto-detect) |
 | `aes validate [path]` | Validate files against JSON schemas + dependency graph checks |
 | `aes inspect [path]` | Show project structure, skills, workflows |
-| `aes sync [path]` | Generate tool-specific configs (Claude, Cursor, Copilot, Windsurf) |
+| `aes sync [path]` | Generate tool-specific configs (prompts for target selection) |
 | `aes status [path]` | Show what changed in `.agent/` since last sync |
 | `aes publish [skill]` | Package skills as tarballs, optionally upload to registry (`--registry`) |
 | `aes publish --template` | Package entire `.agent/` directory as a shareable template |
@@ -121,13 +121,22 @@ A GitHub OAuth dashboard for managing registry API tokens lives in `web/`. It pr
 
 Three reference implementations in [`examples/`](examples/) and installable domain templates in [`templates/`](templates/):
 
-| Example | Domain | Skills | Workflows |
-|---------|--------|--------|-----------|
-| [ml-pipeline](examples/ml-pipeline/) | Machine Learning | discover, examine, train | dataset lifecycle |
-| [web-app](examples/web-app/) | Web Development | scaffold, test, deploy | feature lifecycle |
-| [devops](examples/devops/) | Infrastructure | provision, deploy, rollback | service lifecycle |
+| Example | Domain | Mode | Skills | Workflow Command |
+|---------|--------|------|--------|-----------------|
+| [ml-pipeline](examples/ml-pipeline/) | Machine Learning | Agent-Integrated | discover, examine, train, ... | `/train` |
+| [web-app](examples/web-app/) | Web Development | Dev-Assist | scaffold, test, deploy, ... | `/build` |
+| [devops](examples/devops/) | Infrastructure | Dev-Assist | provision, deploy, rollback, ... | `/provision` |
 
-The `templates/` directory contains validated AES skill packages that can be used as starting points for new projects. Templates have expanded skill suites — ML has a full 7-stage pipeline, web has 5 skills, and devops has 5 skills.
+The `templates/` directory contains validated AES skill packages that can be used as starting points for new projects. Templates have expanded skill suites — ML has a full 7-stage pipeline, web has 5 skills, devops has 5 skills, and the **research** domain has 5 skills for content processing pipelines (ingest, parse, analyze, organize, display).
+
+### Modes
+
+AES distinguishes two kinds of agentic projects:
+
+- **Dev-Assist** — The agent builds the project (scaffold, implement, test, deploy). Once shipped, its main job is done — though it can still help with maintenance and bug fixes. (Web, API, CLI, Library, DevOps)
+- **Agent-Integrated** — The agent is embedded in the running product. It operates continuously as part of the system — training models, processing content, ingesting data. The product doesn't work without it. (ML pipelines, Research pipelines)
+
+`aes init` presents a two-step picker: choose mode, then choose project type. Each domain scaffolds a workflow command (e.g. `/train`, `/build`, `/process`) and an operations memory file for pipeline tracking.
 
 ## Registry
 
@@ -170,14 +179,10 @@ Templates exclude `memory/`, `local.yaml`, and `overrides/` by default to protec
 ## Design Principles
 
 1. **Tool-agnostic** — works with Claude, GPT, Cursor, Copilot, or any agent
-2. **Domain-agnostic** — ML, web, DevOps, data pipelines, anything
+2. **Domain-agnostic** — ML, web, DevOps, research, data pipelines, anything
 3. **Composable** — skills and templates are shareable independently
 4. **Config over code** — agents modify configuration, not orchestration logic
 5. **Explicit over implicit** — state machines, permissions, decisions are declared
-
-## Origin
-
-AES was extracted from the [ML Model Factory](https://github.com/hiro/model-factory) — a production agentic system with 27 ML models, 7 pipeline stages, and a metered prediction API. Every pattern in this spec was battle-tested there first, then generalized.
 
 ## JSON Schemas
 

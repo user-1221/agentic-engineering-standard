@@ -19,10 +19,15 @@ my-project/
       deploy.skill.yaml       # Skill metadata (for tooling)
       deploy.md               # Skill runbook (for the agent to read)
     workflows/                # State machines — what states things go through
-    commands/                 # Slash commands (like /setup, /deploy)
+    commands/                 # Slash commands (like /setup, /train, /build)
+      setup.md                # First-run setup command
+      train.md                # Workflow command (domain-specific)
     memory/                   # What the agent remembers across sessions
+      project.md              # General project knowledge
+      operations.md           # Pipeline progress tracker (domain-specific)
   .agentignore                # Files the agent should never touch
   CLAUDE.md                   # Auto-generated from .agent/ (for Claude)
+  .claude/commands/skills/    # Skills as slash commands (for Claude)
   .cursorrules                # Auto-generated from .agent/ (for Cursor)
 ```
 
@@ -76,9 +81,22 @@ aes init --domain web
 
 # Infrastructure / DevOps — gives you provision, deploy, rollback skills
 aes init --domain devops
+
+# Research / content processing — gives you ingest, parse, analyze, organize, display skills
+aes init --domain research
 ```
 
-Without `--domain`, the CLI auto-detects your framework (FastAPI, Next.js, Django, Rails, etc.) and generates framework-aware scaffolding with relevant skills and configurations. If no framework is detected, you get a generic scaffold that you fill in yourself.
+Without `--domain`, the CLI shows a two-step interactive picker:
+
+1. **Mode** — How will the agent work with your project?
+   - **Dev-Assist** — Agent builds the project, then steps back (API, Web, CLI, Library, DevOps)
+   - **Agent-Integrated** — Agent is embedded in the running product (ML pipeline, Research pipeline)
+
+2. **Type** — What kind of project within that mode?
+
+Each domain also scaffolds a **workflow command** (like `/train`, `/build`, `/process`, `/provision`) that the agent can use to run the full pipeline, plus an **operations memory file** at `.agent/memory/operations.md` that tracks pipeline progress so the agent can resume where it left off.
+
+If no domain is selected, the CLI auto-detects your framework (FastAPI, Next.js, Django, Rails, etc.) and generates framework-aware scaffolding with relevant skills and configurations. If no framework is detected, you get a generic scaffold that you fill in yourself.
 
 ### Initialize from a shared template
 
@@ -168,14 +186,36 @@ AES is tool-agnostic. It generates config files for whatever AI tool you use:
 aes sync
 ```
 
+If you don't specify a target with `-t`, the CLI prompts you to pick which tool(s) you use. You can also specify directly:
+
+```bash
+aes sync -t claude      # sync only for Claude
+aes sync -t cursor      # sync only for Cursor
+```
+
 This reads your `.agent/` directory and generates:
 
-| Tool | Generated File |
-|------|---------------|
-| Claude | `CLAUDE.md` |
+| Tool | Generated Files |
+|------|----------------|
+| Claude | `CLAUDE.md` + `.claude/settings.local.json` + `.claude/commands/skills/*.md` |
 | Cursor | `.cursorrules` |
 | GitHub Copilot | `.github/copilot-instructions.md` |
 | Windsurf | `.windsurfrules` |
+
+### How skills are synced
+
+For **Claude**, each skill runbook becomes a separate slash command file under `.claude/commands/skills/`. This means skills are loaded on demand (when you invoke `/skills/<name>`) instead of bloating the main instructions file. `CLAUDE.md` gets a lightweight index listing available skills.
+
+```
+.claude/commands/
+├── train.md              ← command (/train)
+└── skills/
+    ├── discover.md       ← skill (/skills/discover)
+    ├── examine.md        ← skill (/skills/examine)
+    └── train.md          ← skill (/skills/train)
+```
+
+For **Cursor, Copilot, and Windsurf**, skill runbooks are inlined into the single generated file since those tools don't support separate command files.
 
 **You edit `.agent/`, then run `aes sync`.** Don't edit the generated files directly — they'll be overwritten.
 
@@ -220,11 +260,15 @@ You work normally — ask the agent to write code, fix bugs, deploy, whatever. T
 
 ### Slash commands
 
-Commands you defined in `.agent/commands/` are available as slash commands:
+Commands you defined in `.agent/commands/` are available as slash commands. Skills from `.agent/skills/` are also available as slash commands under `/skills/`:
 
 ```
-/setup     — Auto-populate .agent/ config (run this first on a new project)
-/deploy    — Deploy the application
+/setup              — Auto-populate .agent/ config (run this first on a new project)
+/train              — Run the full ML pipeline (domain-specific workflow command)
+/build              — Build a feature end-to-end (domain-specific workflow command)
+/process            — Run the content pipeline (domain-specific workflow command)
+/skills/discover    — Run the discover skill
+/skills/train       — Run the train skill
 ```
 
 ---
@@ -363,6 +407,7 @@ Published versions are **permanent** — you can't overwrite `1.0.0` once it's p
 4. Review and tweak            (adjust anything the agent got wrong)
 5. aes validate                (check everything is valid)
 6. aes sync                    (regenerate tool configs with your tweaks)
+7. /train (or /build, /process, /provision)  (run your domain's workflow)
 ```
 
 ### Day-to-day
@@ -395,7 +440,7 @@ aes status                     (check if you need to sync)
 | `aes init` | Scaffold `.agent/` directory in your project |
 | `aes init --domain ml` | Scaffold with ML-specific skills and workflows |
 | `aes validate` | Check all files are valid and consistent |
-| `aes sync` | Generate tool configs (CLAUDE.md, .cursorrules, etc.) |
+| `aes sync` | Generate tool configs (prompts for target; use `-t claude` to skip prompt) |
 | `aes status` | Check if `.agent/` changed since last sync |
 | `aes inspect` | Show project structure and stats |
 | `aes search "query"` | Search the skill registry |
@@ -430,3 +475,6 @@ aes install aes-hub/missing-skill@^1.0.0
 
 **The agent doesn't seem to use my changes**
 Did you run `aes sync`? The AI tools read the generated files (`CLAUDE.md`, `.cursorrules`), not `.agent/` directly. You need to sync after every change.
+
+**Skills aren't showing up as slash commands (Claude)**
+Make sure you ran `aes sync -t claude`. Skills are synced to `.claude/commands/skills/` as individual files. Check that the files exist there.

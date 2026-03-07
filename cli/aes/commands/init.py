@@ -229,14 +229,24 @@ def _init_from_tarball(tarball_path: Path, project_root: Path) -> None:
 # Interactive picker (when nothing detected)
 # ---------------------------------------------------------------------------
 
-_PROJECT_TYPE_CHOICES = [
+_MODE_CHOICES = [
+    ("Dev-Assist — Agent builds the project, then steps back", "dev-assist"),
+    ("Agent-Integrated — Agent is embedded in the running product", "agent-integrated"),
+]
+
+_DEV_ASSIST_TYPES = [
     ("API service", "api"),
     ("Web app", "fullstack"),
     ("CLI tool", "cli-tool"),
     ("Library / Package", "library"),
-    ("ML pipeline", "ml"),
     ("DevOps / Infra", "devops"),
     ("Skip", "other"),
+]
+
+_AGENT_INTEGRATED_TYPES = [
+    ("ML pipeline", "ml"),
+    ("Research / Content pipeline", "research"),
+    ("Custom", "other"),
 ]
 
 _LANGUAGE_CHOICES = ["python", "typescript", "javascript", "go", "rust", "java"]
@@ -256,30 +266,49 @@ _FRAMEWORK_PICKER: Dict[tuple, List[str]] = {
 
 
 def _interactive_pick(analysis: ProjectAnalysis) -> tuple:
-    """Show an interactive picker when nothing was auto-detected.
+    """Show a two-step interactive picker when nothing was auto-detected.
+
+    Step 1: Choose mode (dev-assist vs agent-integrated).
+    Step 2: Choose project type within the selected mode.
 
     Returns ``(project_type, language, frameworks)`` chosen by the user.
     """
     console.print()
-    console.print("[bold]No project files detected.[/] What are you building?\n")
+    console.print("[bold]How will the agent work with this project?[/]\n")
 
-    # --- Project type ---
-    for i, (label, _) in enumerate(_PROJECT_TYPE_CHOICES, 1):
+    # --- Step 1: Mode ---
+    for i, (label, _) in enumerate(_MODE_CHOICES, 1):
+        console.print(f"  [bold cyan][{i}][/] {label}")
+    console.print()
+
+    mode_idx = click.prompt(
+        "Choice",
+        type=click.IntRange(1, len(_MODE_CHOICES)),
+        default=1,
+    )
+    _, chosen_mode = _MODE_CHOICES[mode_idx - 1]
+
+    # --- Step 2: Project type based on mode ---
+    type_choices = _DEV_ASSIST_TYPES if chosen_mode == "dev-assist" else _AGENT_INTEGRATED_TYPES
+
+    console.print()
+    console.print("[bold]What type of project?[/]\n")
+    for i, (label, _) in enumerate(type_choices, 1):
         console.print(f"  [bold cyan][{i}][/] {label}")
     console.print()
 
     type_idx = click.prompt(
         "Choice",
-        type=click.IntRange(1, len(_PROJECT_TYPE_CHOICES)),
-        default=7,
+        type=click.IntRange(1, len(type_choices)),
+        default=len(type_choices),
     )
-    chosen_label, chosen_type = _PROJECT_TYPE_CHOICES[type_idx - 1]
+    chosen_label, chosen_type = type_choices[type_idx - 1]
 
     if chosen_type == "other":
         return ("other", analysis.language, [])
 
-    # ML and DevOps use DOMAIN_CONFIGS directly, skip language/framework
-    if chosen_type in ("ml", "devops"):
+    # Domain configs (ml, web, devops, research) skip language/framework
+    if chosen_type in DOMAIN_CONFIGS:
         lang = analysis.language if analysis.language != "other" else "python"
         return (chosen_type, lang, [])
 
@@ -386,8 +415,16 @@ def _print_post_init_summary(
     if registry:
         tree.add("registry/")
 
-    tree.add("commands/setup.md")
-    tree.add("memory/project.md")
+    cmd_branch = tree.add("commands/")
+    cmd_branch.add("setup.md")
+    if isinstance(domain_config, DomainConfig) and domain_config.workflow_commands:
+        for cmd_def in domain_config.workflow_commands:
+            cmd_branch.add(f"{cmd_def.id}.md [dim]{cmd_def.trigger}[/]")
+
+    mem_branch = tree.add("memory/")
+    mem_branch.add("project.md")
+    if isinstance(domain_config, DomainConfig) and domain_config.workflow:
+        mem_branch.add("operations.md [dim](workflow progress)[/]")
 
     console.print(tree)
 
@@ -414,7 +451,11 @@ def _print_post_init_summary(
 
     # Next steps
     console.print()
-    console.print("[dim]Next: Start a new agent session, then type /setup to fine-tune.[/]")
+    workflow_hint = ""
+    if isinstance(domain_config, DomainConfig) and domain_config.workflow_commands:
+        trigger = domain_config.workflow_commands[0].trigger
+        workflow_hint = f", or {trigger} to begin"
+    console.print(f"[dim]Next: Start a new agent session, then type /setup to fine-tune{workflow_hint}.[/]")
 
 
 @click.command("init")
@@ -523,7 +564,7 @@ def init_cmd(
             picked_type, picked_lang, picked_frameworks = _interactive_pick(analysis)
 
             language = picked_lang
-            if picked_type in ("ml", "devops"):
+            if picked_type in DOMAIN_CONFIGS:
                 detected_domain_config = DOMAIN_CONFIGS.get(picked_type)
             elif picked_type != "other":
                 detected_domain_config = resolve_config(
@@ -641,6 +682,19 @@ def init_cmd(
     content = _render_template(env, "setup.md.jinja", context)
     (agent_dir / COMMANDS_DIR / "setup.md").write_text(content)
 
+    # Workflow command runbooks
+    if domain_config and domain_config.workflow_commands:
+        for cmd_def in domain_config.workflow_commands:
+            cmd_context = {"cmd": cmd_def}
+            content = _render_template(env, "workflow_command.md.jinja", cmd_context)
+            (agent_dir / COMMANDS_DIR / f"{cmd_def.id}.md").write_text(content)
+
+    # Operations memory file (when domain has a workflow)
+    if domain_config and domain_config.workflow:
+        ops_context = {"name": name, "domain_config": domain_config}
+        content = _render_template(env, "operations.md.jinja", ops_context)
+        (agent_dir / MEMORY_DIR / "operations.md").write_text(content)
+
     # Auto-sync: generate tool-specific config files
     synced_files = run_sync(project_root, force=True, quiet=True)
     _write_mcp_config(project_root)
@@ -649,7 +703,7 @@ def init_cmd(
     project_type = "other"
     if analysis is not None:
         project_type = analysis.project_type
-    elif domain in ("ml", "web", "devops"):
+    elif domain in ("ml", "web", "devops", "research"):
         project_type = domain
 
     _print_post_init_summary(

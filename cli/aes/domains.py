@@ -78,8 +78,22 @@ class WorkflowDef:
 
 
 @dataclass
+class CommandDef:
+    """Definition for a workflow-initiating command (e.g. /train, /build)."""
+
+    id: str
+    trigger: str              # e.g. "/build", "/train", "/process"
+    description: str
+    runbook_purpose: str
+    runbook_phases: List[Dict[str, str]] = field(default_factory=list)
+
+
+@dataclass
 class DomainConfig:
     """All domain-specific content for aes init."""
+
+    mode: str = "dev-assist"   # "dev-assist" or "agent-integrated"
+    workflow_commands: List[CommandDef] = field(default_factory=list)
 
     # instructions.md content
     instructions_description: str = ""
@@ -377,6 +391,24 @@ _ML_WORKFLOW = WorkflowDef(
 )
 
 ML_CONFIG = DomainConfig(
+    mode="agent-integrated",
+    workflow_commands=[
+        CommandDef(
+            id="train",
+            trigger="/train",
+            description="Run the full ML pipeline: discover, examine, classify, train, evaluate, package, publish",
+            runbook_purpose="Execute the complete ML pipeline end-to-end. The agent discovers datasets, profiles them, trains models via Optuna HPO, evaluates results, and publishes winners.",
+            runbook_phases=[
+                {"title": "Discover", "content": "Find new datasets from OpenML/Kaggle APIs matching quality and licensing criteria."},
+                {"title": "Examine", "content": "Download, profile, and compute quality scores. Reject datasets below thresholds."},
+                {"title": "Classify", "content": "Detect problem type and select candidate models from the registry."},
+                {"title": "Train", "content": "Run Optuna HPO for each candidate model. Train final models on best params."},
+                {"title": "Evaluate", "content": "Score models against quality gates. Compare to baselines."},
+                {"title": "Package", "content": "Serialize models, generate model cards, and prepare artifacts."},
+                {"title": "Publish", "content": "Push passing models to HuggingFace Hub with full metadata."},
+            ],
+        ),
+    ],
     instructions_description="Automated ML pipeline that discovers public datasets, trains models via Optuna HPO, packages winners, and serves them via a metered prediction API.",
     instructions_quick_ref="python scripts/run_pipeline.py --stage all\npython scripts/run_pipeline.py --stage train --dataset-id 42\npython -m pytest tests/ -v",
     instructions_project_structure="pipeline/          # discover, examine, classify, train, evaluate, package, publish\ntrainers/          # gradient_boost, sklearn_models, time_series, anomaly, clustering\nconfig/            # settings, model_registry (THE BRAIN), metrics\nserving/           # FastAPI metered prediction API",
@@ -622,6 +654,22 @@ _WEB_WORKFLOW = WorkflowDef(
 )
 
 WEB_CONFIG = DomainConfig(
+    mode="dev-assist",
+    workflow_commands=[
+        CommandDef(
+            id="build",
+            trigger="/build",
+            description="Build a feature end-to-end: scaffold, implement, test, review, deploy",
+            runbook_purpose="Guide the agent through the full feature development lifecycle. The agent scaffolds boilerplate, implements the feature, runs tests, reviews code quality, and deploys.",
+            runbook_phases=[
+                {"title": "Scaffold", "content": "Generate migration, route, component, and test stubs for the feature."},
+                {"title": "Implement", "content": "Write migration logic, API routes, UI components, and wire up feature flags."},
+                {"title": "Test", "content": "Run unit, integration, and e2e test suites. Fix failures before proceeding."},
+                {"title": "Review", "content": "Run linting, type checking, bundle analysis, and security scan."},
+                {"title": "Deploy", "content": "Deploy to staging, verify health checks, then promote to production."},
+            ],
+        ),
+    ],
     instructions_description="Full-stack web application with authentication, subscription billing, and real-time updates.",
     instructions_quick_ref="npm run dev                    # start dev server\nnpm run test                   # run test suite\nnpm run db:migrate             # run pending migrations\nnpm run deploy:staging         # deploy to staging",
     instructions_project_structure="src/\n  app/               # Next.js app router pages\n  components/        # React components\n  api/               # Express API routes\n  lib/\n    db/              # Drizzle ORM + migrations\n    auth/            # NextAuth.js config\n    billing/         # Stripe integration\n    ws/              # WebSocket server\n  hooks/             # React hooks\ntests/\n  unit/              # Component + utility tests\n  integration/       # API endpoint tests\n  e2e/               # Playwright tests",
@@ -859,6 +907,20 @@ _DEVOPS_WORKFLOW = WorkflowDef(
 )
 
 DEVOPS_CONFIG = DomainConfig(
+    mode="dev-assist",
+    workflow_commands=[
+        CommandDef(
+            id="provision",
+            trigger="/provision",
+            description="Provision and deploy infrastructure: provision, configure, deploy",
+            runbook_purpose="Guide the agent through the full infrastructure provisioning and deployment lifecycle. The agent provisions resources via Terraform, configures services via Ansible, and deploys with blue-green strategy.",
+            runbook_phases=[
+                {"title": "Provision", "content": "Run terraform plan, review for destructive changes, then apply."},
+                {"title": "Configure", "content": "Apply Ansible playbooks with dry-run verification first."},
+                {"title": "Deploy", "content": "Blue-green deploy with health checks. Monitor for 5 minutes. Rollback if degraded."},
+            ],
+        ),
+    ],
     instructions_description="Infrastructure automation for cloud services. Provision, configure, deploy, monitor, and rollback. Uses Terraform for infra, Ansible for config, and Docker for services.",
     instructions_quick_ref="terraform plan -out=plan.tfplan    # preview changes\nterraform apply plan.tfplan         # apply changes\nansible-playbook -i inventory configure.yml\npython scripts/manage.py deploy --service api --env staging\npython scripts/manage.py rollback --service api --env staging",
     instructions_project_structure="terraform/         # Infrastructure as code\nansible/           # Configuration management\nscripts/           # Deployment and management scripts\nmonitoring/        # Alerting rules and dashboards\ndocker/            # Dockerfiles and compose files",
@@ -925,6 +987,266 @@ DEVOPS_CONFIG = DomainConfig(
 
 
 # ---------------------------------------------------------------------------
+# Research domain config — agent-integrated content processing
+# ---------------------------------------------------------------------------
+
+_RESEARCH_SKILLS = [
+    SkillDef(
+        id="ingest",
+        name="Ingest Content",
+        version="1.0.0",
+        description="Collect papers and content from sources (arXiv, Semantic Scholar, RSS, web)",
+        stage=1,
+        phase="ingestion",
+        inputs_required=[
+            {"name": "sources", "type": "list[str]",
+             "description": "Content sources to query (URLs, search terms, feed URLs)"},
+        ],
+        inputs_optional=[
+            {"name": "max_items", "type": "int", "default": "50",
+             "description": "Maximum items to ingest per run"},
+            {"name": "date_range", "type": "str", "default": "7d",
+             "description": "How far back to look (e.g. 7d, 30d, 1y)"},
+        ],
+        outputs=[
+            {"name": "ingested_ids", "type": "list[str]",
+             "description": "IDs of newly ingested items"},
+        ],
+        trigger_command="python scripts/pipeline.py --stage ingest",
+        error_strategy="per-item-isolation",
+        code_primary="pipeline/ingest.py",
+        tags=["ingestion", "arxiv", "semantic-scholar", "rss"],
+        blocks=["parse"],
+        runbook_purpose="Collect new papers, articles, and content from configured sources.",
+        runbook_when="- No items in `ingested` status\n- User requests new content\n- Scheduled daily/weekly",
+        runbook_how="1. Query each configured source (arXiv API, Semantic Scholar, RSS feeds, web scraping)\n2. Deduplicate against existing records by DOI, URL, or title similarity\n3. Store raw content with source metadata\n4. Record provenance and access timestamps",
+        runbook_decision_tree="For each source:\n  |- API available? -> Query API with filters\n  |- RSS feed? -> Parse feed entries\n  |- Web URL? -> Fetch and extract content\n  \\- For each item:\n      |- Already exists? -> Skip\n      |- Matches topic filters? -> Ingest\n      \\- No match? -> Skip",
+        runbook_error_handling="- **API rate limit**: Back off and retry\n- **Network error**: Skip source, continue with others\n- **Duplicate detected**: Skip silently",
+    ),
+    SkillDef(
+        id="parse",
+        name="Parse Content",
+        version="1.0.0",
+        description="Extract structure, metadata, key sections, and citations",
+        stage=2,
+        phase="extraction",
+        inputs_required=[
+            {"name": "item_id", "type": "str",
+             "description": "ID of item to parse"},
+        ],
+        outputs=[
+            {"name": "parsed_content", "type": "object",
+             "description": "Structured representation with sections, metadata, citations"},
+        ],
+        trigger_command="python scripts/pipeline.py --stage parse --item-id {ID}",
+        error_strategy="per-item-isolation",
+        code_primary="pipeline/parse.py",
+        tags=["parsing", "extraction", "metadata"],
+        depends_on=["ingest"],
+        blocks=["analyze"],
+        runbook_purpose="Extract structured information from raw ingested content: title, authors, abstract, sections, figures, citations, and metadata.",
+        runbook_when="- Item is at `ingested` status\n- After ingest skill completes",
+        runbook_how="1. Detect content type (PDF, HTML, plain text)\n2. Extract metadata: title, authors, date, DOI, venue\n3. Extract key sections: abstract, introduction, methods, results, conclusion\n4. Extract citations and build reference list\n5. Extract figures/tables if present\n6. Advance to `parsed`",
+        runbook_decision_tree="Detect format:\n  |- PDF? -> Use PDF parser (PyMuPDF/pdfplumber)\n  |- HTML? -> Use BeautifulSoup/trafilatura\n  |- Plain text? -> Use regex-based extraction\n  \\- After extraction:\n      |- Missing title or abstract? -> Mark for manual review\n      \\- Complete? -> Status: \"parsed\"",
+        runbook_error_handling="- **Corrupted PDF**: Reject with reason\n- **Encoding error**: Try fallback encodings\n- **Missing metadata**: Infer from content where possible",
+    ),
+    SkillDef(
+        id="analyze",
+        name="Analyze Content",
+        version="1.0.0",
+        description="Classify topics, extract insights, identify key findings",
+        stage=3,
+        phase="analysis",
+        inputs_required=[
+            {"name": "item_id", "type": "str",
+             "description": "ID of item to analyze"},
+        ],
+        outputs=[
+            {"name": "topics", "type": "list[str]",
+             "description": "Classified topic tags"},
+            {"name": "key_findings", "type": "list[str]",
+             "description": "Extracted key findings and insights"},
+            {"name": "relevance_score", "type": "float",
+             "description": "0.0-1.0 relevance to research focus"},
+        ],
+        trigger_command="python scripts/pipeline.py --stage analyze --item-id {ID}",
+        error_strategy="per-item-isolation",
+        code_primary="pipeline/analyze.py",
+        tags=["analysis", "classification", "insights"],
+        depends_on=["parse"],
+        blocks=["organize"],
+        runbook_purpose="Classify topics, extract key findings, compute relevance scores, and identify connections to existing knowledge.",
+        runbook_when="- Item is at `parsed` status\n- After parse skill completes",
+        runbook_how="1. Classify into topic taxonomy (multi-label)\n2. Extract key findings and contributions\n3. Identify methodology and approach\n4. Compute relevance score against research focus\n5. Find connections to previously analyzed items\n6. Advance to `analyzed`",
+        runbook_decision_tree="Analyze parsed content:\n  |- Relevance score < 0.2? -> Reject: \"low_relevance\"\n  |- No identifiable findings? -> Reject: \"no_findings\"\n  |- Duplicate findings? -> Merge with existing, note source\n  \\- Valid analysis? -> Status: \"analyzed\"",
+        runbook_error_handling="- **Ambiguous topic**: Assign multiple labels, flag for review\n- **Low confidence**: Lower relevance score, keep for manual review",
+    ),
+    SkillDef(
+        id="organize",
+        name="Organize Content",
+        version="1.0.0",
+        description="Categorize by topic and relevance, build taxonomy, cross-reference",
+        stage=4,
+        phase="taxonomy",
+        inputs_required=[
+            {"name": "item_id", "type": "str",
+             "description": "ID of item to organize"},
+        ],
+        outputs=[
+            {"name": "categories", "type": "list[str]",
+             "description": "Assigned taxonomy categories"},
+            {"name": "cross_refs", "type": "list[str]",
+             "description": "IDs of related items"},
+        ],
+        trigger_command="python scripts/pipeline.py --stage organize --item-id {ID}",
+        error_strategy="per-item-isolation",
+        code_primary="pipeline/organize.py",
+        tags=["taxonomy", "categorization", "cross-reference"],
+        depends_on=["analyze"],
+        blocks=["display"],
+        runbook_purpose="Place analyzed content into the knowledge taxonomy, cross-reference with related items, and update the knowledge graph.",
+        runbook_when="- Item is at `analyzed` status\n- After analyze skill completes",
+        runbook_how="1. Map topics to taxonomy categories\n2. Find related items by topic overlap and citation links\n3. Update knowledge graph with new connections\n4. Compute cluster membership\n5. Update category summaries\n6. Advance to `organized`",
+        runbook_decision_tree="For analyzed item:\n  |- Fits existing category? -> Assign and cross-reference\n  |- New topic cluster? -> Create new category, assign\n  |- Contradicts existing findings? -> Flag for attention\n  \\- Organized? -> Status: \"organized\"",
+        runbook_error_handling="- **Category conflict**: Assign to multiple, flag for review\n- **Missing cross-references**: Continue without, note gap",
+    ),
+    SkillDef(
+        id="display",
+        name="Display Results",
+        version="1.0.0",
+        description="Generate dashboard, report, or organized output for consumption",
+        stage=5,
+        phase="delivery",
+        inputs_optional=[
+            {"name": "format", "type": "str", "default": "markdown",
+             "description": "Output format: markdown, html, json"},
+            {"name": "focus_topics", "type": "list[str]",
+             "description": "Topics to highlight in output"},
+        ],
+        outputs=[
+            {"name": "report_path", "type": "str",
+             "description": "Path to generated report"},
+        ],
+        trigger_command="python scripts/pipeline.py --stage display",
+        error_strategy="fail-fast",
+        code_primary="pipeline/display.py",
+        tags=["reporting", "dashboard", "output"],
+        depends_on=["organize"],
+        runbook_purpose="Generate readable output: topic summaries, key findings digest, trend analysis, and cross-reference maps.",
+        runbook_when="- After organize completes\n- User requests a report or summary",
+        runbook_how="1. Gather all organized items by category\n2. Generate topic summaries with key findings\n3. Build trend analysis (new topics, growing areas)\n4. Create cross-reference visualization\n5. Output in requested format (markdown, HTML, JSON)",
+        runbook_decision_tree="Generate report:\n  |- No organized items? -> Report: \"No content processed yet\"\n  |- Focus topics specified? -> Filter to those topics\n  \\- Full report? -> Include all categories with summaries",
+        runbook_error_handling="- **Empty category**: Include with note \"no items yet\"\n- **Template error**: Fall back to plain text output",
+    ),
+]
+
+_RESEARCH_WORKFLOW = WorkflowDef(
+    id="content-pipeline",
+    entity="content-item",
+    description="Content processing pipeline from ingestion through organized display",
+    states=[
+        WorkflowStateDef("ingested", "Raw content collected from source", initial=True),
+        WorkflowStateDef("parsed", "Structure and metadata extracted"),
+        WorkflowStateDef("analyzed", "Topics classified, findings extracted", active=True),
+        WorkflowStateDef("organized", "Categorized and cross-referenced"),
+        WorkflowStateDef("displayed", "Included in generated output", terminal=True),
+        WorkflowStateDef("rejected", "Failed quality checks or irrelevant", terminal=True),
+    ],
+    transitions=[
+        WorkflowTransitionDef("ingested", "parsed", skill="parse",
+                              conditions=["Content is accessible and readable"]),
+        WorkflowTransitionDef("parsed", "analyzed", skill="analyze",
+                              conditions=["Metadata extraction successful"]),
+        WorkflowTransitionDef("analyzed", "organized", skill="organize",
+                              conditions=["Relevance score >= 0.2", "Key findings extracted"]),
+        WorkflowTransitionDef("organized", "displayed", skill="display",
+                              conditions=["Category assigned", "Cross-references resolved"]),
+        WorkflowTransitionDef("ingested", "rejected",
+                              conditions=["Content unreadable or corrupted"],
+                              description="Reject unprocessable content"),
+        WorkflowTransitionDef("analyzed", "rejected",
+                              conditions=["Relevance score < 0.2"],
+                              description="Reject irrelevant content"),
+    ],
+)
+
+RESEARCH_CONFIG = DomainConfig(
+    mode="agent-integrated",
+    workflow_commands=[
+        CommandDef(
+            id="process",
+            trigger="/process",
+            description="Run the content pipeline: ingest, parse, analyze, organize, display",
+            runbook_purpose="Execute the complete content processing pipeline. The agent ingests content from sources, extracts structure, analyzes findings, organizes into taxonomy, and generates output.",
+            runbook_phases=[
+                {"title": "Ingest", "content": "Collect papers/articles from configured sources (arXiv, Semantic Scholar, RSS, web)."},
+                {"title": "Parse", "content": "Extract structure, metadata, sections, and citations from raw content."},
+                {"title": "Analyze", "content": "Classify topics, extract key findings, compute relevance scores."},
+                {"title": "Organize", "content": "Categorize by topic, build taxonomy, cross-reference related items."},
+                {"title": "Display", "content": "Generate reports, summaries, and visualizations of processed content."},
+            ],
+        ),
+    ],
+    instructions_description="Research content processing pipeline. Ingests papers and articles, extracts structure and metadata, analyzes findings, organizes by topic taxonomy, and generates reports.",
+    instructions_quick_ref="python scripts/pipeline.py --stage all\npython scripts/pipeline.py --stage ingest --sources arxiv\npython scripts/pipeline.py --stage display --format markdown",
+    instructions_project_structure="pipeline/          # ingest, parse, analyze, organize, display\nsources/           # source adapters (arxiv, semantic_scholar, rss, web)\nconfig/            # settings, topic_taxonomy, source_registry\noutput/            # generated reports and dashboards\ndata/              # raw and processed content storage",
+    instructions_rules=[
+        "**Source attribution** -- always record provenance and access date for every ingested item.",
+        "**Deduplication** -- check by DOI, URL, and title similarity before ingesting.",
+        "**Relevance filtering** -- reject items below relevance threshold (default 0.2).",
+        "**Incremental processing** -- resume from last completed stage, never reprocess completed items.",
+        "**Structured output** -- all analysis results stored in structured format (not just prose).",
+    ],
+    instructions_workflow_phases=[
+        {"title": "Ingest Sources", "content": "Query configured sources for new content matching topic filters."},
+        {"title": "Extract Structure", "content": "Parse content into structured sections, metadata, and citations."},
+        {"title": "Analyze & Classify", "content": "Topic classification, key finding extraction, relevance scoring."},
+        {"title": "Organize & Connect", "content": "Build taxonomy, cross-reference, update knowledge graph."},
+        {"title": "Generate Output", "content": "Produce reports, summaries, and dashboards in requested format."},
+    ],
+    instructions_key_principle="Content is the raw material; structured knowledge is the product. Every item flows through the pipeline from raw ingestion to organized, cross-referenced output.",
+    instructions_gotchas=[
+        "PDFs from arXiv often have inconsistent formatting -- use multiple parsing strategies.",
+        "Semantic Scholar API has rate limits (100 req/5min) -- implement backoff.",
+        "Topic taxonomy evolves -- new categories emerge as content is processed.",
+        "Citation links may reference items not yet in the system -- store as pending references.",
+    ],
+    skills=_RESEARCH_SKILLS,
+    orchestrator_pipeline="ingest -> parse -> analyze -> organize -> display",
+    orchestrator_status_flow="ingested -> parsed -> analyzed -> organized -> displayed\n    |                  |\n    v                  v\n rejected           rejected",
+    orchestrator_decision_tree="for each stage in [ingest, parse, analyze, organize, display]:\n  1. Get items at current status\n  2. For each item:\n     a. Run stage skill\n     b. On success: advance status\n     c. On failure: log error, reject if unrecoverable\n  3. Report: N processed, N rejected, N skipped\n\nAfter analyze stage:\n  - Check relevance scores\n  - Reject items below threshold\n  - Flag items that contradict existing findings",
+    orchestrator_when_to_stop="- All items at terminal status (displayed or rejected)\n- No new items from sources\n- User requests stop",
+    workflow=_RESEARCH_WORKFLOW,
+    permissions_shell_read=[
+        "python scripts/pipeline.py status *",
+        "python scripts/pipeline.py list *",
+    ],
+    permissions_shell_execute=[
+        "python scripts/pipeline.py *",
+        "python -m pytest *",
+    ],
+    permissions_file_write=[
+        "pipeline/**/*.py",
+        "config/**/*.py",
+        "output/**",
+        "data/**",
+    ],
+    permissions_deny_shell=[
+        "rm -rf *",
+    ],
+    permissions_confirm_shell=[
+        "git push *",
+    ],
+    permissions_confirm_actions=[],
+    env_required=[],
+    env_optional=[
+        {"name": "SEMANTIC_SCHOLAR_API_KEY", "default": "", "description": "Semantic Scholar API key (optional, increases rate limits)"},
+        {"name": "MAX_ITEMS_PER_RUN", "default": "50", "description": "Maximum items to process per pipeline run"},
+    ],
+)
+
+
+# ---------------------------------------------------------------------------
 # Public mapping
 # ---------------------------------------------------------------------------
 
@@ -932,4 +1254,5 @@ DOMAIN_CONFIGS: Dict[str, DomainConfig] = {
     "ml": ML_CONFIG,
     "web": WEB_CONFIG,
     "devops": DEVOPS_CONFIG,
+    "research": RESEARCH_CONFIG,
 }

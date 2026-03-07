@@ -36,6 +36,14 @@ commands:
     path: "commands/setup.md"
     trigger: "/setup"
     description: "Review and customize .agent/ files for your project"
+{% if domain_config.workflow_commands %}
+{% for cmd in domain_config.workflow_commands %}
+  - id: "{{ cmd.id }}"
+    path: "commands/{{ cmd.id }}.md"
+    trigger: "{{ cmd.trigger }}"
+    description: "{{ cmd.description }}"
+{% endfor %}
+{% endif %}
 
 environment:
 {% if domain_config.env_required %}
