@@ -423,8 +423,8 @@ def _print_post_init_summary(
 
     mem_branch = tree.add("memory/")
     mem_branch.add("project.md")
-    if isinstance(domain_config, DomainConfig) and domain_config.workflow:
-        mem_branch.add("operations.md [dim](workflow progress)[/]")
+    if isinstance(domain_config, DomainConfig) and domain_config.workflow_commands:
+        mem_branch.add("operations.md [dim](per-command activity log)[/]")
 
     console.print(tree)
 
@@ -693,9 +693,13 @@ def init_cmd(
             content = _render_template(env, "workflow_command.md.jinja", cmd_context)
             (agent_dir / COMMANDS_DIR / f"{cmd_def.id}.md").write_text(content)
 
-    # Operations memory file (when domain has a workflow)
-    if domain_config and domain_config.workflow:
-        ops_context = {"name": name, "domain_config": domain_config}
+    # Operations memory file (when domain has workflow commands)
+    if domain_config and domain_config.workflow_commands:
+        ops_context = {
+            "name": name,
+            "domain_config": domain_config,
+            "workflow_commands": domain_config.workflow_commands,
+        }
         content = _render_template(env, "operations.md.jinja", ops_context)
         (agent_dir / MEMORY_DIR / "operations.md").write_text(content)
 

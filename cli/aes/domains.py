@@ -86,6 +86,7 @@ class CommandDef:
     description: str
     runbook_purpose: str
     runbook_phases: List[Dict[str, str]] = field(default_factory=list)
+    worker_specialty: str = ""  # one-line specialty for worker identity in memory
 
 
 @dataclass
@@ -398,6 +399,7 @@ ML_CONFIG = DomainConfig(
             trigger="/build",
             description="Build the ML pipeline codebase from scratch: project structure, database, pipeline stages, model registry, config, scripts, tests",
             runbook_purpose="Construct the complete ML pipeline codebase. The agent creates project structure, sets up the database, implements each pipeline stage, builds the model registry, writes configuration, adds CLI scripts, and verifies with tests.",
+            worker_specialty="Constructing ML pipeline codebases — modules, database, stages, registry",
             runbook_phases=[
                 {"title": "Project Structure", "content": "Create directory layout: pipeline/, trainers/, config/, serving/, scripts/, tests/. Set up pyproject.toml, __init__.py files, and virtual environment."},
                 {"title": "Database & Storage", "content": "Implement SQLite schema for datasets, models, and runs. Create migration scripts and helper functions (insert, update, query)."},
@@ -413,6 +415,7 @@ ML_CONFIG = DomainConfig(
             trigger="/train",
             description="Run the full ML pipeline: discover, examine, classify, train, evaluate, package, publish",
             runbook_purpose="Execute the complete ML pipeline end-to-end. The agent discovers datasets, profiles them, trains models via Optuna HPO, evaluates results, and publishes winners.",
+            worker_specialty="Executing ML training pipelines — HPO, evaluation, packaging",
             runbook_phases=[
                 {"title": "Discover", "content": "Find new datasets from OpenML/Kaggle APIs matching quality and licensing criteria."},
                 {"title": "Examine", "content": "Download, profile, and compute quality scores. Reject datasets below thresholds."},
@@ -676,6 +679,7 @@ WEB_CONFIG = DomainConfig(
             trigger="/build",
             description="Build a feature end-to-end: scaffold, implement, test, review, deploy",
             runbook_purpose="Guide the agent through the full feature development lifecycle. The agent scaffolds boilerplate, implements the feature, runs tests, reviews code quality, and deploys.",
+            worker_specialty="Building web features end-to-end — scaffold, implement, test, deploy",
             runbook_phases=[
                 {"title": "Scaffold", "content": "Generate migration, route, component, and test stubs for the feature."},
                 {"title": "Implement", "content": "Write migration logic, API routes, UI components, and wire up feature flags."},
@@ -929,6 +933,7 @@ DEVOPS_CONFIG = DomainConfig(
             trigger="/provision",
             description="Provision and deploy infrastructure: provision, configure, deploy",
             runbook_purpose="Guide the agent through the full infrastructure provisioning and deployment lifecycle. The agent provisions resources via Terraform, configures services via Ansible, and deploys with blue-green strategy.",
+            worker_specialty="Provisioning and deploying infrastructure — Terraform, Ansible, blue-green deploys",
             runbook_phases=[
                 {"title": "Provision", "content": "Run terraform plan, review for destructive changes, then apply."},
                 {"title": "Configure", "content": "Apply Ansible playbooks with dry-run verification first."},
@@ -1193,6 +1198,7 @@ RESEARCH_CONFIG = DomainConfig(
             trigger="/build",
             description="Build the research pipeline codebase from scratch: project structure, source adapters, storage, pipeline stages, taxonomy, scripts, tests",
             runbook_purpose="Construct the complete research content pipeline codebase. The agent creates project structure, implements source adapters, sets up storage, builds each pipeline stage, defines the topic taxonomy, adds CLI scripts, and verifies with tests.",
+            worker_specialty="Constructing research pipeline codebases — sources, storage, stages, taxonomy",
             runbook_phases=[
                 {"title": "Project Structure", "content": "Create directory layout: pipeline/, sources/, config/, output/, data/, scripts/, tests/. Set up pyproject.toml, __init__.py files, and virtual environment."},
                 {"title": "Source Adapters", "content": "Implement source adapters: arxiv.py, semantic_scholar.py, rss.py, web.py. Each adapter handles authentication, rate limiting, and returns normalized content objects."},
@@ -1208,6 +1214,7 @@ RESEARCH_CONFIG = DomainConfig(
             trigger="/process",
             description="Run the content pipeline: ingest, parse, analyze, organize, display",
             runbook_purpose="Execute the complete content processing pipeline. The agent ingests content from sources, extracts structure, analyzes findings, organizes into taxonomy, and generates output.",
+            worker_specialty="Processing research content through the pipeline — ingest, analyze, organize",
             runbook_phases=[
                 {"title": "Ingest", "content": "Collect papers/articles from configured sources (arXiv, Semantic Scholar, RSS, web)."},
                 {"title": "Parse", "content": "Extract structure, metadata, sections, and citations from raw content."},
@@ -1285,6 +1292,7 @@ _BUILD_COMMAND = CommandDef(
     trigger="/build",
     description="Build the project codebase: structure, core modules, storage, configuration, scripts, tests",
     runbook_purpose="Construct the project codebase from scratch. The agent creates directory structure, implements core modules, sets up storage, writes configuration, adds scripts, and verifies with tests.",
+    worker_specialty="Constructing project codebases from scratch",
     runbook_phases=[
         {"title": "Project Structure", "content": "Create directory layout, set up package config, __init__.py files, and virtual environment or package manager."},
         {"title": "Core Modules", "content": "Implement the primary modules that define the system's behavior. Each module has a clear responsibility and interface."},
@@ -1311,6 +1319,7 @@ AGENT_INTEGRATED_BASE_CONFIG = DomainConfig(
             trigger="/run",
             description="Execute the primary pipeline or workflow end-to-end",
             runbook_purpose="Run the project's main workflow from start to finish. The agent executes each stage, monitors progress, handles errors, and reports results.",
+            worker_specialty="Executing the primary project workflow end-to-end",
             runbook_phases=[
                 {"title": "Pre-flight Check", "content": "Verify environment, dependencies, and configuration. Ensure storage is accessible and previous state is consistent."},
                 {"title": "Execute Pipeline", "content": "Run each stage of the pipeline in order. Monitor progress and resource usage. Handle per-item errors gracefully."},

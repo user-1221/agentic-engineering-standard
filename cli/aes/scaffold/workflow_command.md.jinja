@@ -2,11 +2,18 @@
 
 {{ cmd.runbook_purpose }}
 
-## Operation Tracking
+## Worker Identity
 
-Before starting, check `.agent/memory/operations.md` for current pipeline state.
-Resume from the last completed stage if a previous run was interrupted.
-Update `.agent/memory/operations.md` after each stage completes.
+You are the **{{ cmd.trigger }}** worker — {{ cmd.worker_specialty or cmd.description }}.
+
+## Memory
+
+Before starting, read the **{{ cmd.trigger }}** section in `.agent/memory/operations.md`.
+Check the Activity Log to see what was done in previous sessions.
+Resume from the last incomplete checkpoint if a previous run was interrupted.
+Update your section in `.agent/memory/operations.md` after each phase:
+- Mark completed phases with `[x]` and a summary
+- Record any issues or decisions
 
 ## Phases
 {% for phase in cmd.runbook_phases %}
@@ -18,5 +25,8 @@ Update `.agent/memory/operations.md` after each stage completes.
 
 ## After Completion
 
-1. Update `.agent/memory/operations.md` with final status and run summary
-2. Report: stages completed, items processed, errors encountered
+1. Update your section in `.agent/memory/operations.md`:
+   - Set **Last run** date and **Status** to final outcome
+   - Mark all completed phases with `[x]` in the Activity Log
+   - Record issues and decisions made during this run
+2. Report: phases completed, items processed, errors encountered

@@ -23,7 +23,7 @@ ls templates/                         # domain templates (ml, web, devops, resea
 ```
 spec/                    # The specification (10 documents + README)
 schemas/                 # JSON Schemas for validating .agent/ files
-cli/                     # The `aes` CLI tool (Python 3.9+)
+cli/                     # The `aes` CLI tool (Python 3.10+)
   aes/
     commands/            # CLI commands: init, validate, inspect, publish, install, sync, status, search
     scaffold/            # Jinja2 templates for `aes init`
@@ -44,7 +44,7 @@ templates/               # Dogfooded domain templates (validated AES packages)
 
 ## Critical Rules
 
-1. **Python 3.9** — use `from __future__ import annotations` everywhere. Pydantic uses `Optional[X]` from typing, not `X | None`.
+1. **Python 3.10** — use `from __future__ import annotations` everywhere. Pydantic uses `Optional[X]` from typing, not `X | None`.
 2. **Spec is the source of truth** — schemas and CLI derive from the spec, not the other way around.
 3. **Tool-agnostic** — the standard uses `.agent/` not `.claude/`. Never reference a specific AI tool in the spec except in `overrides` sections.
 4. **YAML for humans, JSON Schema for machines** — all agent config is YAML. Validation schemas are JSON Schema draft 2020-12.

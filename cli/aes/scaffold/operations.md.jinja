@@ -1,23 +1,31 @@
-# {{ name }} — Operation Log
+# {{ name }} — Operations Memory
 
-## Current Workflow
-{% if domain_config.workflow %}
-**Workflow:** {{ domain_config.workflow.id }}
-{% else %}
-**Workflow:** --
-{% endif %}
+> This file tracks activity across all workflow commands.
+> Each command has its own section with checkmarked history.
+> The agent reads this before starting any command to understand previous activity.
+{% for cmd in workflow_commands %}
+
+---
+
+## {{ cmd.trigger }}
+
+> **Worker:** {{ cmd.worker_specialty or cmd.description }}
+
+**Last run:** Never
 **Status:** Not started
-**Current Stage:** --
+**Phases:** {{ cmd.runbook_phases | map(attribute='title') | join(', ') }}
 
-## Stage Progress
-{% for skill in domain_config.skills %}
-- [ ] **{{ skill.name }}** (stage {{ skill.stage }}) — Pending
-{% endfor %}
+### Activity Log
 
-## Run History
+_No activity recorded yet._
 
-_No runs recorded yet._
+<!-- Format:
+- [x] YYYY-MM-DD: Phase completed — what was done, outcome
+- [ ] YYYY-MM-DD: Phase in progress — current state
+- [ ] Pending — what still needs to be done
+-->
 
-## Errors / Blockers
+### Issues & Decisions
 
 _None._
+{% endfor %}

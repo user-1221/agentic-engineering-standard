@@ -71,7 +71,29 @@ No workflow was pre-populated. If your project has entities with lifecycle state
 4. Update `agent.yaml` workflows list
 {% endif %}
 
-## Phase 5: Review Permissions
+## Phase 5: Review Workflow Commands
+
+Workflow commands define repeating multi-phase workflows the agent executes.
+{% if domain_config.workflow_commands %}
+Pre-populated for the **{{ domain }}** domain:
+{% for cmd in domain_config.workflow_commands %}
+- `{{ cmd.trigger }}` — `.agent/commands/{{ cmd.id }}.md`
+{% endfor %}
+
+For each command:
+1. Review the phases — verify they match your actual workflow
+2. Customize phase content with project-specific scripts, paths, and checks
+3. Add any missing commands, remove any that don't apply
+4. Update `agent.yaml` commands list if you add/remove
+{% else %}
+No workflow commands were pre-populated. Consider adding commands for recurring workflows:
+1. `/build` — project construction
+2. `/run` — execute primary workflow
+3. Create command files in `.agent/commands/`
+4. Register in `agent.yaml` commands list
+{% endif %}
+
+## Phase 6: Review Permissions
 
 Edit `.agent/permissions.yaml`:
 1. Verify **shell read** commands match your inspection tools
@@ -83,14 +105,14 @@ Edit `.agent/permissions.yaml`:
 5. Add any **confirm** rules (high-impact commands like deploy, publish)
 6. Update **resource limits** if your project has compute constraints
 
-## Phase 6: Configure Environment
+## Phase 7: Configure Environment
 
 Edit `agent.yaml` environment section:
 - Codebase: scan for `os.environ`, `process.env`, `.env`, `.env.example`
 - Interview: ask "any API keys or config vars needed?"
 List required vars and optional vars with defaults.
 
-## Phase 7: Validate and Sync
+## Phase 8: Validate and Sync
 
 ```bash
 aes validate
@@ -173,7 +195,21 @@ For each skill:
 3. Create `workflows/{id}.yaml`
 4. Update `agent.yaml` workflows list
 
-## Phase 5: Set Permissions
+## Phase 5: Define Workflow Commands
+
+Workflow commands define repeating multi-phase workflows the agent executes (e.g. `/build`, `/run`).
+
+If commands exist in `.agent/commands/` (besides `setup.md`):
+1. Review each command's phases — verify they match your actual workflow
+2. Customize phase content with project-specific scripts, paths, and checks
+
+If no workflow commands exist, consider adding:
+1. `/build` — project construction (structure, modules, tests)
+2. `/run` — execute primary workflow end-to-end
+3. Create command files in `.agent/commands/`
+4. Register in `agent.yaml` commands list
+
+## Phase 6: Set Permissions
 
 Edit `.agent/permissions.yaml`:
 1. **Shell read**: inspection commands (git, ls, status)
@@ -185,14 +221,14 @@ Edit `.agent/permissions.yaml`:
 5. **Confirm**: high-impact commands (deploy, publish, push)
 6. **Resource limits**: if the project has compute constraints
 
-## Phase 6: Configure Environment
+## Phase 7: Configure Environment
 
 Edit `agent.yaml` environment section:
 - Codebase: scan for `os.environ`, `process.env`, `.env`, `.env.example`
 - Interview: ask "any API keys or config vars needed?"
 List required vars and optional vars with defaults.
 
-## Phase 7: Validate and Sync
+## Phase 8: Validate and Sync
 
 ```bash
 aes validate

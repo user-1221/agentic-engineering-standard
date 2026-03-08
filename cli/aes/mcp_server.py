@@ -19,7 +19,7 @@ from aes.validator import validate_agent_dir
 logging.basicConfig(level=logging.INFO, stream=sys.stderr)
 logger = logging.getLogger("aes-mcp")
 
-mcp = FastMCP("aes-registry", version="0.1.0")
+mcp = FastMCP("aes-registry")
 
 
 # ---------------------------------------------------------------------------

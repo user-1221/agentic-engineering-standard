@@ -1,9 +1,16 @@
 {% if domain_config %}
 # {{ name }} — Orchestrator
 
-## Operation Tracking
+## Operations Memory
 
-Check `.agent/memory/operations.md` for current state before executing. Resume from last completed stage.
+Check `.agent/memory/operations.md` for the current state of each command worker.
+Each command has its own indexed section with activity history and checkmarks.
+{% if domain_config.workflow_commands %}
+Commands tracked:
+{% for cmd in domain_config.workflow_commands %}
+- **{{ cmd.trigger }}** — {{ cmd.worker_specialty or cmd.description }}
+{% endfor %}
+{% endif %}
 
 ## Pipeline
 

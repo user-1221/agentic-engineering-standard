@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "CLI tool for the Agentic Engineering Standard"
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     {name = "Hiro"},
 ]
@@ -18,12 +18,10 @@ dependencies = [
     "jsonschema>=4.17",
     "jinja2>=3.1",
     "rich>=13.0",
+    "mcp>=1.2.0",
 ]
 
 [project.optional-dependencies]
-mcp = [
-    "mcp>=1.2.0",
-]
 dev = [
     "pytest>=7.0",
     "pytest-tmp-files>=0.0.2",
