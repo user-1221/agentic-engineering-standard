@@ -1,31 +1,33 @@
 # {{ name }} — Operations Memory
 
-> This file tracks activity across all workflow commands.
-> Each command has its own section with checkmarked history.
-> The agent reads this before starting any command to understand previous activity.
-{% for cmd in workflow_commands %}
+> Unified chronological log across all commands.
+> **Read the entire log** when starting any command — entries from other workers give you context.
+> After reading, update your **Read Cursor** below so you know where you left off next time.
+> Append new entries to the Activity Log tagged with your command.
 
----
+## Workers
 
-## {{ cmd.trigger }}
+| Command | Specialty | Read Cursor |
+|---------|-----------|-------------|
+{% for cmd in workflow_commands %}| {{ cmd.trigger }} | {{ cmd.worker_specialty or cmd.description }} | 0 |
+{% endfor %}
 
-> **Worker:** {{ cmd.worker_specialty or cmd.description }}
-
-**Last run:** Never
-**Status:** Not started
-**Phases:** {{ cmd.runbook_phases | map(attribute='title') | join(', ') }}
-
-### Activity Log
+## Activity Log
 
 _No activity recorded yet._
 
-<!-- Format:
-- [x] YYYY-MM-DD: Phase completed — what was done, outcome
-- [ ] YYYY-MM-DD: Phase in progress — current state
-- [ ] Pending — what still needs to be done
+<!-- Append entries in this format:
+1. [/build] YYYY-MM-DD: what was done — outcome
+2. [/train] YYYY-MM-DD: what was done — outcome
+Entries are numbered sequentially. Each command updates its Read Cursor to the
+last entry number it has seen, so it knows what's new next session.
 -->
 
-### Issues & Decisions
+## Issues & Decisions
 
-_None._
-{% endfor %}
+_None yet._
+
+<!-- Record cross-cutting issues and decisions here, tagged with command:
+- [/build] Chose SQLite over Postgres for simplicity
+- [/train] Ordinal targets should be reframed as regression
+-->

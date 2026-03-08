@@ -8,12 +8,16 @@ You are the **{{ cmd.trigger }}** worker — {{ cmd.worker_specialty or cmd.desc
 
 ## Memory
 
-Before starting, read the **{{ cmd.trigger }}** section in `.agent/memory/operations.md`.
-Check the Activity Log to see what was done in previous sessions.
-Resume from the last incomplete checkpoint if a previous run was interrupted.
-Update your section in `.agent/memory/operations.md` after each phase:
-- Mark completed phases with `[x]` and a summary
-- Record any issues or decisions
+Before starting, read **all** of `.agent/memory/operations.md`.
+Check the Activity Log for entries since your last **Read Cursor** — these are things other workers did that you haven't seen yet.
+Use this context to inform your work (e.g. what `/build` constructed, what `/run` encountered, decisions made).
+
+After each phase, append a numbered entry to the Activity Log tagged with `{{ cmd.trigger }}`:
+```
+N. [{{ cmd.trigger }}] YYYY-MM-DD: what was done — outcome
+```
+
+When done, update your **Read Cursor** in the Workers table to the last entry number.
 
 ## Phases
 {% for phase in cmd.runbook_phases %}
@@ -25,8 +29,8 @@ Update your section in `.agent/memory/operations.md` after each phase:
 
 ## After Completion
 
-1. Update your section in `.agent/memory/operations.md`:
-   - Set **Last run** date and **Status** to final outcome
-   - Mark all completed phases with `[x]` in the Activity Log
-   - Record issues and decisions made during this run
+1. Update `.agent/memory/operations.md`:
+   - Append final entries to the Activity Log
+   - Update your **Read Cursor** to the last entry number
+   - Add any cross-cutting issues or decisions to the Issues & Decisions section
 2. Report: phases completed, items processed, errors encountered

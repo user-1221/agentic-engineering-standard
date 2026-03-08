@@ -161,3 +161,25 @@ Include concrete examples of failures and recoveries:
 | User interaction | Minimal | Asks questions, reports results |
 
 Commands orchestrate skills. A `/train` command might invoke the `examine`, `classify`, `train`, `evaluate`, and `package` skills, with analysis and iteration between them.
+
+## Worker Identity
+
+Each command acts as a specialized worker with a defined area of expertise. The runbook includes a Worker Identity section that tells the agent its specialty, and a Memory section that points to its indexed section in `operations.md`:
+
+```markdown
+## Worker Identity
+
+You are the **/train** worker — executing ML training pipelines.
+
+## Memory
+
+Before starting, read the **/train** section in `.agent/memory/operations.md`.
+Check the Activity Log to see what was done in previous sessions.
+Resume from the last incomplete checkpoint if a previous run was interrupted.
+```
+
+This pattern gives each command:
+
+1. **Continuity** — the agent knows what happened in previous sessions via checkmarked activity logs
+2. **Specialization** — the agent focuses on its specific domain of expertise
+3. **Accountability** — each command's history is separately tracked in its own section

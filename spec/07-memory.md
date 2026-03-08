@@ -126,6 +126,66 @@ Per-session notes. Created automatically during work, gitignored by default.
 - Should the classifier auto-detect ordinal targets?
 ```
 
+## Operations Memory: `operations.md`
+
+Unified chronological log across all workflow commands. Entries are interleaved — every command appends to the same Activity Log, tagged with its name. Each command tracks a **Read Cursor** so it knows what's new since its last session.
+
+### Structure
+
+```markdown
+# Project — Operations Memory
+
+> Unified chronological log across all commands.
+> Read the entire log when starting any command.
+> Update your Read Cursor after reading.
+
+## Workers
+
+| Command | Specialty | Read Cursor |
+|---------|-----------|-------------|
+| /build | Constructing the codebase | 8 |
+| /train | ML training pipelines | 14 |
+
+## Activity Log
+
+1. [/build] 2026-03-07: Project Structure — created pipeline/, trainers/, config/
+2. [/build] 2026-03-07: Database — SQLite schema for datasets, models, runs
+3. [/build] 2026-03-07: Pipeline Stages — all 7 modules implemented
+4. [/build] 2026-03-07: Tests — 148 passing
+5. [/train] 2026-03-08: Discover — found 3 datasets from OpenML
+6. [/train] 2026-03-08: Train — CatBoost R2=0.511 for dataset 42
+7. [/build] 2026-03-08: Hotfix — fixed import in evaluate.py
+8. [/train] 2026-03-08: Evaluate — 3 models passed quality gates
+
+## Issues & Decisions
+
+- [/build] Chose SQLite over Postgres for simplicity
+- [/train] Ordinal targets should be reframed as regression
+```
+
+### How the Read Cursor Works
+
+Each command stores the last entry number it has read. When starting a new session:
+
+1. Read the full Activity Log
+2. Entries after your Read Cursor are **new** — other workers did these since you last ran
+3. Use this context to inform your work
+4. After finishing, update your Read Cursor to the last entry number
+
+### Guidelines
+
+- The agent reads the **entire file** before starting any command
+- Entries are numbered sequentially and tagged with `[/command]`
+- Each command appends to the shared Activity Log — no separate sections
+- Cross-cutting issues go in Issues & Decisions, tagged with command
+- Keep the log practical — summarize, don't dump raw output
+
+### Git Strategy
+
+| File | Git Status | Reason |
+|------|-----------|--------|
+| `operations.md` | Tracked | Shared operational state benefits all developers |
+
 ## What to Remember
 
 Save:

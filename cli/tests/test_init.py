@@ -394,7 +394,7 @@ class TestWorkflowCommands:
 
 
 class TestOperationsMemory:
-    """Test operations memory file generation with per-command indexed sections."""
+    """Test operations memory file generation with unified chronological log."""
 
     def test_ml_has_operations_md(self, tmp_path):
         _init(tmp_path, name="test-ml", domain="ml")
@@ -402,9 +402,14 @@ class TestOperationsMemory:
         assert ops_path.exists()
         content = ops_path.read_text()
         assert "Operations Memory" in content
-        assert "## /build" in content
-        assert "## /train" in content
-        assert "Not started" in content
+        assert "Activity Log" in content
+
+    def test_ml_operations_has_workers_table(self, tmp_path):
+        _init(tmp_path, name="test-ml", domain="ml")
+        content = (tmp_path / ".agent" / "memory" / "operations.md").read_text()
+        assert "| /build |" in content
+        assert "| /train |" in content
+        assert "Read Cursor" in content
 
     def test_ml_operations_has_worker_specialty(self, tmp_path):
         _init(tmp_path, name="test-ml", domain="ml")
@@ -412,25 +417,18 @@ class TestOperationsMemory:
         assert "Constructing ML pipeline" in content
         assert "Executing ML training" in content
 
-    def test_ml_operations_has_activity_log(self, tmp_path):
+    def test_ml_operations_has_issues_section(self, tmp_path):
         _init(tmp_path, name="test-ml", domain="ml")
         content = (tmp_path / ".agent" / "memory" / "operations.md").read_text()
-        assert "Activity Log" in content
         assert "Issues & Decisions" in content
-
-    def test_ml_operations_has_phases(self, tmp_path):
-        _init(tmp_path, name="test-ml", domain="ml")
-        content = (tmp_path / ".agent" / "memory" / "operations.md").read_text()
-        assert "Project Structure" in content  # /build phase
-        assert "Discover" in content  # /train phase
 
     def test_research_has_operations_md(self, tmp_path):
         _init(tmp_path, name="test-research", domain="research")
         ops_path = tmp_path / ".agent" / "memory" / "operations.md"
         assert ops_path.exists()
         content = ops_path.read_text()
-        assert "## /build" in content
-        assert "## /process" in content
+        assert "| /build |" in content
+        assert "| /process |" in content
 
     def test_other_domain_has_operations_md(self, tmp_path):
         """Other domain now gets operations.md since it has /build command."""
@@ -438,7 +436,7 @@ class TestOperationsMemory:
         ops_path = tmp_path / ".agent" / "memory" / "operations.md"
         assert ops_path.exists()
         content = ops_path.read_text()
-        assert "## /build" in content
+        assert "| /build |" in content
 
     def test_orchestrator_references_operations(self, tmp_path):
         _init(tmp_path, name="test-ml", domain="ml")
