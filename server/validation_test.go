@@ -220,4 +220,73 @@ func TestValidateIndexJSON(t *testing.T) {
 	}`)); err == nil {
 		t.Error("non-string type should be rejected")
 	}
+
+	// Valid: visibility = "public"
+	if _, err := ValidateIndexJSON([]byte(`{
+		"packages": {
+			"deploy": {
+				"visibility": "public",
+				"versions": {
+					"1.0.0": {"url":"packages/deploy/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
+				}
+			}
+		}
+	}`)); err != nil {
+		t.Errorf("visibility=public should be valid, got: %v", err)
+	}
+
+	// Valid: visibility = "private"
+	if _, err := ValidateIndexJSON([]byte(`{
+		"packages": {
+			"deploy": {
+				"visibility": "private",
+				"versions": {
+					"1.0.0": {"url":"packages/deploy/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
+				}
+			}
+		}
+	}`)); err != nil {
+		t.Errorf("visibility=private should be valid, got: %v", err)
+	}
+
+	// Valid: no visibility field (backward compat)
+	if _, err := ValidateIndexJSON([]byte(`{
+		"packages": {
+			"deploy": {
+				"versions": {
+					"1.0.0": {"url":"packages/deploy/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
+				}
+			}
+		}
+	}`)); err != nil {
+		t.Errorf("no visibility field should be valid (backward compat), got: %v", err)
+	}
+
+	// Invalid: visibility = "unlisted"
+	if _, err := ValidateIndexJSON([]byte(`{
+		"packages": {
+			"deploy": {
+				"visibility": "unlisted",
+				"versions": {
+					"1.0.0": {"url":"packages/deploy/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
+				}
+			}
+		}
+	}`)); err == nil {
+		t.Error("visibility=unlisted should be rejected")
+	}
+
+	// Invalid: visibility = 123
+	if _, err := ValidateIndexJSON([]byte(`{
+		"packages": {
+			"deploy": {
+				"visibility": 123,
+				"versions": {
+					"1.0.0": {"url":"packages/deploy/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}
+				}
+			}
+		}
+	}`)); err == nil {
+		t.Error("non-string visibility should be rejected")
+	}
 }

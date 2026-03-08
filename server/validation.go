@@ -83,6 +83,17 @@ func ValidateIndexJSON(data []byte) (map[string]interface{}, error) {
 			}
 		}
 
+		// Validate visibility field if present
+		if visVal, ok := entryMap["visibility"]; ok {
+			visStr, ok := visVal.(string)
+			if !ok {
+				return nil, fmt.Errorf("package %q: visibility must be a string", name)
+			}
+			if visStr != "public" && visStr != "private" {
+				return nil, fmt.Errorf("package %q: visibility must be \"public\" or \"private\", got %q", name, visStr)
+			}
+		}
+
 		versions, ok := entryMap["versions"]
 		if !ok {
 			continue // versions is optional in the index

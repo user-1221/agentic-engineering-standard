@@ -165,6 +165,7 @@ def upload_package(
     tags: Optional[List[str]] = None,
     registry_url: Optional[str] = None,
     pkg_type: str = "skill",
+    visibility: str = "public",
 ) -> dict:
     """Upload a tarball and update the registry index.
 
@@ -211,6 +212,7 @@ def upload_package(
     })
     pkg["description"] = description
     pkg["type"] = pkg_type
+    pkg["visibility"] = visibility
     if tags:
         pkg["tags"] = tags
 

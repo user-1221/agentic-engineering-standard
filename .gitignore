@@ -26,6 +26,9 @@ Thumbs.db
 .env
 .env.*
 
+# Local MCP config
+.mcp.json
+
 # Test artifacts
 .pytest_cache/
 htmlcov/

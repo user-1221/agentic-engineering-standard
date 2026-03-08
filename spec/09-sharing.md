@@ -104,6 +104,29 @@ Package entries in `index.json` include a `type` field:
 
 Valid values: `"skill"` (default) or `"template"`. Packages without a `type` field are treated as skills for backward compatibility.
 
+### Registry Index Visibility Field
+
+Package entries may include a `visibility` field:
+
+```json
+{
+  "packages": {
+    "internal-deploy": {
+      "type": "skill",
+      "visibility": "private",
+      "description": "Internal deploy skill",
+      "latest": "1.0.0",
+      "versions": { ... }
+    }
+  }
+}
+```
+
+Valid values: `"public"` (default) or `"private"`. Packages without a `visibility` field are treated as public for backward compatibility.
+
+- **Public** packages appear in search results and can be downloaded by anyone.
+- **Private** packages require a valid registry token (`AES_REGISTRY_KEY`) to appear in search results and to download.
+
 ### Searching by Type
 
 ```bash
@@ -212,6 +235,14 @@ This:
 2. Packages the skill directory as `.tar.gz`
 3. Uploads the tarball to the registry (requires `AES_REGISTRY_KEY`)
 4. Updates the registry `index.json` with the new version and SHA256 hash
+
+By default packages are public. To publish a private package:
+
+```bash
+aes publish --skill train --registry --visibility private
+```
+
+When `--visibility` is omitted in interactive mode, the CLI prompts for selection.
 
 The registry is a static file store (S3/R2-compatible):
 ```

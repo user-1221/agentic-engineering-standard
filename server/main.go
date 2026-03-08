@@ -98,7 +98,7 @@ func runServe() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	// SIGHUP reloads tokens from disk (used by the web service after creating/revoking tokens)
+	// SIGHUP reloads tokens from disk (kept for manual use: kill -HUP <pid>)
 	sighup := make(chan os.Signal, 1)
 	signal.Notify(sighup, syscall.SIGHUP)
 	go func() {
@@ -111,10 +111,28 @@ func runServe() {
 			} else {
 				logger.Log("info", map[string]interface{}{
 					"event": "tokens_reloaded",
+					"source": "sighup",
 				})
 			}
 		}
 	}()
+
+	// Auto-reload tokens when aes-web modifies tokens.json (polls mtime every 2s)
+	watchCtx, watchCancel := context.WithCancel(context.Background())
+	defer watchCancel()
+	go tokens.WatchFile(watchCtx, 2*time.Second, func(err error) {
+		if err != nil {
+			logger.Log("error", map[string]interface{}{
+				"event": "token_reload_failed",
+				"error": err.Error(),
+			})
+		} else {
+			logger.Log("info", map[string]interface{}{
+				"event":  "tokens_reloaded",
+				"source": "file_watch",
+			})
+		}
+	})
 
 	// Graceful shutdown
 	stop := make(chan os.Signal, 1)

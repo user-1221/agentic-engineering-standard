@@ -79,8 +79,18 @@ func (s *Server) handleGetIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token := s.optionalAuthenticate(r)
+
+	if token == nil {
+		// Unauthenticated — filter out private packages
+		filterPrivatePackages(index)
+		w.Header().Set("Cache-Control", "public, max-age=60")
+	} else {
+		// Authenticated — return everything, but don't cache publicly
+		w.Header().Set("Cache-Control", "private, max-age=60")
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "public, max-age=60")
 	json.NewEncoder(w).Encode(index)
 }
 
@@ -144,6 +154,16 @@ func (s *Server) handleGetPackage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check package visibility
+	vis := s.packageVisibility(name)
+	if vis == "private" {
+		token := s.optionalAuthenticate(r)
+		if token == nil {
+			s.jsonError(w, "authentication required for private packages", http.StatusUnauthorized)
+			return
+		}
+	}
+
 	f, size, err := s.storage.ReadPackage(name, version)
 	if err != nil {
 		if strings.Contains(err.Error(), "no such file") {
@@ -158,7 +178,11 @@ func (s *Server) handleGetPackage(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/gzip")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", size))
-	w.Header().Set("Cache-Control", "public, max-age=86400, immutable")
+	if vis == "private" {
+		w.Header().Set("Cache-Control", "private, max-age=86400, immutable")
+	} else {
+		w.Header().Set("Cache-Control", "public, max-age=86400, immutable")
+	}
 	io.Copy(w, f)
 }
 
@@ -283,6 +307,56 @@ func (s *Server) authenticate(w http.ResponseWriter, r *http.Request) (*TokenEnt
 	}
 
 	return &entry, true
+}
+
+// optionalAuthenticate tries to validate a Bearer token but returns nil if missing/invalid.
+func (s *Server) optionalAuthenticate(r *http.Request) *TokenEntry {
+	auth := r.Header.Get("Authorization")
+	if auth == "" {
+		return nil
+	}
+	rawToken := strings.TrimPrefix(auth, "Bearer ")
+	if rawToken == auth {
+		return nil
+	}
+	entry, ok := s.tokens.Validate(rawToken)
+	if !ok {
+		return nil
+	}
+	return &entry
+}
+
+// filterPrivatePackages removes private packages from the index in-place.
+func filterPrivatePackages(index map[string]interface{}) {
+	pkgs, ok := index["packages"].(map[string]interface{})
+	if !ok {
+		return
+	}
+	for name, entry := range pkgs {
+		entryMap, ok := entry.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		vis, _ := entryMap["visibility"].(string)
+		if vis == "private" {
+			delete(pkgs, name)
+		}
+	}
+}
+
+// packageVisibility returns the visibility of a package from the index ("public" or "private").
+func (s *Server) packageVisibility(name string) string {
+	index, err := s.storage.ReadIndex()
+	if err != nil {
+		return "public"
+	}
+	pkgs, _ := index["packages"].(map[string]interface{})
+	entry, _ := pkgs[name].(map[string]interface{})
+	vis, _ := entry["visibility"].(string)
+	if vis == "" {
+		return "public"
+	}
+	return vis
 }
 
 // parsePackagePath extracts name and version from /packages/{name}/{version}.tar.gz

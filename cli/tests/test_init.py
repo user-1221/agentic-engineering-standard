@@ -107,9 +107,9 @@ class TestDomainAwareInitML:
     def test_ml_instructions_have_real_content(self, tmp_path):
         _init(tmp_path, name="test-ml", domain="ml")
         content = (tmp_path / ".agent" / "instructions.md").read_text()
-        assert "resource limits" in content.lower() or "Resource limits" in content
-        assert "HPO" in content or "Optuna" in content
-        assert "TODO" not in content
+        assert "Resource limits" in content
+        assert "Analyze Results" in content
+        assert "Model registry is the brain" in content
 
     def test_ml_generates_skill_files(self, tmp_path):
         _init(tmp_path, name="test-ml", domain="ml")
@@ -188,8 +188,8 @@ class TestDomainAwareInitWeb:
     def test_web_instructions_have_real_content(self, tmp_path):
         _init(tmp_path, name="test-web", domain="web", language="typescript")
         content = (tmp_path / ".agent" / "instructions.md").read_text()
-        assert "TypeScript strict" in content or "typescript" in content.lower()
-        assert "TODO" not in content
+        assert "Feature flags" in content
+        assert "Auth on every API route" in content
 
     def test_web_generates_skill_files(self, tmp_path):
         _init(tmp_path, name="test-web", domain="web", language="typescript")
@@ -223,8 +223,8 @@ class TestDomainAwareInitDevOps:
     def test_devops_instructions_have_real_content(self, tmp_path):
         _init(tmp_path, name="test-devops", domain="devops")
         content = (tmp_path / ".agent" / "instructions.md").read_text()
-        assert "Terraform" in content or "terraform" in content
-        assert "TODO" not in content
+        assert "Staging first" in content
+        assert "Rollback ready" in content
 
     def test_devops_generates_skill_files(self, tmp_path):
         _init(tmp_path, name="test-devops", domain="devops")
@@ -257,7 +257,7 @@ class TestDomainAwareInitResearch:
         _init(tmp_path, name="test-research", domain="research")
         content = (tmp_path / ".agent" / "instructions.md").read_text()
         assert "content processing" in content.lower() or "ingests" in content.lower()
-        assert "TODO" not in content
+        assert "Source attribution" in content
 
     def test_research_generates_skill_files(self, tmp_path):
         _init(tmp_path, name="test-research", domain="research")
@@ -688,12 +688,12 @@ class TestAutoDetect:
         assert "TODO" in content
 
     def test_init_domain_ml_still_works(self, tmp_path):
-        """--domain ml -> pre-filled content."""
+        """--domain ml -> pre-filled domain knowledge content."""
         result = _init(tmp_path, name="test-ml", domain="ml", language="python")
         assert result.exit_code == 0
         content = (tmp_path / ".agent" / "instructions.md").read_text()
-        assert "TODO" not in content
-        assert "HPO" in content or "Optuna" in content
+        assert "Analyze Results" in content
+        assert "Model registry is the brain" in content
 
 
 class TestInteractivePicker:
@@ -705,7 +705,7 @@ class TestInteractivePicker:
         Patches sys.stdin.isatty to return True so the interactive code
         path is triggered (CliRunner's stdin is not a real TTY).
         """
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
 
         def _fake_isatty():
             return True
@@ -761,7 +761,7 @@ class TestInteractivePicker:
         skills_dir = tmp_path / ".agent" / "skills"
         assert (skills_dir / "discover.skill.yaml").exists()
         content = (tmp_path / ".agent" / "instructions.md").read_text()
-        assert "TODO" not in content
+        assert "Analyze Results" in content
 
     def test_picker_devops(self, tmp_path):
         """Pick Dev-Assist -> DevOps uses DOMAIN_CONFIGS['devops']."""
@@ -795,7 +795,7 @@ class TestInteractivePicker:
         skills_dir = tmp_path / ".agent" / "skills"
         assert (skills_dir / "ingest.skill.yaml").exists()
         content = (tmp_path / ".agent" / "instructions.md").read_text()
-        assert "TODO" not in content
+        assert "Source attribution" in content
 
     def test_picker_agent_integrated_custom(self, tmp_path):
         """Pick Agent-Integrated -> Custom produces TODO scaffolding with /build + /run."""

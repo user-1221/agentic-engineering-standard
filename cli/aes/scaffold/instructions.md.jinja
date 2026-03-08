@@ -36,9 +36,13 @@
 
 ## Common Gotchas
 
+{% if domain_config.instructions_gotchas %}
 {% for gotcha in domain_config.instructions_gotchas %}
 - {{ gotcha }}
 {% endfor %}
+{% else %}
+<!-- AGENT: Add project-specific gotchas — hard-won lessons, common mistakes, non-obvious behaviors. -->
+{% endif %}
 
 ## AES File Formats
 

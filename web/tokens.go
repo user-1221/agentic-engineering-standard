@@ -7,9 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
-	"os/exec"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -172,29 +171,8 @@ func (tm *TokenManager) RevokeToken(name string) error {
 	return nil
 }
 
-// signalRegistry sends SIGHUP to the registry process so it reloads tokens.
+// signalRegistry is a no-op — the registry now watches tokens.json for
+// changes via mtime polling, so no cross-process signal is needed.
 func (tm *TokenManager) signalRegistry() {
-	// Try PID file first
-	if tm.registryPIDFile != "" {
-		data, err := os.ReadFile(tm.registryPIDFile)
-		if err == nil {
-			pidStr := strings.TrimSpace(string(data))
-			var pid int
-			if _, err := fmt.Sscanf(pidStr, "%d", &pid); err == nil && pid > 0 {
-				syscall.Kill(pid, syscall.SIGHUP)
-				return
-			}
-		}
-	}
-
-	// Fallback: pidof
-	out, err := exec.Command("pidof", "aes-registry").Output()
-	if err != nil {
-		return
-	}
-	pidStr := strings.TrimSpace(string(out))
-	var pid int
-	if _, err := fmt.Sscanf(pidStr, "%d", &pid); err == nil && pid > 0 {
-		syscall.Kill(pid, syscall.SIGHUP)
-	}
+	log.Printf("signalRegistry: tokens.json updated, registry will auto-reload within ~2s")
 }

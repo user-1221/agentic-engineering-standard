@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import fnmatch
 import shutil
+import sys
 import tarfile
 import tempfile
 from pathlib import Path
@@ -217,6 +218,20 @@ def _publish_template_dir(
     return tarball_path
 
 
+def _prompt_visibility() -> str:
+    """Interactively prompt the user for package visibility."""
+    console.print("\n[bold]Package visibility:[/]\n")
+    choices = [
+        ("public", "Anyone can search and download"),
+        ("private", "Requires a valid registry token"),
+    ]
+    for i, (name, desc) in enumerate(choices, 1):
+        console.print(f"  [bold cyan][{i}][/] {name} — {desc}")
+    console.print()
+    idx = click.prompt("Choice", type=click.IntRange(1, len(choices)), default=1)
+    return choices[idx - 1][0]
+
+
 def _upload_to_registry(
     tarball: Path,
     skill_id: str,
@@ -224,12 +239,14 @@ def _upload_to_registry(
     description: str,
     tags: Optional[list] = None,
     pkg_type: str = "skill",
+    visibility: str = "public",
 ) -> None:
     """Upload a single tarball to the AES registry."""
     from aes.registry import upload_package
 
     try:
-        upload_package(tarball, skill_id, version, description, tags, pkg_type=pkg_type)
+        upload_package(tarball, skill_id, version, description, tags,
+                       pkg_type=pkg_type, visibility=visibility)
         console.print(f"  [green]Uploaded to registry:[/] {skill_id}@{version}")
     except RuntimeError as exc:
         console.print(f"  [red]Registry upload failed:[/] {exc}")
@@ -241,6 +258,7 @@ def _upload_tarballs_from_dir(
     output_dir: Path,
     project_root: Path,
     skill_filter: Optional[str],
+    visibility: str = "public",
 ) -> None:
     """Upload all tarballs in *output_dir* to the registry."""
     for tarball in sorted(output_dir.glob("*.tar.gz")):
@@ -270,7 +288,7 @@ def _upload_tarballs_from_dir(
         except Exception:
             pass
 
-        _upload_to_registry(tarball, sid, sver, description, tags)
+        _upload_to_registry(tarball, sid, sver, description, tags, visibility=visibility)
 
 
 @click.command("publish")
@@ -283,6 +301,8 @@ def _upload_tarballs_from_dir(
 @click.option("--include-memory", is_flag=True, default=False, help="Include memory/ in template (excluded by default)")
 @click.option("--exclude", multiple=True, help="Additional glob patterns to exclude from template")
 @click.option("--include-all", is_flag=True, default=False, help="No default exclusions for template")
+@click.option("--visibility", type=click.Choice(["public", "private"]), default=None,
+              help="Package visibility (public/private). Prompts if interactive, defaults to public in CI.")
 def publish_cmd(
     skill_path: Optional[str],
     output: str,
@@ -293,6 +313,7 @@ def publish_cmd(
     include_memory: bool,
     exclude: tuple,
     include_all: bool,
+    visibility: Optional[str],
 ) -> None:
     """Package skill(s) or a template as tarball(s) for sharing.
 
@@ -313,6 +334,14 @@ def publish_cmd(
     """
     output_dir = Path(output).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    if registry and visibility is None:
+        if sys.stdin.isatty():
+            visibility = _prompt_visibility()
+        else:
+            visibility = "public"
+    elif visibility is None:
+        visibility = "public"
 
     if template:
         # Template mode — package entire .agent/ directory
@@ -354,6 +383,7 @@ def publish_cmd(
                 mdata.get("description", ""),
                 mdata.get("tags"),
                 pkg_type="template",
+                visibility=visibility,
             )
         else:
             console.print()
@@ -385,7 +415,8 @@ def publish_cmd(
         console.print(f"  Size: {tarball.stat().st_size / 1024:.1f} KB")
 
         if registry:
-            _upload_to_registry(tarball, sid, sver, mdata.get("description", ""), mdata.get("tags"))
+            _upload_to_registry(tarball, sid, sver, mdata.get("description", ""), mdata.get("tags"),
+                                visibility=visibility)
         else:
             console.print()
             console.print("[dim]Use --registry to upload to the AES registry.[/]")
@@ -398,4 +429,4 @@ def publish_cmd(
             console.print(f"[green]Published {count} skill(s)[/] to {output_dir}")
 
             if registry:
-                _upload_tarballs_from_dir(output_dir, project_root, skill)
+                _upload_tarballs_from_dir(output_dir, project_root, skill, visibility=visibility)

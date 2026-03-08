@@ -63,7 +63,8 @@ aes init --from aes-hub/ml-pipeline@^2.0
 aes publish ./my-skill -o dist/
 
 # Publish a complete .agent/ config as a template
-aes publish --template --registry -o dist/
+aes publish --template --registry -o dist/              # public by default
+aes publish --skill train --registry --visibility private  # private package
 ```
 
 ## Specification

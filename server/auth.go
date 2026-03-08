@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
@@ -32,6 +33,7 @@ type TokenStore struct {
 	path     string
 	tokens   []TokenEntry
 	auditLog string
+	lastMod  time.Time
 }
 
 // tokensFile is the on-disk format.
@@ -57,6 +59,12 @@ func NewTokenStore(path, auditLog string) (*TokenStore, error) {
 	if err := ts.load(); err != nil {
 		return nil, fmt.Errorf("load tokens: %w", err)
 	}
+
+	// Record initial mtime for file watching
+	if info, err := os.Stat(path); err == nil {
+		ts.lastMod = info.ModTime()
+	}
+
 	return ts, nil
 }
 
@@ -66,6 +74,36 @@ func (ts *TokenStore) Reload() error {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 	return ts.load()
+}
+
+// WatchFile polls the tokens file for changes and reloads automatically.
+// Call this in a goroutine. It runs until the context is cancelled.
+func (ts *TokenStore) WatchFile(ctx context.Context, interval time.Duration, onReload func(error)) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			info, err := os.Stat(ts.path)
+			if err != nil {
+				continue
+			}
+			ts.mu.RLock()
+			changed := info.ModTime().After(ts.lastMod)
+			ts.mu.RUnlock()
+			if changed {
+				err := ts.Reload()
+				ts.mu.Lock()
+				ts.lastMod = info.ModTime()
+				ts.mu.Unlock()
+				if onReload != nil {
+					onReload(err)
+				}
+			}
+		}
+	}
 }
 
 func (ts *TokenStore) load() error {

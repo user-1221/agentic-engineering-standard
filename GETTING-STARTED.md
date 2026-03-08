@@ -376,6 +376,18 @@ You can also share your entire `.agent/` configuration as a template — so othe
 aes publish --template --registry -o ./dist
 ```
 
+### Visibility
+
+By default, packages are public. To publish a private package (only accessible with a registry token):
+
+```bash
+aes publish --skill deploy --registry --visibility private
+```
+
+If you omit `--visibility`, the CLI will prompt you to choose.
+
+### Privacy Controls
+
 By default, `memory/`, `local.yaml`, and `overrides/` are excluded (they contain sensitive/local data). Override with:
 
 ```bash

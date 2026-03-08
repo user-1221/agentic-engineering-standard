@@ -241,6 +241,147 @@ func TestSecurityHeaders(t *testing.T) {
 	}
 }
 
+func TestGetIndexFiltersPrivatePackages(t *testing.T) {
+	srv, token := setupTestServer(t)
+
+	// Put an index with one public and one private package
+	indexData := `{"packages":{
+		"public-pkg":{"description":"Public","visibility":"public","latest":"1.0.0","versions":{"1.0.0":{"url":"packages/public-pkg/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}}},
+		"private-pkg":{"description":"Private","visibility":"private","latest":"1.0.0","versions":{"1.0.0":{"url":"packages/private-pkg/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}}}
+	}}`
+	putReq := httptest.NewRequest("PUT", "/index.json", bytes.NewReader([]byte(indexData)))
+	putReq.Header.Set("Authorization", "Bearer "+token)
+	putW := httptest.NewRecorder()
+	srv.Router().ServeHTTP(putW, putReq)
+	if putW.Code != 200 {
+		t.Fatalf("PUT index: got %d, want 200. Body: %s", putW.Code, putW.Body.String())
+	}
+
+	// GET without auth — should only see public-pkg
+	getReq := httptest.NewRequest("GET", "/index.json", nil)
+	getW := httptest.NewRecorder()
+	srv.Router().ServeHTTP(getW, getReq)
+
+	var index map[string]interface{}
+	json.Unmarshal(getW.Body.Bytes(), &index)
+	pkgs := index["packages"].(map[string]interface{})
+	if _, ok := pkgs["public-pkg"]; !ok {
+		t.Error("unauthenticated GET should see public-pkg")
+	}
+	if _, ok := pkgs["private-pkg"]; ok {
+		t.Error("unauthenticated GET should NOT see private-pkg")
+	}
+	if cc := getW.Header().Get("Cache-Control"); cc != "public, max-age=60" {
+		t.Errorf("unauthenticated Cache-Control: got %q, want %q", cc, "public, max-age=60")
+	}
+
+	// GET with auth — should see both
+	getAuthReq := httptest.NewRequest("GET", "/index.json", nil)
+	getAuthReq.Header.Set("Authorization", "Bearer "+token)
+	getAuthW := httptest.NewRecorder()
+	srv.Router().ServeHTTP(getAuthW, getAuthReq)
+
+	var indexAuth map[string]interface{}
+	json.Unmarshal(getAuthW.Body.Bytes(), &indexAuth)
+	pkgsAuth := indexAuth["packages"].(map[string]interface{})
+	if _, ok := pkgsAuth["public-pkg"]; !ok {
+		t.Error("authenticated GET should see public-pkg")
+	}
+	if _, ok := pkgsAuth["private-pkg"]; !ok {
+		t.Error("authenticated GET should see private-pkg")
+	}
+	if cc := getAuthW.Header().Get("Cache-Control"); cc != "private, max-age=60" {
+		t.Errorf("authenticated Cache-Control: got %q, want %q", cc, "private, max-age=60")
+	}
+}
+
+func TestGetPrivatePackageRequiresAuth(t *testing.T) {
+	srv, token := setupTestServer(t)
+
+	// Upload a package
+	content := []byte("private package content")
+	putPkgReq := httptest.NewRequest("PUT", "/packages/secret/1.0.0.tar.gz", bytes.NewReader(content))
+	putPkgReq.Header.Set("Authorization", "Bearer "+token)
+	putPkgW := httptest.NewRecorder()
+	srv.Router().ServeHTTP(putPkgW, putPkgReq)
+	if putPkgW.Code != 201 {
+		t.Fatalf("PUT package: got %d, want 201", putPkgW.Code)
+	}
+
+	// Mark it private in the index
+	indexData := `{"packages":{"secret":{"description":"Secret pkg","visibility":"private","latest":"1.0.0","versions":{"1.0.0":{"url":"packages/secret/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}}}}}`
+	putIdxReq := httptest.NewRequest("PUT", "/index.json", bytes.NewReader([]byte(indexData)))
+	putIdxReq.Header.Set("Authorization", "Bearer "+token)
+	putIdxW := httptest.NewRecorder()
+	srv.Router().ServeHTTP(putIdxW, putIdxReq)
+	if putIdxW.Code != 200 {
+		t.Fatalf("PUT index: got %d, want 200", putIdxW.Code)
+	}
+
+	// GET without auth — should 401
+	getReq := httptest.NewRequest("GET", "/packages/secret/1.0.0.tar.gz", nil)
+	getW := httptest.NewRecorder()
+	srv.Router().ServeHTTP(getW, getReq)
+	if getW.Code != 401 {
+		t.Errorf("unauthenticated GET private package: got %d, want 401", getW.Code)
+	}
+
+	// GET with auth — should 200
+	getAuthReq := httptest.NewRequest("GET", "/packages/secret/1.0.0.tar.gz", nil)
+	getAuthReq.Header.Set("Authorization", "Bearer "+token)
+	getAuthW := httptest.NewRecorder()
+	srv.Router().ServeHTTP(getAuthW, getAuthReq)
+	if getAuthW.Code != 200 {
+		t.Errorf("authenticated GET private package: got %d, want 200", getAuthW.Code)
+	}
+	body, _ := io.ReadAll(getAuthW.Body)
+	if !bytes.Equal(body, content) {
+		t.Error("authenticated download content doesn't match")
+	}
+	if cc := getAuthW.Header().Get("Cache-Control"); cc != "private, max-age=86400, immutable" {
+		t.Errorf("private package Cache-Control: got %q, want %q", cc, "private, max-age=86400, immutable")
+	}
+}
+
+func TestGetPublicPackageNoAuth(t *testing.T) {
+	srv, token := setupTestServer(t)
+
+	// Upload a package
+	content := []byte("public package content")
+	putPkgReq := httptest.NewRequest("PUT", "/packages/openpkg/1.0.0.tar.gz", bytes.NewReader(content))
+	putPkgReq.Header.Set("Authorization", "Bearer "+token)
+	putPkgW := httptest.NewRecorder()
+	srv.Router().ServeHTTP(putPkgW, putPkgReq)
+	if putPkgW.Code != 201 {
+		t.Fatalf("PUT package: got %d, want 201", putPkgW.Code)
+	}
+
+	// Mark it public in the index
+	indexData := `{"packages":{"openpkg":{"description":"Open pkg","visibility":"public","latest":"1.0.0","versions":{"1.0.0":{"url":"packages/openpkg/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}}}}}`
+	putIdxReq := httptest.NewRequest("PUT", "/index.json", bytes.NewReader([]byte(indexData)))
+	putIdxReq.Header.Set("Authorization", "Bearer "+token)
+	putIdxW := httptest.NewRecorder()
+	srv.Router().ServeHTTP(putIdxW, putIdxReq)
+	if putIdxW.Code != 200 {
+		t.Fatalf("PUT index: got %d, want 200", putIdxW.Code)
+	}
+
+	// GET without auth — should succeed
+	getReq := httptest.NewRequest("GET", "/packages/openpkg/1.0.0.tar.gz", nil)
+	getW := httptest.NewRecorder()
+	srv.Router().ServeHTTP(getW, getReq)
+	if getW.Code != 200 {
+		t.Errorf("unauthenticated GET public package: got %d, want 200", getW.Code)
+	}
+	body, _ := io.ReadAll(getW.Body)
+	if !bytes.Equal(body, content) {
+		t.Error("public download content doesn't match")
+	}
+	if cc := getW.Header().Get("Cache-Control"); cc != "public, max-age=86400, immutable" {
+		t.Errorf("public package Cache-Control: got %q, want %q", cc, "public, max-age=86400, immutable")
+	}
+}
+
 func TestParsePackagePath(t *testing.T) {
 	tests := []struct {
 		path    string

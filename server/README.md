@@ -91,7 +91,8 @@ curl https://registry.example.com/health
 
 ### GET /index.json
 
-Returns the full package catalog. Cached for 60 seconds.
+Returns the full package catalog. Unauthenticated requests only see public packages.
+Private packages require a valid Bearer token. Cached for 60 seconds.
 
 ```bash
 curl https://registry.example.com/index.json
@@ -102,6 +103,7 @@ curl https://registry.example.com/index.json
   "packages": {
     "deploy": {
       "description": "Deploy skill for AES projects",
+      "visibility": "public",
       "latest": "1.1.0",
       "tags": ["devops", "deployment"],
       "versions": {
@@ -121,6 +123,9 @@ curl https://registry.example.com/index.json
 }
 ```
 
+Packages with `"visibility": "private"` are filtered from unauthenticated responses.
+Pass `Authorization: Bearer $TOKEN` to see all packages.
+
 ### GET /packages/{name}/{version}.tar.gz
 
 Downloads a skill tarball. Cached for 24 hours (immutable content).
@@ -130,6 +135,7 @@ curl -o deploy-1.0.0.tar.gz https://registry.example.com/packages/deploy/1.0.0.t
 ```
 
 Returns 404 if the package or version doesn't exist.
+Returns 401 if the package is private and no valid token is provided.
 
 ### PUT /packages/{name}/{version}.tar.gz
 
@@ -231,6 +237,9 @@ export AES_REGISTRY_KEY=aes_tok_...
 
 # Publish a skill
 aes publish --skill train --registry --path ./my-project
+
+# Publish a private skill
+aes publish --skill train --registry --visibility private
 
 # Search for skills
 aes search "deploy"

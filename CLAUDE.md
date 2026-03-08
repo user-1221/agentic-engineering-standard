@@ -55,6 +55,10 @@ templates/               # Dogfooded domain templates (validated AES packages)
 
 The standard treats agent instructions, skills, permissions, and memory as **first-class engineering artifacts** — equal in importance to code. AES standardizes these so they become portable, composable, and shareable.
 
+## Workflow Rules
+
+- **Document systematic changes** — when making architectural or infrastructure changes (e.g. changing how services communicate, modifying auth flows, updating deployment configs), update all relevant documentation: CLAUDE.md, MEMORY.md, deploy.md, README files, and architecture docs. Don't leave docs stale.
+
 ## Common Gotchas
 
 - Skill manifests (`.skill.yaml`) are separate from runbooks (`.md`). The manifest is for tooling; the runbook is for agent reasoning.
@@ -73,3 +77,4 @@ The standard treats agent instructions, skills, permissions, and memory as **fir
 - `aes publish --template` excludes `memory/`, `local.yaml`, and `overrides/` by default — use `--include-memory` or `--include-all` to override.
 - `aes init --from` accepts both registry sources (`aes-hub/name@^1.0`) and local tarballs (`./template.tar.gz`).
 - Registry packages have a `type` field (`"skill"` or `"template"`). Packages without `type` default to `"skill"` for backward compatibility.
+- `aes publish --registry` prompts for visibility (public/private) interactively; use `--visibility public` or `--visibility private` to skip. In non-interactive mode (CI), defaults to public. Registry packages have a `visibility` field (`"public"` or `"private"`). Packages without `visibility` default to `"public"` for backward compatibility. Private packages require `AES_REGISTRY_KEY` to search/download.

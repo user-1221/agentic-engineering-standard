@@ -270,6 +270,67 @@ class TestUploadPackage:
                         description="Deploy skill",
                     )
 
+    def test_upload_includes_visibility(self, tmp_path):
+        tarball = tmp_path / "deploy-1.0.0.tar.gz"
+        tarball.write_bytes(b"fake tarball content")
+
+        calls = []
+        def mock_urlopen(req, **kwargs):
+            calls.append(req)
+            method = req.get_method()
+            url = req.full_url
+            # First call is PUT package, second is GET index, third is PUT index
+            if method == "PUT" and "index.json" in url:
+                return MagicMock()
+            if method == "PUT":
+                return MagicMock()
+            # GET index — return empty index
+            resp = MagicMock()
+            resp.read.return_value = b'{"packages":{}}'
+            resp.__enter__ = lambda s: s
+            resp.__exit__ = MagicMock(return_value=False)
+            return resp
+
+        with patch.dict(os.environ, {"AES_REGISTRY_KEY": "test-token"}):
+            with patch("aes.registry.urllib.request.urlopen", side_effect=mock_urlopen):
+                result = upload_package(
+                    tarball_path=tarball,
+                    name="deploy",
+                    version="1.0.0",
+                    description="Deploy skill",
+                    visibility="private",
+                )
+
+        assert result["visibility"] == "private"
+
+    def test_upload_default_visibility_is_public(self, tmp_path):
+        tarball = tmp_path / "deploy-1.0.0.tar.gz"
+        tarball.write_bytes(b"fake tarball content")
+
+        def mock_urlopen(req, **kwargs):
+            method = req.get_method()
+            url = req.full_url
+            if method == "PUT" and "index.json" in url:
+                return MagicMock()
+            if method == "PUT":
+                return MagicMock()
+            resp = MagicMock()
+            resp.read.return_value = b'{"packages":{}}'
+            resp.__enter__ = lambda s: s
+            resp.__exit__ = MagicMock(return_value=False)
+            return resp
+
+        with patch.dict(os.environ, {"AES_REGISTRY_KEY": "test-token"}):
+            with patch("aes.registry.urllib.request.urlopen", side_effect=mock_urlopen):
+                result = upload_package(
+                    tarball_path=tarball,
+                    name="deploy",
+                    version="1.0.0",
+                    description="Deploy skill",
+                )
+
+        assert result["visibility"] == "public"
+
     def test_500_still_raises_httperror(self, tmp_path):
         tarball = tmp_path / "deploy-1.0.0.tar.gz"
         tarball.write_bytes(b"fake tarball content")

@@ -8,6 +8,39 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css?v=3">
+    <style>
+        .token-loading {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        .token-loading p {
+            margin-top: 1rem;
+            color: var(--text-secondary, #888);
+            font-size: 0.95rem;
+        }
+        .loading-spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid var(--border, #333);
+            border-top-color: var(--accent, #58a6ff);
+            border-radius: 50%;
+            margin: 0 auto;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.2s steps(4, end) infinite;
+        }
+        @keyframes dots {
+            0%  { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -21,7 +54,12 @@
     </header>
 
     <main>
-        <div class="token-created">
+        <div id="activating" class="token-loading">
+            <div class="loading-spinner"></div>
+            <p>Activating token<span class="loading-dots"></span></p>
+        </div>
+
+        <div id="token-result" class="token-created" style="display:none">
             <h1>Token Created</h1>
             <p class="warning">Copy this token now. It will not be shown again.</p>
 
@@ -43,5 +81,12 @@ export AES_REGISTRY_URL=https://registry.aes-official.com</code></pre>
     <footer>
         <p>Apache 2.0 &middot; <a href="https://github.com/user-1221/agentic-engineering-standard">GitHub</a></p>
     </footer>
+
+    <script>
+        setTimeout(function() {
+            document.getElementById('activating').style.display = 'none';
+            document.getElementById('token-result').style.display = '';
+        }, 2500);
+    </script>
 </body>
 </html>
