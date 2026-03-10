@@ -19,6 +19,18 @@ N. [{{ cmd.trigger }}] YYYY-MM-DD: what was done — outcome
 
 When done, update your **Read Cursor** in the Workers table to the last entry number.
 
+## Completion Check
+
+After reading the Activity Log, check if the pipeline is already complete (all items at terminal status and no new items to process). If so:
+
+1. Report the current state summary (counts, statuses, last activity)
+2. Ask the user what to do:
+   - **Re-run**: Clear state and start the pipeline fresh
+   - **New session**: Start a new pipeline with new inputs
+   - **Re-validate**: Re-run validation only on existing artifacts
+   - **Exit**: Nothing to do
+3. Do NOT silently re-execute phases on a finished pipeline
+
 ## Phases
 {% for phase in cmd.runbook_phases %}
 

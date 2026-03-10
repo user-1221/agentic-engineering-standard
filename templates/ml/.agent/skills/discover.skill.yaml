@@ -5,6 +5,18 @@ name: "Discover Datasets"
 version: "1.0.0"
 description: "Find new public datasets from OpenML and Kaggle APIs"
 
+negative_triggers:
+  - "Do NOT use for manual CSV imports or local file ingestion"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "pipeline/**"
+      - "data/**"
+  network: true
+
 stage: 1
 phase: "ingestion"
 

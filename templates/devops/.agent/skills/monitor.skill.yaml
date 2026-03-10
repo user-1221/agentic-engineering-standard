@@ -5,6 +5,16 @@ name: "Monitor Service"
 version: "1.0.0"
 description: "Check health endpoints, error rates, latency, and resource usage"
 
+negative_triggers:
+  - "Do NOT use as a substitute for proper monitoring infrastructure"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write: false
+  network: true
+
 stage: 5
 phase: "observability"
 

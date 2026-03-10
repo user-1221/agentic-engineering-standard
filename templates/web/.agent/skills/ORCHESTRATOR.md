@@ -17,6 +17,10 @@ planned → in_progress → testing → staging → deployed
 ## Decision Tree
 
 ```
+FIRST: Check if pipeline is already complete (all features at terminal status).
+  If complete → report status summary, ask user: re-run / new session / re-validate / exit.
+  If not → proceed:
+
 1. Understand feature requirements
 2. Create migration if schema change needed
 3. Implement API route with auth middleware

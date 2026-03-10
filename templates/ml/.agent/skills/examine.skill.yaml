@@ -5,6 +5,18 @@ name: "Examine Dataset"
 version: "1.0.0"
 description: "Download, profile, and compute quality score for a dataset"
 
+negative_triggers:
+  - "Do NOT use on datasets already at examined status or beyond"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "pipeline/**"
+      - "data/**"
+  network: true
+
 stage: 2
 phase: "profiling"
 

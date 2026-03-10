@@ -5,6 +5,18 @@ name: "Provision Infrastructure"
 version: "1.0.0"
 description: "Create or update cloud infrastructure via Terraform"
 
+negative_triggers:
+  - "Do NOT use for configuration management — use configure skill instead"
+  - "Do NOT apply destructive changes without user confirmation"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "terraform/**"
+  network: true
+
 stage: 1
 phase: "infrastructure"
 

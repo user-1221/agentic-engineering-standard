@@ -15,7 +15,8 @@ console = Console()
 
 @click.command("validate")
 @click.argument("path", default=".", type=click.Path(exists=True))
-def validate_cmd(path: str) -> None:
+@click.option("--strict", is_flag=True, help="Promote quality warnings to errors.")
+def validate_cmd(path: str, strict: bool) -> None:
     """Validate all .agent/ files against AES schemas.
 
     PATH is the project root directory (default: current directory).
@@ -35,10 +36,23 @@ def validate_cmd(path: str) -> None:
 
     passed = 0
     failed = 0
+    warnings = 0
 
     for result in results:
         rel_path = result.file_path.relative_to(project_root)
-        if result.valid:
+        is_warning = result.valid and result.errors
+        if is_warning and strict:
+            # Promote warnings to errors in strict mode
+            console.print(f"  [red]FAIL[/] {rel_path}")
+            for error in result.errors:
+                console.print(f"       {error}")
+            failed += 1
+        elif is_warning:
+            console.print(f"  [yellow]WARN[/] {rel_path}")
+            for error in result.errors:
+                console.print(f"       {error}")
+            warnings += 1
+        elif result.valid:
             console.print(f"  [green]PASS[/] {rel_path}")
             passed += 1
         else:
@@ -48,8 +62,16 @@ def validate_cmd(path: str) -> None:
             failed += 1
 
     console.print()
+    summary_parts = []
+    if passed:
+        summary_parts.append(f"{passed} passed")
+    if warnings:
+        summary_parts.append(f"{warnings} warning(s)")
+    if failed:
+        summary_parts.append(f"{failed} failed")
+
     if failed == 0:
-        console.print(f"[green]All {passed} files valid.[/]")
+        console.print(f"[green]All valid.[/] {', '.join(summary_parts)}.")
     else:
-        console.print(f"[red]{failed} file(s) failed[/], {passed} passed.")
+        console.print(f"[red]{', '.join(summary_parts)}.[/]")
         raise SystemExit(1)

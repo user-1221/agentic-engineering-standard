@@ -5,6 +5,20 @@ name: "Scaffold Feature"
 version: "1.0.0"
 description: "Generate boilerplate for a new feature: migration, route, component, test"
 
+negative_triggers:
+  - "Do NOT use for modifying existing features"
+  - "Do NOT use for bug fixes"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "src/**"
+      - "tests/**"
+      - "migrations/**"
+  network: false
+
 stage: 1
 phase: "setup"
 

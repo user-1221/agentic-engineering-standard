@@ -5,6 +5,18 @@ name: "Publish Model"
 version: "1.0.0"
 description: "Upload model to HuggingFace and register with the prediction API"
 
+negative_triggers:
+  - "Do NOT use without HF_TOKEN configured"
+  - "Do NOT use on unpackaged models"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "pipeline/**"
+  network: true
+
 stage: 7
 phase: "distribution"
 

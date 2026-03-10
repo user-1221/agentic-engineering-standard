@@ -126,7 +126,7 @@ def _load_agent_context(project_root: Path) -> AgentContext:
             runbook_path = agent_dir / runbook_rel
             if runbook_path.exists():
                 skill_runbooks[skill_id] = runbook_path.read_text()
-        # Load skill manifest for name/description metadata
+        # Load skill manifest for name/description/activation metadata
         manifest_rel = skill_ref.get("manifest")
         if manifest_rel:
             skill_manifest_path = agent_dir / manifest_rel
@@ -136,9 +136,18 @@ def _load_agent_context(project_root: Path) -> AgentContext:
                 skill_metadata[skill_id] = {
                     "name": skill_data.get("name", skill_id),
                     "description": skill_data.get("description", ""),
+                    "negative_triggers": skill_data.get("negative_triggers", []),
+                    "activation": skill_data.get("activation", "explicit"),
+                    "allowed_tools": skill_data.get("allowed_tools"),
                 }
         if skill_id not in skill_metadata:
-            skill_metadata[skill_id] = {"name": skill_id, "description": ""}
+            skill_metadata[skill_id] = {
+                "name": skill_id,
+                "description": "",
+                "negative_triggers": [],
+                "activation": "explicit",
+                "allowed_tools": None,
+            }
 
     # Load permissions
     permissions: Optional[dict] = None

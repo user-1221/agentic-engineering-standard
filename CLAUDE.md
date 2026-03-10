@@ -5,11 +5,12 @@ This repo defines the open standard for structuring, sharing, and discovering ag
 ## Quick Reference
 
 ```bash
-# Development
-cd cli && pip install -e ".[dev]"     # install CLI in dev mode
-python -m pytest cli/tests/ -v        # run tests
-aes validate examples/ml-pipeline     # validate an example
-aes validate templates/ml             # validate a template
+# Development (use existing venv or create one)
+cd cli && python3 -m venv .venv && . .venv/bin/activate
+pip install -e ".[dev]"              # install CLI in dev mode
+python -m pytest tests/ -v           # run tests
+aes validate examples/ml-pipeline    # validate an example
+aes validate templates/ml            # validate a template
 
 # Working with the spec
 ls spec/                              # all spec documents
@@ -54,6 +55,20 @@ templates/               # Dogfooded domain templates (validated AES packages)
 ## Key Principle
 
 The standard treats agent instructions, skills, permissions, and memory as **first-class engineering artifacts** — equal in importance to code. AES standardizes these so they become portable, composable, and shareable.
+
+## Versioning
+
+Two version tracks, bumped independently:
+- **Spec** (`X.Y`) — the standard itself. Bump on spec, schema, or example changes.
+- **CLI** (`X.Y.Z`, semver) — the `aes` tool. Bump on CLI changes.
+
+```bash
+python scripts/bump-version.py --cli 0.2.0 --dry-run   # preview
+python scripts/bump-version.py --cli 0.2.0              # update files
+# edit CHANGELOG.md, then commit, then run the printed git tag commands
+```
+
+The script updates version strings across all files (pyproject.toml, __init__.py, spec/README.md, schemas, examples, templates, scaffolds). It prints `git tag` commands to run after committing.
 
 ## Workflow Rules
 

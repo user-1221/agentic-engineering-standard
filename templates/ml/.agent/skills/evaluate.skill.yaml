@@ -5,6 +5,17 @@ name: "Evaluate Models"
 version: "1.0.0"
 description: "Compare trained models, check overfitting, and apply quality gates"
 
+negative_triggers:
+  - "Do NOT use when no experiments have completed"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "pipeline/**"
+  network: false
+
 stage: 5
 phase: "evaluation"
 

@@ -192,6 +192,9 @@ def validate_agent_dir(agent_dir: Path) -> List[ValidationResult]:
     # Validate skill dependency graph
     results.extend(_validate_skill_graph(agent_dir, manifest))
 
+    # Quality checks (warnings)
+    results.extend(_validate_skill_quality(agent_dir, manifest))
+
     return results
 
 
@@ -281,5 +284,111 @@ def _validate_skill_graph(
                 f"Circular dependency detected among skills: {', '.join(sorted(cycle_members))}"
             ],
         ))
+
+    return results
+
+
+def _validate_skill_quality(
+    agent_dir: Path,
+    manifest: dict,
+) -> List[ValidationResult]:
+    """Quality checks for skills (warnings only, valid=True).
+
+    These catch common issues: bad descriptions, oversized runbooks,
+    empty tags, and excessive skill counts.
+    """
+    results: List[ValidationResult] = []
+
+    skills = manifest.get("skills", [])
+    skill_count = len(skills)
+    if skill_count > 50:
+        results.append(ValidationResult(
+            file_path=agent_dir / "agent.yaml",
+            schema_type="skill",
+            valid=True,
+            errors=[
+                f"Project has {skill_count} skills; recommended maximum is 50 (warning)"
+            ],
+        ))
+
+    for skill_ref in skills:
+        manifest_rel = skill_ref.get("manifest")
+        if not manifest_rel:
+            continue
+        skill_path = agent_dir / manifest_rel
+        if not skill_path.exists():
+            continue
+
+        try:
+            skill_data = load_yaml(skill_path)
+        except Exception:
+            continue
+
+        skill_id = skill_data.get("id", skill_ref.get("id", "unknown"))
+        desc = skill_data.get("description", "")
+
+        # Description contains TODO
+        if "TODO" in desc:
+            results.append(ValidationResult(
+                file_path=skill_path,
+                schema_type="skill",
+                valid=True,
+                errors=[
+                    f"Skill '{skill_id}' description contains TODO (warning)"
+                ],
+            ))
+        elif len(desc) < 20:
+            results.append(ValidationResult(
+                file_path=skill_path,
+                schema_type="skill",
+                valid=True,
+                errors=[
+                    f"Skill '{skill_id}' description is only {len(desc)} chars; "
+                    f"aim for 20+ chars (warning)"
+                ],
+            ))
+
+        if len(desc) > 1024:
+            results.append(ValidationResult(
+                file_path=skill_path,
+                schema_type="skill",
+                valid=True,
+                errors=[
+                    f"Skill '{skill_id}' description is {len(desc)} chars; "
+                    f"maximum recommended is 1024 (warning)"
+                ],
+            ))
+
+        # Empty tags check
+        tags = skill_data.get("tags", [])
+        if isinstance(tags, list) and any(
+            isinstance(t, str) and not t.strip() for t in tags
+        ):
+            results.append(ValidationResult(
+                file_path=skill_path,
+                schema_type="skill",
+                valid=True,
+                errors=[
+                    f"Skill '{skill_id}' has empty tag values (warning)"
+                ],
+            ))
+
+        # Runbook size check
+        runbook_rel = skill_ref.get("runbook")
+        if runbook_rel:
+            runbook_path = agent_dir / runbook_rel
+            if runbook_path.exists():
+                runbook_text = runbook_path.read_text()
+                word_count = len(runbook_text.split())
+                if word_count > 5000:
+                    results.append(ValidationResult(
+                        file_path=runbook_path,
+                        schema_type="skill",
+                        valid=True,
+                        errors=[
+                            f"Skill '{skill_id}' runbook is {word_count} words; "
+                            f"recommended maximum is 5000 (warning)"
+                        ],
+                    ))
 
     return results

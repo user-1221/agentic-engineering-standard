@@ -6,6 +6,13 @@ id: "{{ skill.id }}"
 name: "{{ skill.name }}"
 version: "{{ skill.version }}"
 description: "{{ skill.description }}"
+{% if skill.negative_triggers %}
+negative_triggers:
+{% for nt in skill.negative_triggers %}  - "{{ nt }}"
+{% endfor %}{% endif %}
+{% if skill.activation != "explicit" %}
+activation: "{{ skill.activation }}"
+{% endif %}
 
 stage: {{ skill.stage }}
 phase: "{{ skill.phase }}"
@@ -62,6 +69,21 @@ triggers:
 
 error_handling:
   strategy: "{{ skill.error_strategy }}"
+{% if skill.allowed_tools %}
+
+allowed_tools:
+{% if skill.allowed_tools.shell is defined %}  shell: {{ skill.allowed_tools.shell | lower }}
+{% endif %}{% if skill.allowed_tools.files is defined %}  files:
+{% if skill.allowed_tools.files.read is defined %}{% if skill.allowed_tools.files.read is sameas true or skill.allowed_tools.files.read is sameas false %}    read: {{ skill.allowed_tools.files.read | lower }}
+{% else %}    read:
+{% for p in skill.allowed_tools.files.read %}      - "{{ p }}"
+{% endfor %}{% endif %}{% endif %}{% if skill.allowed_tools.files.write is defined %}{% if skill.allowed_tools.files.write is sameas true or skill.allowed_tools.files.write is sameas false %}    write: {{ skill.allowed_tools.files.write | lower }}
+{% else %}    write:
+{% for p in skill.allowed_tools.files.write %}      - "{{ p }}"
+{% endfor %}{% endif %}{% endif %}{% endif %}{% if skill.allowed_tools.network is defined %}  network: {{ skill.allowed_tools.network | lower }}
+{% endif %}{% if skill.allowed_tools.mcp_servers is defined %}  mcp_servers:
+{% for srv in skill.allowed_tools.mcp_servers %}    - "{{ srv }}"
+{% endfor %}{% endif %}{% endif %}
 
 code:
   primary: "{{ skill.code_primary }}"
@@ -90,10 +112,24 @@ aes_skill: "1.0"
 id: "{{ skill_id }}"
 name: "{{ skill_name }}"
 version: "1.0.0"
-# <!-- AGENT: Describe what this skill does in one sentence.
+# Description formula: [What it does] + [When to use it] + [Key capabilities]
+# Example: "Discover new datasets from OpenML and Kaggle APIs. Use when the pipeline
+#           needs fresh data or no datasets are in discovered status. Queries multiple
+#           sources, deduplicates, and filters by quality criteria."
+# Keep under 1024 characters. Be specific about triggers and capabilities.
+# <!-- AGENT: Describe what this skill does following the formula above.
 #      If code exists: read the primary source file and summarize its purpose.
 #      If greenfield: ask the user what this operation does. -->
 description: "TODO: describe what this skill does"
+
+# Phrases describing when this skill should NOT be used (optional)
+# negative_triggers:
+#   - "Do NOT use for manual data entry"
+#   - "Do NOT use when API keys are not configured"
+
+# Activation mode: "explicit" (slash command only, default),
+#   "auto" (loaded when description matches), "hybrid" (both)
+# activation: "explicit"
 
 inputs:
   # <!-- AGENT: Define required and optional inputs for this skill.
@@ -119,6 +155,15 @@ triggers:
 
 error_handling:
   strategy: "per-item-isolation"
+
+# Per-skill tool permissions (optional, tool-agnostic format)
+# allowed_tools:
+#   shell: true
+#   files:
+#     read: true
+#     write: ["src/**", "config/**"]
+#   network: true
+#   mcp_servers: ["fetch"]
 
 code:
   # <!-- AGENT: Set the path to the primary source file for this skill.

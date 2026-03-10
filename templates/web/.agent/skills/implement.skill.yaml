@@ -5,6 +5,20 @@ name: "Implement Feature"
 version: "1.0.0"
 description: "Write migration, routes, components, and feature flag integration"
 
+negative_triggers:
+  - "Do NOT use before scaffold has run"
+  - "Do NOT use without clear requirements"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "src/**"
+      - "tests/**"
+      - "migrations/**"
+  network: false
+
 stage: 2
 phase: "development"
 

@@ -5,6 +5,17 @@ name: "Deploy Service"
 version: "1.0.0"
 description: "Blue-green deploy with health checks and monitoring"
 
+negative_triggers:
+  - "Do NOT deploy to production without staging verification"
+  - "Do NOT use when infrastructure is not provisioned"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write: false
+  network: true
+
 stage: 3
 phase: "delivery"
 

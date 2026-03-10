@@ -51,11 +51,16 @@ def compose_instructions_with_skill_index(
     skill_metadata: Dict[str, Dict[str, Any]],
     memory_project: Optional[str],
     header: str,
+    skill_runbooks: Optional[Dict[str, str]] = None,
 ) -> str:
     """Compose instructions with a skill index instead of inlined runbooks.
 
     Skills are synced as separate command files; this just lists them
     so the agent knows they exist and can be invoked as slash commands.
+
+    Skills with ``activation: auto`` have their description (and optionally
+    a runbook summary) inlined directly so the agent can match them without
+    invoking a slash command.  ``hybrid`` skills appear in both sections.
     """
     sections: List[str] = [header]
 
@@ -67,25 +72,108 @@ def compose_instructions_with_skill_index(
         sections.append(orchestrator)
 
     if skill_metadata:
-        sections.append("---\n")
-        lines: List[str] = [
-            "# Available Skills\n",
-            "The following skills are available as slash commands:\n",
-        ]
+        # Partition skills by activation mode
+        auto_skills: Dict[str, Dict[str, Any]] = {}
+        explicit_skills: Dict[str, Dict[str, Any]] = {}
         for skill_id, meta in skill_metadata.items():
-            name = meta.get("name", skill_id)
-            desc = meta.get("description", "")
-            line = f"- **/skills/{skill_id}** — {name}"
-            if desc:
-                line += f": {desc}"
-            lines.append(line)
-        sections.append("\n".join(lines))
+            mode = meta.get("activation", "explicit")
+            if mode in ("auto", "hybrid"):
+                auto_skills[skill_id] = meta
+            if mode in ("explicit", "hybrid"):
+                explicit_skills[skill_id] = meta
+
+        # Auto-activated skills — inlined into instructions
+        if auto_skills:
+            sections.append("---\n")
+            auto_lines: List[str] = [
+                "# Auto-Activated Skills\n",
+                "The following skills activate automatically based on context:\n",
+            ]
+            for skill_id, meta in auto_skills.items():
+                name = meta.get("name", skill_id)
+                desc = meta.get("description", "")
+                neg = meta.get("negative_triggers", [])
+                auto_lines.append(f"### {name} (`/skills/{skill_id}`)\n")
+                if desc:
+                    auto_lines.append(desc)
+                if neg:
+                    auto_lines.append("")
+                    for trigger in neg:
+                        auto_lines.append(f"- {trigger}")
+                perms = format_skill_permissions(meta.get("allowed_tools"))
+                if perms:
+                    auto_lines.append("")
+                    auto_lines.append(perms)
+                auto_lines.append("")
+            sections.append("\n".join(auto_lines))
+
+        # Explicit skills — listed as slash commands
+        if explicit_skills:
+            sections.append("---\n")
+            lines: List[str] = [
+                "# Available Skills\n",
+                "The following skills are available as slash commands:\n",
+            ]
+            for skill_id, meta in explicit_skills.items():
+                name = meta.get("name", skill_id)
+                desc = meta.get("description", "")
+                neg = meta.get("negative_triggers", [])
+                line = f"- **/skills/{skill_id}** — {name}"
+                if desc:
+                    line += f": {desc}"
+                if neg:
+                    line += " " + " ".join(f"[{t}]" for t in neg)
+                lines.append(line)
+            sections.append("\n".join(lines))
 
     if memory_project:
         sections.append("---\n")
         sections.append(memory_project)
 
     return "\n\n".join(sections) + "\n"
+
+
+def format_skill_permissions(allowed_tools: Optional[Dict[str, Any]]) -> str:
+    """Format per-skill allowed_tools as a markdown permissions note.
+
+    Returns empty string if no permissions are specified.
+    """
+    if not allowed_tools:
+        return ""
+
+    parts: List[str] = ["**Permissions:**"]
+
+    shell = allowed_tools.get("shell")
+    if shell is not None:
+        parts.append(f"- Shell: {'allowed' if shell else 'denied'}")
+
+    files = allowed_tools.get("files")
+    if isinstance(files, dict):
+        read_val = files.get("read")
+        write_val = files.get("write")
+        if read_val is not None:
+            if isinstance(read_val, bool):
+                parts.append(f"- File read: {'allowed' if read_val else 'denied'}")
+            elif isinstance(read_val, list):
+                parts.append(f"- File read: {', '.join(f'`{p}`' for p in read_val)}")
+        if write_val is not None:
+            if isinstance(write_val, bool):
+                parts.append(f"- File write: {'allowed' if write_val else 'denied'}")
+            elif isinstance(write_val, list):
+                parts.append(f"- File write: {', '.join(f'`{p}`' for p in write_val)}")
+
+    network = allowed_tools.get("network")
+    if network is not None:
+        parts.append(f"- Network: {'allowed' if network else 'denied'}")
+
+    mcp = allowed_tools.get("mcp_servers")
+    if mcp:
+        parts.append(f"- MCP servers: {', '.join(mcp)}")
+
+    if len(parts) <= 1:
+        return ""
+
+    return "\n".join(parts)
 
 
 def translate_permissions_to_claude(permissions: dict) -> dict:

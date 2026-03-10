@@ -36,7 +36,12 @@ aes_skill: "1.0"
 id: "discover"
 name: "Discover Datasets"
 version: "1.0.0"
-description: "Find new public datasets from OpenML and Kaggle"
+description: "Find new public datasets from OpenML and Kaggle APIs. Use when the pipeline needs fresh data or no datasets are in discovered status. Queries multiple sources, deduplicates, and filters by quality criteria."
+
+# ── Activation & Triggers ────────────────────────────────
+activation: "explicit"              # explicit | auto | hybrid
+negative_triggers:
+  - "Do NOT use for manual CSV imports or local file ingestion"
 
 # ── Position in Pipeline ──────────────────────────────────
 stage: 1                        # execution order
@@ -89,6 +94,14 @@ error_handling:
   on_rate_limit: "sleep_and_retry"
   on_invalid_data: "skip_with_log"
 
+# ── Per-Skill Permissions ────────────────────────────────
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write: ["pipeline/**", "data/**"]
+  network: true                      # needs API access
+
 # ── Code References ───────────────────────────────────────
 code:
   primary: "pipeline/discover.py"
@@ -112,12 +125,15 @@ tags: ["data-ingestion", "api", "openml", "kaggle"]
 | `id` | string | Unique identifier (kebab-case) |
 | `name` | string | Human-readable name |
 | `version` | string | Semver |
-| `description` | string | One-line summary |
+| `description` | string | One-line summary (max 1024 chars, see guidelines below) |
 
 ### Optional Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
+| `negative_triggers` | string[] | Phrases describing when **not** to use this skill |
+| `activation` | enum | `"explicit"` (default), `"auto"`, or `"hybrid"` — see Activation Modes |
+| `allowed_tools` | object | Per-skill tool permissions (shell, files, network, mcp_servers) |
 | `stage` | int | Execution order in pipeline |
 | `phase` | string | Logical grouping |
 | `inputs` | object | Required/optional inputs + env vars |
@@ -129,6 +145,88 @@ tags: ["data-ingestion", "api", "openml", "kaggle"]
 | `depends_on` | array | Skills that must run first |
 | `blocks` | array | Skills that wait on this one |
 | `tags` | array | For discovery and search |
+
+## Description Guidelines
+
+The description is the primary signal agents use to decide whether to activate a skill. Follow this formula:
+
+**`[What it does] + [When to use it] + [Key capabilities]`**
+
+Good example:
+```
+"Find new public datasets from OpenML and Kaggle APIs. Use when the pipeline needs fresh data or no datasets are in discovered status. Queries multiple sources, deduplicates, and filters by quality criteria."
+```
+
+Bad examples:
+```
+"TODO: describe what this skill does"      # Placeholder — agent cannot match
+"Discover datasets"                         # Too vague — when? from where?
+```
+
+Rules:
+- Keep under **1024 characters** — agents truncate longer descriptions
+- Be specific about **trigger conditions** ("Use when...", "Run after...")
+- Include key **capabilities** the agent can match against
+- Use `negative_triggers` for exclusions instead of cluttering the description
+
+### Negative Triggers
+
+Use `negative_triggers` to explicitly state when a skill should **not** be activated:
+
+```yaml
+negative_triggers:
+  - "Do NOT use for manual data entry or CSV imports"
+  - "Do NOT use when API keys are not configured"
+```
+
+These are appended to skill index entries during sync so agents can avoid false matches.
+
+## Activation Modes
+
+The `activation` field controls how an agent discovers and loads a skill:
+
+| Mode | Behavior |
+|------|----------|
+| `explicit` (default) | Available only as a slash command. Agent must be explicitly told to use it. |
+| `auto` | Description and summary are inlined into the main instructions document. Agent activates based on context matching. |
+| `hybrid` | Both: inlined for auto-matching AND available as a slash command. |
+
+```yaml
+activation: "auto"    # Orchestrators, system-level skills
+activation: "explicit" # Pipeline stages, specific operations (default)
+activation: "hybrid"   # Skills useful both ways
+```
+
+Guidelines:
+- **Orchestrators** and system-level skills → `auto`
+- **Pipeline stages** and specific operations → `explicit`
+- **Utility skills** that could be useful either way → `hybrid`
+
+> **Note:** Activation mode affects Claude Code target output. Other targets (Cursor, Copilot, Windsurf) inline all skills regardless of mode.
+
+## Per-Skill Allowed Tools
+
+The `allowed_tools` field provides fine-grained, tool-agnostic permission hints per skill:
+
+```yaml
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write: ["src/**", "config/**"]
+  network: true
+  mcp_servers: ["fetch", "database"]
+```
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `shell` | bool | Whether shell/terminal access is needed |
+| `files.read` | bool or string[] | File read access (true = all, list = patterns) |
+| `files.write` | bool or string[] | File write access (true = all, list = patterns) |
+| `network` | bool | Whether network/HTTP access is needed |
+| `mcp_servers` | string[] | MCP servers this skill requires |
+
+These are **advisory** — sync targets render them as guidance in generated files. They do not enforce access control.
 
 ## Skill Runbook Format
 
@@ -234,6 +332,13 @@ for each pending_stage:
 - User requests stop
 - No items to process at any stage
 ```
+
+## Scaling Guidelines
+
+- **20–50 skills** is the recommended range for a single project. Beyond 50, agents struggle with context window limits and skill selection accuracy.
+- If you exceed 50 skills, consider splitting into sub-projects or using orchestrators to group related skills.
+- `aes validate` warns when a project exceeds 50 skills.
+- Prefer fewer, well-described skills over many narrow ones.
 
 ## Sharing Skills
 

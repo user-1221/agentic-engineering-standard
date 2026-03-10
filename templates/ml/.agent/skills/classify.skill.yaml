@@ -5,6 +5,17 @@ name: "Classify Problem"
 version: "1.0.0"
 description: "Detect problem type and select candidate models from the registry"
 
+negative_triggers:
+  - "Do NOT use on datasets below quality threshold (quality_score < 0.30)"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "pipeline/**"
+  network: false
+
 stage: 3
 phase: "classification"
 

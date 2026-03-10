@@ -4,14 +4,26 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aes-cli"
-version = "0.1.0"
+version = "0.2.0"
 description = "CLI tool for the Agentic Engineering Standard"
 readme = "README.md"
-license = {text = "MIT"}
+license = {text = "Apache-2.0"}
 requires-python = ">=3.10"
 authors = [
     {name = "Hiro"},
 ]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Code Generators",
+]
+keywords = ["agentic", "ai", "engineering", "standard", "cli"]
 dependencies = [
     "click>=8.0",
     "pyyaml>=6.0",
@@ -30,6 +42,14 @@ dev = [
 [project.scripts]
 aes = "aes.__main__:cli"
 aes-mcp = "aes.mcp_server:main"
+
+[project.urls]
+Homepage = "https://aes-official.com"
+Repository = "https://github.com/user-1221/agentic-engineering-standard"
+Documentation = "https://github.com/user-1221/agentic-engineering-standard/tree/main/spec"
+
+[tool.setuptools.package-data]
+aes = ["scaffold/*.jinja", "schemas/*.json"]
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -5,6 +5,17 @@ name: "Run Tests"
 version: "1.0.0"
 description: "Run unit, integration, and e2e test suites"
 
+negative_triggers:
+  - "Do NOT use during active implementation — wait until code compiles"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "tests/**"
+  network: false
+
 stage: 3
 phase: "quality"
 

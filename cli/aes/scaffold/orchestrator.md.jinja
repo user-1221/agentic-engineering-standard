@@ -27,6 +27,10 @@ Commands tracked:
 ## Decision Tree
 
 ```
+FIRST: Check if pipeline is already complete (all items at terminal status).
+  If complete → report status summary, ask user: re-run / new session / re-validate / exit.
+  If not → proceed:
+
 {{ domain_config.orchestrator_decision_tree }}
 ```
 
@@ -68,6 +72,10 @@ status_1 → status_2 → ... → status_n
      If greenfield: ask about decision points and error handling. -->
 
 ```
+FIRST: Check if pipeline is already complete (all items at terminal status).
+  If complete → report status summary, ask user: re-run / new session / re-validate / exit.
+  If not → proceed:
+
 for each pending_stage:
   1. Check prerequisites
   2. Get items at current status

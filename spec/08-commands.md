@@ -183,3 +183,17 @@ This pattern gives each command:
 1. **Continuity** — the agent knows what happened in previous sessions via checkmarked activity logs
 2. **Specialization** — the agent focuses on its specific domain of expertise
 3. **Accountability** — each command's history is separately tracked in its own section
+
+## Completion Check
+
+Before executing phases, a command must check if its pipeline is already complete:
+
+1. Read `.agent/memory/operations.md` — check the Activity Log for entries since the last Read Cursor
+2. Determine if all entities are at terminal status (e.g. published, rejected, deployed)
+3. If complete:
+   - Report the current state summary (counts, statuses, last activity)
+   - Ask the user what to do: **re-run** (clear state, start fresh), **new session** (start a new pipeline with new inputs), **re-validate** (verify artifacts only), or **exit** (nothing to do)
+   - Do NOT silently re-execute the pipeline
+4. If incomplete: proceed to Phase 1 as normal
+
+This prevents the agent from wasting time re-verifying already-completed work and respects the user's time.

@@ -20,6 +20,10 @@ discovered → examined → classified → training → trained → packaged →
 ## Decision Tree
 
 ```
+FIRST: Check if pipeline is already complete (all datasets at terminal status).
+  If complete → report status summary, ask user: re-run / new session / re-validate / exit.
+  If not → proceed:
+
 for each stage in [discover, examine, classify, train, evaluate, package, publish]:
   1. Check resource limits (CPU <70%, memory <75%)
   2. Get datasets at current status (or single dataset if --dataset-id)

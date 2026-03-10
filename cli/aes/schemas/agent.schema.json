@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aes.dev/schemas/agent/v1",
+  "title": "AES Agent Manifest",
+  "description": "Validates .agent/agent.yaml — the central manifest for an AES project",
+  "type": "object",
+  "required": ["aes", "name", "version", "description"],
+  "properties": {
+    "aes": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$",
+      "description": "AES spec version (e.g., '1.0')"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$",
+      "description": "Project name in kebab-case"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+",
+      "description": "Semantic version"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One-line project description"
+    },
+    "domain": {
+      "type": "string",
+      "description": "Project domain (ml, web, devops, data-pipeline, etc.)"
+    },
+    "license": {
+      "type": "string"
+    },
+    "repository": {
+      "type": "string",
+      "format": "uri"
+    },
+    "author": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "language": { "type": "string" },
+        "version": { "type": "string" },
+        "entry_point": { "type": "string" },
+        "setup": { "type": "string" }
+      },
+      "required": ["language"]
+    },
+    "agent": {
+      "type": "object",
+      "required": ["instructions"],
+      "properties": {
+        "instructions": {
+          "type": "string",
+          "description": "Path to instructions.md relative to .agent/"
+        },
+        "permissions": {
+          "type": "string",
+          "description": "Path to permissions.yaml relative to .agent/"
+        },
+        "orchestrator": {
+          "type": "string",
+          "description": "Path to ORCHESTRATOR.md relative to .agent/"
+        }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/skill_ref"
+      }
+    },
+    "registries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/registry_ref"
+      }
+    },
+    "workflows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/workflow_ref"
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/command_ref"
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "properties": {
+        "skills": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/env_var" }
+        },
+        "optional": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/env_var_optional" }
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "max_cpu_percent": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "max_memory_percent": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "max_concurrent_jobs": { "type": "integer", "minimum": 1 },
+        "max_disk_usage_mb": { "type": "integer", "minimum": 1 },
+        "coexistence_note": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "skill_ref": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+        "manifest": { "type": "string" },
+        "runbook": { "type": "string" }
+      }
+    },
+    "registry_ref": {
+      "type": "object",
+      "required": ["id", "path"],
+      "properties": {
+        "id": { "type": "string" },
+        "path": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "workflow_ref": {
+      "type": "object",
+      "required": ["id", "path"],
+      "properties": {
+        "id": { "type": "string" },
+        "path": { "type": "string" }
+      }
+    },
+    "command_ref": {
+      "type": "object",
+      "required": ["id", "path"],
+      "properties": {
+        "id": { "type": "string" },
+        "path": { "type": "string" },
+        "trigger": { "type": "string", "pattern": "^/" },
+        "description": { "type": "string" }
+      }
+    },
+    "env_var": {
+      "type": "object",
+      "required": ["name", "description"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "env_var_optional": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "default": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    }
+  }
+}

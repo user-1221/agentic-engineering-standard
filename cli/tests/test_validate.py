@@ -162,40 +162,6 @@ class TestSchemaRejection:
 # Skill dependency graph validation
 # ---------------------------------------------------------------------------
 
-def _make_agent_with_skills(agent_dir, skills_data):
-    """Helper: create agent.yaml + skill manifests for dep validation tests.
-
-    *skills_data* is a list of dicts with keys: id, depends_on, blocks.
-    """
-    agent_dir.mkdir(parents=True, exist_ok=True)
-    skills_dir = agent_dir / "skills"
-    skills_dir.mkdir(exist_ok=True)
-
-    skill_refs = []
-    for sd in skills_data:
-        sid = sd["id"]
-        manifest_name = f"{sid}.skill.yaml"
-        skill_file = skills_dir / manifest_name
-        skill_file.write_text(yaml.dump({
-            "aes_skill": "1.0",
-            "id": sid,
-            "name": sid.title(),
-            "version": "1.0.0",
-            "description": f"Skill {sid}",
-            "depends_on": sd.get("depends_on", []),
-            "blocks": sd.get("blocks", []),
-        }))
-        skill_refs.append({"id": sid, "manifest": f"skills/{manifest_name}"})
-
-    (agent_dir / "agent.yaml").write_text(yaml.dump({
-        "aes": "1.0",
-        "name": "dep-test",
-        "version": "1.0.0",
-        "description": "Dependency test project",
-        "skills": skill_refs,
-    }))
-
-
 class TestSkillDependencyGraph:
 
     def test_valid_deps_no_errors(self, tmp_path):
@@ -290,6 +256,257 @@ class TestSkillDependencyGraph:
         results = validate_agent_dir(agent_dir)
         for r in results:
             assert r.valid, f"{r.file_path}: {r.errors}"
+
+
+# ---------------------------------------------------------------------------
+# Skill quality checks (warnings)
+# ---------------------------------------------------------------------------
+
+class TestSkillQualityChecks:
+
+    def test_todo_description_warns(self, tmp_path):
+        """A skill with 'TODO' in description triggers a quality warning."""
+        agent_dir = tmp_path / ".agent"
+        _make_agent_with_skills(agent_dir, [
+            {"id": "bad-desc", "description": "TODO: describe what this does"},
+        ])
+        results = validate_agent_dir(agent_dir)
+        warnings = [r for r in results if r.valid and r.errors]
+        assert any("TODO" in e for r in warnings for e in r.errors)
+
+    def test_short_description_warns(self, tmp_path):
+        """A skill with description < 20 chars triggers a quality warning."""
+        agent_dir = tmp_path / ".agent"
+        _make_agent_with_skills(agent_dir, [
+            {"id": "short", "description": "Do stuff"},
+        ])
+        results = validate_agent_dir(agent_dir)
+        warnings = [r for r in results if r.valid and r.errors]
+        assert any("aim for 20+" in e for r in warnings for e in r.errors)
+
+    def test_good_description_no_warning(self, tmp_path):
+        """A skill with a good description has no quality warnings."""
+        agent_dir = tmp_path / ".agent"
+        _make_agent_with_skills(agent_dir, [
+            {"id": "good", "description": "Find new public datasets from APIs and filter by quality criteria"},
+        ])
+        results = validate_agent_dir(agent_dir)
+        quality_warnings = [
+            r for r in results if r.valid and r.errors
+            and any("description" in e.lower() for e in r.errors)
+        ]
+        assert len(quality_warnings) == 0
+
+    def test_empty_tags_warns(self, tmp_path):
+        """A skill with empty string in tags triggers a warning."""
+        agent_dir = tmp_path / ".agent"
+        skills_dir = agent_dir / "skills"
+        skills_dir.mkdir(parents=True)
+        (skills_dir / "etag.skill.yaml").write_text(yaml.dump({
+            "aes_skill": "1.0",
+            "id": "etag",
+            "name": "Empty Tag",
+            "version": "1.0.0",
+            "description": "A skill with empty tag values for testing",
+            "tags": ["good-tag", "", "another-good"],
+        }))
+        (agent_dir / "agent.yaml").write_text(yaml.dump({
+            "aes": "1.0",
+            "name": "tag-test",
+            "version": "1.0.0",
+            "description": "Test",
+            "skills": [{"id": "etag", "manifest": "skills/etag.skill.yaml"}],
+        }))
+        results = validate_agent_dir(agent_dir)
+        warnings = [r for r in results if r.valid and r.errors]
+        assert any("empty tag" in e.lower() for r in warnings for e in r.errors)
+
+    def test_oversized_runbook_warns(self, tmp_path):
+        """A runbook > 5000 words triggers a warning."""
+        agent_dir = tmp_path / ".agent"
+        skills_dir = agent_dir / "skills"
+        skills_dir.mkdir(parents=True)
+        (skills_dir / "big.skill.yaml").write_text(yaml.dump({
+            "aes_skill": "1.0",
+            "id": "big",
+            "name": "Big Runbook",
+            "version": "1.0.0",
+            "description": "A skill with a very large runbook for testing",
+        }))
+        # Create a runbook with > 5000 words
+        (skills_dir / "big.md").write_text("word " * 5500)
+        (agent_dir / "agent.yaml").write_text(yaml.dump({
+            "aes": "1.0",
+            "name": "runbook-test",
+            "version": "1.0.0",
+            "description": "Test",
+            "skills": [{
+                "id": "big",
+                "manifest": "skills/big.skill.yaml",
+                "runbook": "skills/big.md",
+            }],
+        }))
+        results = validate_agent_dir(agent_dir)
+        warnings = [r for r in results if r.valid and r.errors]
+        assert any("5000" in e for r in warnings for e in r.errors)
+
+    def test_skill_count_over_50_warns(self, tmp_path):
+        """More than 50 skills triggers a warning."""
+        agent_dir = tmp_path / ".agent"
+        skills_data = [
+            {"id": f"skill-{i}", "description": f"Skill number {i} for testing limits"}
+            for i in range(55)
+        ]
+        _make_agent_with_skills(agent_dir, skills_data)
+        results = validate_agent_dir(agent_dir)
+        warnings = [r for r in results if r.valid and r.errors]
+        assert any("55 skills" in e for r in warnings for e in r.errors)
+
+
+def _make_agent_with_skills(agent_dir, skills_data):
+    """Helper: create agent.yaml + skill manifests for dep/quality validation tests.
+
+    *skills_data* is a list of dicts with keys: id, depends_on, blocks, description.
+    """
+    agent_dir.mkdir(parents=True, exist_ok=True)
+    skills_dir = agent_dir / "skills"
+    skills_dir.mkdir(exist_ok=True)
+
+    skill_refs = []
+    for sd in skills_data:
+        sid = sd["id"]
+        manifest_name = f"{sid}.skill.yaml"
+        skill_file = skills_dir / manifest_name
+        skill_file.write_text(yaml.dump({
+            "aes_skill": "1.0",
+            "id": sid,
+            "name": sid.title(),
+            "version": "1.0.0",
+            "description": sd.get("description", f"Skill {sid}"),
+            "depends_on": sd.get("depends_on", []),
+            "blocks": sd.get("blocks", []),
+        }))
+        skill_refs.append({"id": sid, "manifest": f"skills/{manifest_name}"})
+
+    (agent_dir / "agent.yaml").write_text(yaml.dump({
+        "aes": "1.0",
+        "name": "dep-test",
+        "version": "1.0.0",
+        "description": "Dependency test project",
+        "skills": skill_refs,
+    }))
+
+
+# ---------------------------------------------------------------------------
+# Schema acceptance of new fields
+# ---------------------------------------------------------------------------
+
+class TestNewSchemaFields:
+    """Ensure schemas accept the new fields (negative_triggers, activation, allowed_tools)."""
+
+    def test_skill_with_negative_triggers(self, tmp_path):
+        bad = tmp_path / "skill.yaml"
+        bad.write_text(yaml.dump({
+            "aes_skill": "1.0",
+            "id": "test-neg",
+            "name": "Test Negative Triggers",
+            "version": "1.0.0",
+            "description": "A test skill with negative triggers for validation",
+            "negative_triggers": [
+                "Do NOT use for CSV imports",
+                "Do NOT use without API keys",
+            ],
+        }))
+        result = validate_file(bad, "skill")
+        assert result.valid, result.errors
+
+    def test_skill_with_activation_auto(self, tmp_path):
+        f = tmp_path / "skill.yaml"
+        f.write_text(yaml.dump({
+            "aes_skill": "1.0",
+            "id": "test-auto",
+            "name": "Test Auto Activation",
+            "version": "1.0.0",
+            "description": "A skill with auto activation mode for validation",
+            "activation": "auto",
+        }))
+        result = validate_file(f, "skill")
+        assert result.valid, result.errors
+
+    def test_skill_with_activation_hybrid(self, tmp_path):
+        f = tmp_path / "skill.yaml"
+        f.write_text(yaml.dump({
+            "aes_skill": "1.0",
+            "id": "test-hybrid",
+            "name": "Test Hybrid Activation",
+            "version": "1.0.0",
+            "description": "A skill with hybrid activation mode for validation",
+            "activation": "hybrid",
+        }))
+        result = validate_file(f, "skill")
+        assert result.valid, result.errors
+
+    def test_skill_with_invalid_activation_rejected(self, tmp_path):
+        f = tmp_path / "skill.yaml"
+        f.write_text(yaml.dump({
+            "aes_skill": "1.0",
+            "id": "test-bad-act",
+            "name": "Test Bad Activation",
+            "version": "1.0.0",
+            "description": "A skill with invalid activation mode for validation",
+            "activation": "invalid",
+        }))
+        result = validate_file(f, "skill")
+        assert not result.valid
+
+    def test_skill_with_allowed_tools(self, tmp_path):
+        f = tmp_path / "skill.yaml"
+        f.write_text(yaml.dump({
+            "aes_skill": "1.0",
+            "id": "test-perms",
+            "name": "Test Permissions",
+            "version": "1.0.0",
+            "description": "A skill with per-skill permissions for validation",
+            "allowed_tools": {
+                "shell": True,
+                "files": {
+                    "read": True,
+                    "write": ["src/**", "config/**"],
+                },
+                "network": False,
+                "mcp_servers": ["fetch"],
+            },
+        }))
+        result = validate_file(f, "skill")
+        assert result.valid, result.errors
+
+    def test_skill_with_allowed_tools_invalid_field_rejected(self, tmp_path):
+        f = tmp_path / "skill.yaml"
+        f.write_text(yaml.dump({
+            "aes_skill": "1.0",
+            "id": "test-bad-perms",
+            "name": "Test Bad Permissions",
+            "version": "1.0.0",
+            "description": "A skill with invalid allowed_tools field for validation",
+            "allowed_tools": {
+                "shell": True,
+                "dangerous_field": True,
+            },
+        }))
+        result = validate_file(f, "skill")
+        assert not result.valid
+
+    def test_description_over_1024_rejected(self, tmp_path):
+        f = tmp_path / "skill.yaml"
+        f.write_text(yaml.dump({
+            "aes_skill": "1.0",
+            "id": "test-long-desc",
+            "name": "Test Long Description",
+            "version": "1.0.0",
+            "description": "x" * 1025,
+        }))
+        result = validate_file(f, "skill")
+        assert not result.valid
 
 
 # ---------------------------------------------------------------------------

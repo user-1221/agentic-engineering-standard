@@ -15,6 +15,7 @@ from aes.targets._base import (
 )
 from aes.targets._composer import (
     compose_instructions_with_skill_index,
+    format_skill_permissions,
     translate_permissions_to_claude,
 )
 
@@ -42,6 +43,7 @@ class ClaudeTarget(SyncTarget):
             skill_metadata=ctx.skill_metadata,
             memory_project=ctx.memory_project,
             header=header,
+            skill_runbooks=ctx.skill_runbooks,
         )
 
         if ctx.permissions:
@@ -89,6 +91,23 @@ class ClaudeTarget(SyncTarget):
         for skill_id, runbook in ctx.skill_runbooks.items():
             rel_path = f".claude/commands/skills/{skill_id}.md"
             skill_content = AES_SENTINEL_MD + "\n" + runbook
+
+            # Append per-skill metadata (negative triggers, permissions)
+            meta = ctx.skill_metadata.get(skill_id, {})
+            neg_triggers = meta.get("negative_triggers", [])
+            allowed_tools = meta.get("allowed_tools")
+
+            extras: List[str] = []
+            if neg_triggers:
+                extras.append("\n## Do NOT Use When\n")
+                for trigger in neg_triggers:
+                    extras.append(f"- {trigger}")
+            perms_section = format_skill_permissions(allowed_tools)
+            if perms_section:
+                extras.append(f"\n## Skill Permissions\n\n{perms_section}")
+            if extras:
+                skill_content += "\n" + "\n".join(extras) + "\n"
+
             action = self._check_conflict(ctx.project_root, rel_path, force)
             plan.files.append(GeneratedFile(
                 relative_path=rel_path,

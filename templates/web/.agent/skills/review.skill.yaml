@@ -5,6 +5,17 @@ name: "Code Review"
 version: "1.0.0"
 description: "Run linting, type checking, bundle analysis, and security scan"
 
+negative_triggers:
+  - "Do NOT use before tests pass"
+  - "Do NOT use for runtime debugging"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write: false
+  network: false
+
 stage: 4
 phase: "quality"
 

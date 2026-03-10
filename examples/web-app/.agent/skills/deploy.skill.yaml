@@ -5,6 +5,17 @@ name: "Deploy"
 version: "1.0.0"
 description: "Deploy to staging or production environment"
 
+negative_triggers:
+  - "Do NOT deploy to production without staging verification first"
+  - "Do NOT use when tests or review have not passed"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write: false
+  network: true
+
 stage: 5
 phase: "delivery"
 

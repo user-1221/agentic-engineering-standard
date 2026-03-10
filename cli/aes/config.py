@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
-# Schema directory — relative to the repo root
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-SCHEMAS_DIR = REPO_ROOT / "schemas"
-SCAFFOLD_DIR = Path(__file__).resolve().parent / "scaffold"
+# Resource directories — handle PyInstaller bundles and normal installs
+if getattr(sys, "frozen", False):
+    # Running as PyInstaller bundle
+    _BASE = Path(sys._MEIPASS)  # type: ignore[attr-defined]
+    SCHEMAS_DIR = _BASE / "aes" / "schemas"
+    SCAFFOLD_DIR = _BASE / "aes" / "scaffold"
+else:
+    # Normal install (pip, editable, source)
+    SCHEMAS_DIR = Path(__file__).resolve().parent / "schemas"
+    SCAFFOLD_DIR = Path(__file__).resolve().parent / "scaffold"
 
 # Standard directory and file names
 AGENT_DIR = ".agent"

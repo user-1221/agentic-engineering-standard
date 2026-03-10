@@ -5,6 +5,18 @@ name: "Configure Service"
 version: "1.0.0"
 description: "Apply service configuration via Ansible with dry-run verification"
 
+negative_triggers:
+  - "Do NOT use before infrastructure is provisioned"
+  - "Do NOT skip dry-run verification"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "ansible/**"
+  network: true
+
 stage: 2
 phase: "configuration"
 

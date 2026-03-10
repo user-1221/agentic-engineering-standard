@@ -5,6 +5,19 @@ name: "Package Model"
 version: "1.0.0"
 description: "Export best model in native format and create deployment zip bundle"
 
+negative_triggers:
+  - "Do NOT use when best model fails quality gates"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "pipeline/**"
+      - "models/**"
+      - "packages/**"
+  network: false
+
 stage: 6
 phase: "packaging"
 

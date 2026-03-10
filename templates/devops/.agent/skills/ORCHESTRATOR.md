@@ -17,6 +17,10 @@ planned → provisioning → configured → deploying → deployed → monitored
 ## Decision Tree
 
 ```
+FIRST: Check if pipeline is already complete (all services at terminal status).
+  If complete → report status summary, ask user: re-run / new session / re-validate / exit.
+  If not → proceed:
+
 1. Provision infrastructure (Terraform)
    ├── Plan shows destructive changes? → STOP, confirm with user
    └── Plan is additive? → Apply
