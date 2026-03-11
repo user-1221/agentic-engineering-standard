@@ -1,0 +1,53 @@
+aes_skill: "1.0"
+
+id: "analyze"
+name: "Analyze Content"
+version: "1.0.0"
+description: "Classify topics, extract insights, identify key findings. Computes relevance scores and finds connections between items."
+
+negative_triggers:
+  - "Do NOT use for unparsed content — run parse first"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "pipeline/**"
+      - "data/**"
+
+stage: 3
+phase: "analysis"
+
+inputs:
+  required:
+    - name: "item_id"
+      type: "str"
+      description: "ID of the content item to analyze"
+
+outputs:
+  - name: "topics"
+    type: "list[str]"
+    description: "Assigned topic labels"
+  - name: "key_findings"
+    type: "list[str]"
+    description: "Extracted key findings"
+  - name: "relevance_score"
+    type: "float"
+    description: "Relevance score from 0.0 to 1.0"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/pipeline.py --stage analyze --item-id {ID}"
+
+error_handling:
+  strategy: "per-item-isolation"
+  retries: 1
+
+code:
+  primary: "pipeline/analyze.py"
+
+depends_on: ["parse"]
+blocks: ["organize"]
+
+tags: ["analysis", "classification", "relevance"]

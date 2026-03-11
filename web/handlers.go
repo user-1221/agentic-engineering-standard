@@ -288,7 +288,7 @@ func (a *App) handleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleDocs(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "https://github.com/user-1221/agentic-engineering-standard", http.StatusFound)
+	http.Redirect(w, r, a.Config.DocsURL, http.StatusFound)
 }
 
 func (a *App) render(w http.ResponseWriter, name string, data interface{}) {

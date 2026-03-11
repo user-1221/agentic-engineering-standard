@@ -1,0 +1,61 @@
+aes_workflow: "1.0"
+
+id: "content-pipeline"
+entity: "content-item"
+description: "Content item lifecycle from ingestion through report generation"
+
+states:
+  ingested:
+    description: "Raw content collected from source"
+    initial: true
+  parsed:
+    description: "Structure, metadata, and citations extracted"
+  analyzed:
+    description: "Topics classified, findings extracted, relevance scored"
+    active: true
+  organized:
+    description: "Categorized by taxonomy, cross-referenced"
+  displayed:
+    description: "Included in generated output"
+    terminal: true
+  rejected:
+    description: "Failed quality checks or below relevance threshold"
+    terminal: true
+
+transitions:
+  - from: "ingested"
+    to: "parsed"
+    skill: "parse"
+    conditions:
+      - "Content is readable"
+    on_failure: "rejected"
+
+  - from: "parsed"
+    to: "analyzed"
+    skill: "analyze"
+    conditions:
+      - "Metadata extracted successfully"
+
+  - from: "analyzed"
+    to: "organized"
+    skill: "organize"
+    conditions:
+      - "relevance_score >= 0.2"
+      - "Key findings extracted"
+    on_failure: "rejected"
+
+  - from: "organized"
+    to: "displayed"
+    skill: "display"
+    conditions:
+      - "At least one category assigned"
+
+  - from: "ingested"
+    to: "rejected"
+    description: "Content unreadable or unsupported format"
+
+  - from: "analyzed"
+    to: "rejected"
+    description: "Below relevance threshold"
+    conditions:
+      - "relevance_score < 0.2"

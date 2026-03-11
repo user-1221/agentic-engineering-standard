@@ -1,0 +1,47 @@
+# Research Pipeline — AES Template
+aes: "1.0"
+
+name: "research-pipeline"
+version: "1.0.0"
+description: "Research content pipeline: ingest papers, extract structure, analyze findings, organize by taxonomy, generate reports"
+domain: "research"
+
+runtime:
+  language: "python"
+  version: "3.10"
+  entry_point: "scripts/pipeline.py"
+
+agent:
+  instructions: "instructions.md"
+  permissions: "permissions.yaml"
+  orchestrator: "skills/ORCHESTRATOR.md"
+
+skills:
+  - id: "ingest"
+    manifest: "skills/ingest.skill.yaml"
+    runbook: "skills/ingest.md"
+  - id: "parse"
+    manifest: "skills/parse.skill.yaml"
+    runbook: "skills/parse.md"
+  - id: "analyze"
+    manifest: "skills/analyze.skill.yaml"
+    runbook: "skills/analyze.md"
+  - id: "organize"
+    manifest: "skills/organize.skill.yaml"
+    runbook: "skills/organize.md"
+  - id: "display"
+    manifest: "skills/display.skill.yaml"
+    runbook: "skills/display.md"
+
+workflows:
+  - id: "content-pipeline"
+    path: "workflows/pipeline.yaml"
+
+environment:
+  optional:
+    - name: "SEMANTIC_SCHOLAR_API_KEY"
+      default: ""
+      description: "Semantic Scholar API key (optional, increases rate limits)"
+    - name: "MAX_ITEMS_PER_RUN"
+      default: "50"
+      description: "Maximum items to process per pipeline run"

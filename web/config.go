@@ -12,6 +12,7 @@ type Config struct {
 	GitHubClientID     string
 	GitHubClientSecret string
 	BaseURL            string
+	DocsURL            string
 	MaxTokensPerUser   int
 }
 
@@ -25,6 +26,7 @@ func LoadConfig() Config {
 		GitHubClientID:     envOr("AES_WEB_GITHUB_CLIENT_ID", ""),
 		GitHubClientSecret: envOr("AES_WEB_GITHUB_CLIENT_SECRET", ""),
 		BaseURL:            envOr("AES_WEB_BASE_URL", "http://localhost:8081"),
+		DocsURL:            envOr("AES_WEB_DOCS_URL", "https://github.com/user-1221/agentic-engineering-standard"),
 		MaxTokensPerUser:   10,
 	}
 }

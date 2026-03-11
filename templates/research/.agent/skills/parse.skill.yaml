@@ -1,0 +1,47 @@
+aes_skill: "1.0"
+
+id: "parse"
+name: "Parse Content"
+version: "1.0.0"
+description: "Extract structure, metadata, key sections, and citations from raw content. Supports PDF, HTML, plain text."
+
+negative_triggers:
+  - "Do NOT use for content that hasn't been ingested first"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "pipeline/**"
+      - "data/**"
+
+stage: 2
+phase: "extraction"
+
+inputs:
+  required:
+    - name: "item_id"
+      type: "str"
+      description: "ID of the content item to parse"
+
+outputs:
+  - name: "parsed_content"
+    type: "object"
+    description: "Extracted sections, metadata, and citations"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/pipeline.py --stage parse --item-id {ID}"
+
+error_handling:
+  strategy: "per-item-isolation"
+  retries: 1
+
+code:
+  primary: "pipeline/parse.py"
+
+depends_on: ["ingest"]
+blocks: ["analyze"]
+
+tags: ["extraction", "parsing", "metadata"]

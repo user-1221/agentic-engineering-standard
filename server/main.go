@@ -93,7 +93,7 @@ func runServe() {
 	httpServer := &http.Server{
 		Addr:         cfg.ListenAddr,
 		Handler:      handler,
-		ReadTimeout:  30 * time.Second,
+		ReadTimeout:  120 * time.Second,
 		WriteTimeout: 120 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}

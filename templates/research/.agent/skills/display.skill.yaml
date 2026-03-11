@@ -1,0 +1,52 @@
+aes_skill: "1.0"
+
+id: "display"
+name: "Display Results"
+version: "1.0.0"
+description: "Generate dashboard, report, or organized output. Supports markdown, HTML, JSON formats."
+
+negative_triggers:
+  - "Do NOT use for unorganized content — run organize first"
+
+allowed_tools:
+  shell: true
+  files:
+    read: true
+    write:
+      - "pipeline/**"
+      - "output/**"
+
+stage: 5
+phase: "delivery"
+
+inputs:
+  optional:
+    - name: "format"
+      type: "str"
+      default: "markdown"
+      description: "Output format: markdown, html, json"
+    - name: "topic_filter"
+      type: "list[str]"
+      default: []
+      description: "Filter output to specific topics"
+
+outputs:
+  - name: "report_path"
+    type: "str"
+    description: "Path to generated report file"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/pipeline.py --stage display"
+
+error_handling:
+  strategy: "fail-fast"
+  retries: 0
+
+code:
+  primary: "pipeline/display.py"
+
+depends_on: ["organize"]
+blocks: []
+
+tags: ["reporting", "visualization", "output"]

@@ -1,0 +1,38 @@
+aes_permissions: "1.0"
+
+allow:
+  shell:
+    read:
+      - "python scripts/pipeline.py status *"
+      - "python scripts/pipeline.py list *"
+      - "git status"
+      - "git log *"
+      - "git diff *"
+    execute:
+      - "python scripts/pipeline.py *"
+      - "python -m pytest *"
+
+  files:
+    read: "**/*"
+    write:
+      - "pipeline/**/*.py"
+      - "config/**/*.py"
+      - "output/**"
+      - "data/**"
+      - ".agent/memory/**"
+
+deny:
+  shell:
+    - "rm -rf *"
+    - "kill *"
+  files:
+    write:
+      - ".env"
+      - ".git/**"
+
+confirm:
+  shell:
+    - "git push *"
+  actions:
+    - "delete_content"
+    - "publish_report"
