@@ -23,25 +23,42 @@ Manual steps for releasing `aes-cli` to PyPI and building standalone binaries.
 
 ## PyPI
 
-### First-time setup
+### Setup
 
-1. Create account at https://pypi.org/account/register/
-2. Enable 2FA (required for new projects)
-3. Create API token at https://pypi.org/manage/account/token/ (scope: project `aes-cli`)
-4. Save token in `~/.pypirc`:
-   ```ini
-   [pypi]
-   username = __token__
-   password = pypi-XXXX...
-   ```
+Tokens are configured in `~/.pypirc`:
 
-### Test upload (recommended for first release)
+```ini
+[distutils]
+index-servers =
+    pypi
+    testpypi
+    aes-cli
+
+[testpypi]
+repository = https://test.pypi.org/legacy/
+username = __token__
+password = <TestPyPI token>
+
+[pypi]
+username = __token__
+password = <account-wide token>
+
+[aes-cli]
+repository = https://upload.pypi.org/legacy/
+username = __token__
+password = <project-scoped token>
+```
+
+- **TestPyPI**: account at https://test.pypi.org, separate token
+- **PyPI**: account at https://pypi.org, 2FA required
+- **Project-scoped token**: create at https://pypi.org/manage/project/aes-cli/settings/ after first publish
+
+### Test upload (optional)
 
 ```bash
-# Upload to TestPyPI first
 .venv/bin/python -m twine upload --repository testpypi dist/*
 
-# Verify install from TestPyPI
+# Verify
 pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ aes-cli
 aes --help
 ```
@@ -49,7 +66,7 @@ aes --help
 ### Production upload
 
 ```bash
-.venv/bin/python -m twine upload dist/*
+.venv/bin/python -m twine upload --repository aes-cli dist/*
 ```
 
 Verify: `pip install aes-cli && aes --help`
@@ -135,8 +152,8 @@ jobs:
 After building binaries on each platform:
 
 ```bash
-gh release create v0.1.0 \
-  --title "aes-cli v0.1.0" \
+gh release create v0.2.0 \
+  --title "aes-cli v0.2.0" \
   --notes "First release" \
   aes-macos-arm64 \
   aes-linux-x64 \

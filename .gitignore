@@ -34,6 +34,10 @@ Thumbs.db
 htmlcov/
 .coverage
 
+# CLI internals (private)
+cli/PUBLISHING.md
+cli/aes.spec
+
 # Server & web internals (private)
 server/docs/
 server/deploy/
