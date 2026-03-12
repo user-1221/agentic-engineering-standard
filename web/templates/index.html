@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=3">
+    <link rel="stylesheet" href="/static/style.css?v=4">
 </head>
 <body class="page-home">
     <header>
@@ -38,8 +38,8 @@
                         <span class="badge-dot"></span>
                         <span>Open Standard &middot; v1.0</span>
                     </div>
-                    <h1>Ship your agents<br>like you ship <span class="hero-gradient">code</span></h1>
-                    <p class="hero-tagline">The open standard for structuring, sharing, and discovering agentic engineering projects.</p>
+                    <h1>Your AI agents forget everything.<br>Let's <span class="hero-gradient">fix that</span>.</h1>
+                    <p class="hero-tagline">Give your agents persistent memory, deep project knowledge, and real skills. Structured once, useful forever &mdash; across every AI tool you use.</p>
                     <div class="cta-buttons">
                         <a href="/docs" class="btn btn-large btn-ghost">Read the Docs</a>
                         {{if not .User}}
@@ -73,14 +73,14 @@
             <div class="why-grid">
                 <div class="why-card why-problem">
                     <span class="why-label">The problem</span>
-                    <p>Agent instructions, skills, and permissions are scattered across tool-specific configs. Nothing is portable. Nothing composes.</p>
+                    <p>Your agents don't understand your project.</p>
                 </div>
                 <div class="why-arrow">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
                 </div>
                 <div class="why-card why-solution">
                     <span class="why-label">The standard</span>
-                    <p>AES gives your agentic projects a single, structured directory &mdash; portable across tools, shareable via registry, composable by design.</p>
+                    <p>Now they do.</p>
                 </div>
             </div>
         </section>
@@ -93,72 +93,85 @@
                     </div>
                     <span class="terminal-title">terminal</span>
                 </div>
-                <pre class="terminal-body"><code><span class="t-comment"># Install the CLI</span>
+                <pre class="terminal-body"><code><span class="t-comment"># Install in seconds</span>
 <span class="t-prompt">$</span> pip install aes-cli
 
-<span class="t-comment"># Scaffold a new AES project</span>
+<span class="t-comment"># Give your project structured agent context</span>
 <span class="t-prompt">$</span> aes init
 
-<span class="t-comment"># Validate your .agent/ directory</span>
+<span class="t-comment"># Make sure your agent setup is complete</span>
 <span class="t-prompt">$</span> aes validate
 
-<span class="t-comment"># Search the registry</span>
+<span class="t-comment"># Find proven skills others have built</span>
 <span class="t-prompt">$</span> aes search <span class="t-string">"deploy"</span>
 
-<span class="t-comment"># Install a skill from the registry</span>
+<span class="t-comment"># Add deployment expertise to your agent</span>
 <span class="t-prompt">$</span> aes install aes-hub/deploy@^1.0.0</code></pre>
             </div>
         </section>
 
         <section class="home-anatomy">
-            <span class="section-label">How it works</span>
-            <h2>Everything lives in <code>.agent/</code></h2>
-            <p class="anatomy-desc">A single directory. Every agent artifact &mdash; instructions, skills, permissions, memory &mdash; organized and portable.</p>
+            <span class="section-label">What you're building</span>
+            <h2>Your project's <code>.agent/</code> brain</h2>
+            <p class="anatomy-desc">Instructions teach your agent how to think. Skills give it capabilities. Memory lets it learn from experience. Permissions keep it safe. All in one directory, checked into git.</p>
             <div class="anatomy-tree">
                 <pre class="tree-block"><code><span class="tree-dir">.agent/</span>
-  <span class="tree-file">agent.yaml</span>          <span class="tree-ann"># Project manifest</span>
-  <span class="tree-file">instructions.md</span>     <span class="tree-ann"># Agent instructions</span>
-  <span class="tree-file">permissions.yaml</span>    <span class="tree-ann"># Tool access rules</span>
-  <span class="tree-dir">skills/</span>             <span class="tree-ann"># Composable capabilities</span>
+  <span class="tree-file">agent.yaml</span>          <span class="tree-ann"># Who the agent is</span>
+  <span class="tree-file">instructions.md</span>     <span class="tree-ann"># How it thinks about your project</span>
+  <span class="tree-file">permissions.yaml</span>    <span class="tree-ann"># What it's allowed to do</span>
+  <span class="tree-dir">skills/</span>             <span class="tree-ann"># What it knows how to do</span>
     <span class="tree-file">deploy.skill.yaml</span>
     <span class="tree-file">deploy.md</span>
-  <span class="tree-dir">workflows/</span>          <span class="tree-ann"># State machines</span>
-  <span class="tree-dir">memory/</span>             <span class="tree-ann"># Persistent context</span>
-  <span class="tree-dir">commands/</span>           <span class="tree-ann"># Runbook triggers</span>
-  <span class="tree-dir">registry/</span>           <span class="tree-ann"># Vendored packages</span></code></pre>
+  <span class="tree-dir">workflows/</span>          <span class="tree-ann"># How work flows through stages</span>
+  <span class="tree-dir">memory/</span>             <span class="tree-ann"># What it's learned over time</span>
+  <span class="tree-dir">commands/</span>           <span class="tree-ann"># Complex tasks it can run</span>
+  <span class="tree-dir">registry/</span>           <span class="tree-ann"># Installed community skills</span></code></pre>
             </div>
         </section>
 
         <section class="home-features">
-            <span class="section-label">What you can do</span>
-            <h2>Built for the agentic era</h2>
-            <div class="features-grid">
+            <span class="section-label">Why it matters</span>
+            <h2>Built for how you actually work</h2>
+            <div class="features-grid-2col">
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
-                    </div>
-                    <h3>Start like a pro</h3>
-                    <p>One command. Full agent project &mdash; instructions, skills, permissions, memory &mdash; all structured and ready to go.</p>
+                    <h3>For individual developers</h3>
+                    <ul>
+                        <li>Install a template and your agent already knows the best practices for your domain &mdash; ML pipelines, web apps, DevOps, research</li>
+                        <li>Access proven skills built by experienced engineers. Deploy, test, review &mdash; one command to install, zero learning curve</li>
+                        <li>Your agent compounds what it learns. Memory persists. Skills get refined. Every session makes it smarter</li>
+                        <li>Works across Claude, Cursor, Copilot, Windsurf &mdash; switch tools without starting over</li>
+                    </ul>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-                    </div>
-                    <h3>Share your flows</h3>
-                    <p>Package your entire agentic setup and publish it to the registry. Anyone can install it with one command.</p>
+                    <h3>For teams</h3>
+                    <ul>
+                        <li>In the agentic era, each developer builds a complete feature with their AI. AES ensures every agent thinks with the same architecture, conventions, and design principles</li>
+                        <li>New teammate? <code>aes init --from your-team/template</code> &mdash; their agent already understands the project like a veteran</li>
+                        <li>No more "we do it this way" meetings. The instructions, permissions, and skills are in <code>.agent/</code>, checked into git, always in sync</li>
+                        <li>Each person ships independently, but everything fits together because the agents share the same foundation</li>
+                    </ul>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    </div>
-                    <h3>Plug &amp; play skills</h3>
-                    <p>Install skills and templates built by others. Drop them into your project and they just work &mdash; with any AI tool.</p>
+            </div>
+        </section>
+
+        <section class="home-why home-before-after">
+            <div class="why-grid">
+                <div class="why-card why-problem">
+                    <span class="why-label">Without AES</span>
+                    <p>"Set up the project like I explained last time. Oh wait, you don't remember. Let me re-explain the architecture, the deployment process, the coding conventions..."</p>
+                </div>
+                <div class="why-arrow">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                </div>
+                <div class="why-card why-solution">
+                    <span class="why-label">With AES</span>
+                    <p>The agent already knows. It read the instructions. It has the deployment skill. It remembers last session's decisions. It just... works.</p>
                 </div>
             </div>
         </section>
 
         <section class="home-cta">
-            <h2>Get started in seconds</h2>
+            <h2>Stop re-explaining your codebase to AI</h2>
             <div class="install-command">
                 <code>pip install aes-cli</code>
                 <button data-copy="pip install aes-cli" class="copy-btn" aria-label="Copy install command">Copy</button>
@@ -174,7 +187,7 @@
                 <span class="footer-badge">Tool Agnostic</span>
             </div>
             <p><a href="https://github.com/user-1221/agentic-engineering-standard">GitHub</a> &middot; <a href="/docs">Docs</a></p>
-            <p class="footer-tagline">Built for the agentic era.</p>
+            <p class="footer-tagline">Your agents should know your project as well as your senior engineers do.</p>
         </div>
     </footer>
 

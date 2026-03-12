@@ -5,23 +5,23 @@
 }
 
 :root {
-    --bg: #0d1117;
-    --bg-card: #161b22;
-    --bg-elevated: #010409;
-    --border: #30363d;
-    --text: #e6edf3;
-    --text-muted: #8b949e;
-    --accent: #58a6ff;
-    --accent-hover: #79c0ff;
-    --accent-glow: rgba(88, 166, 255, 0.15);
-    --accent-subtle: rgba(88, 166, 255, 0.08);
-    --accent-border: rgba(88, 166, 255, 0.2);
+    --bg: #000000;
+    --bg-card: #0a0a0a;
+    --bg-elevated: #000000;
+    --border: #1a1a1a;
+    --text: #ededed;
+    --text-muted: #888888;
+    --accent: #0070f3;
+    --accent-hover: #3291ff;
+    --accent-glow: rgba(0, 112, 243, 0.15);
+    --accent-subtle: rgba(0, 112, 243, 0.06);
+    --accent-border: rgba(0, 112, 243, 0.15);
     --danger: #f85149;
     --success: #3fb950;
     --warning: #d29922;
     --violet: #a78bfa;
-    --code-bg: #0d1117;
-    --radius: 10px;
+    --code-bg: #0a0a0a;
+    --radius: 8px;
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 
@@ -39,7 +39,7 @@ body {
     font-family: var(--font);
     background: var(--bg);
     color: var(--text);
-    line-height: 1.7;
+    line-height: 1.6;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -85,12 +85,12 @@ pre code {
    ============================================================ */
 
 header {
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding: 0.75rem var(--space-4);
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(13, 17, 23, 0.85);
+    background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
@@ -172,11 +172,11 @@ main {
 .btn {
     display: inline-block;
     padding: var(--space-1) var(--space-2);
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 6px;
     font-size: 0.875rem;
     color: var(--text);
-    background: var(--bg-card);
+    background: transparent;
     cursor: pointer;
     text-decoration: none;
     font-family: var(--font);
@@ -184,7 +184,7 @@ main {
     transition: border-color 0.15s, background 0.15s, box-shadow 0.2s, transform 0.2s;
 }
 .btn:hover {
-    border-color: var(--text-muted);
+    border-color: rgba(255, 255, 255, 0.3);
     text-decoration: none;
 }
 .btn-primary {
@@ -216,12 +216,12 @@ main {
 }
 .btn-ghost {
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     color: var(--text);
 }
 .btn-ghost:hover {
-    border-color: var(--accent);
-    background: rgba(88, 166, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.04);
     color: var(--text);
 }
 
@@ -423,7 +423,7 @@ main {
    ============================================================ */
 
 footer {
-    border-top: 1px solid var(--border);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding: var(--space-5) var(--space-4);
     text-align: center;
 }
@@ -453,7 +453,7 @@ footer p {
 .footer-tagline {
     font-family: var(--mono);
     font-size: 0.6875rem;
-    color: var(--border);
+    color: var(--text-muted);
     margin-top: var(--space-1);
     letter-spacing: 0.05em;
 }
@@ -513,7 +513,7 @@ footer p {
     content: '';
     position: absolute;
     inset: 0;
-    background-image: radial-gradient(circle, rgba(88, 166, 255, 0.12) 1px, transparent 1px);
+    background-image: radial-gradient(circle, rgba(0, 112, 243, 0.12) 1px, transparent 1px);
     background-size: 24px 24px;
     mask-image: radial-gradient(ellipse 70% 50% at 50% 30%, black 10%, transparent 70%);
     -webkit-mask-image: radial-gradient(ellipse 70% 50% at 50% 30%, black 10%, transparent 70%);
@@ -528,7 +528,7 @@ footer p {
     transform: translateX(-50%);
     width: 600px;
     height: 400px;
-    background: radial-gradient(ellipse, rgba(88, 166, 255, 0.08) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(0, 112, 243, 0.08) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
 }
@@ -539,12 +539,12 @@ footer p {
 .home-hero h1 {
     font-size: clamp(3.25rem, 8vw, 5rem);
     font-weight: 800;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.05em;
     line-height: 1.05;
     margin-bottom: var(--space-3);
 }
 .hero-gradient {
-    background: linear-gradient(135deg, #58a6ff, #a78bfa, #58a6ff);
+    background: linear-gradient(135deg, #0070f3, #7928ca, #0070f3);
     background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -560,19 +560,19 @@ footer p {
     color: var(--text-muted);
     line-height: 1.7;
     margin-bottom: 0;
-    max-width: 560px;
+    max-width: 520px;
 }
 
 /* Home page primary button override — accent blue */
 .page-home .btn-primary {
-    background: linear-gradient(135deg, #58a6ff, #388bfd);
-    border: 1px solid rgba(88, 166, 255, 0.4);
+    background: linear-gradient(135deg, #0070f3, #0050d0);
+    border: 1px solid rgba(0, 112, 243, 0.5);
     color: #fff;
-    box-shadow: 0 0 20px rgba(88, 166, 255, 0.2);
+    box-shadow: 0 0 24px rgba(0, 112, 243, 0.15);
 }
 .page-home .btn-primary:hover {
-    background: linear-gradient(135deg, #79c0ff, #58a6ff);
-    box-shadow: 0 0 40px rgba(88, 166, 255, 0.3);
+    background: linear-gradient(135deg, #3291ff, #0070f3);
+    box-shadow: 0 0 40px rgba(0, 112, 243, 0.25);
     transform: translateY(-2px);
     color: #fff;
 }
@@ -601,11 +601,11 @@ footer p {
 }
 .hero-tree-card {
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: var(--space-3) var(--space-4);
     width: 280px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 60px rgba(88,166,255,0.04);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 .hero-tree-header {
     display: flex;
@@ -657,9 +657,7 @@ footer p {
 
 .home-why {
     padding: var(--space-5) var(--space-4) var(--space-6);
-    background: rgba(22, 27, 34, 0.5);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
     margin: 0 calc(-1 * var(--space-4));
 }
 .why-grid {
@@ -672,7 +670,7 @@ footer p {
 }
 .why-card {
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 12px;
     padding: var(--space-4);
 }
@@ -691,13 +689,13 @@ footer p {
     font-weight: 500;
 }
 .why-problem {
-    border-top: 3px solid rgba(248, 81, 73, 0.5);
+    border-top: 3px solid rgba(255, 60, 60, 0.5);
 }
 .why-problem .why-label {
-    color: var(--danger);
+    color: #ff3c3c;
 }
 .why-solution {
-    border-top: 3px solid rgba(88, 166, 255, 0.5);
+    border-top: 3px solid rgba(0, 112, 243, 0.5);
 }
 .why-solution .why-label {
     color: var(--accent);
@@ -719,11 +717,11 @@ footer p {
 .terminal {
     max-width: 620px;
     margin: 0 auto;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     overflow: hidden;
     background: var(--bg-elevated);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.03);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 .terminal-header {
     display: flex;
@@ -731,7 +729,7 @@ footer p {
     gap: 0.75rem;
     padding: 0.65rem var(--space-2);
     background: rgba(255, 255, 255, 0.03);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 .terminal-dots {
     display: flex;
@@ -794,7 +792,7 @@ footer p {
 .home-anatomy h2 {
     font-size: clamp(2rem, 4.5vw, 2.75rem);
     font-weight: 700;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.04em;
     margin-bottom: 0.75rem;
 }
 .home-anatomy h2 code {
@@ -843,17 +841,25 @@ footer p {
 .home-features {
     text-align: center;
     padding: var(--space-6) var(--space-4);
-    background: rgba(22, 27, 34, 0.5);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
     margin: 0 calc(-1 * var(--space-4));
 }
 .home-features h2 {
     font-size: clamp(2rem, 4.5vw, 2.75rem);
     font-weight: 700;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.04em;
     margin-bottom: var(--space-5);
 }
+
+/* Two-column feature grid (audience cards) */
+.features-grid-2col {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+    text-align: left;
+}
+
+/* Original 3-column grid (kept for other pages) */
 .features-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -862,14 +868,14 @@ footer p {
 }
 .feature-card {
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 12px;
     padding: var(--space-4);
     transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 .feature-card:hover {
-    border-color: rgba(88, 166, 255, 0.4);
-    box-shadow: 0 4px 32px rgba(88, 166, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
     transform: translateY(-2px);
 }
 .feature-icon {
@@ -889,7 +895,7 @@ footer p {
     height: 24px;
 }
 .feature-card h3 {
-    font-size: 1.1875rem;
+    font-size: 1.25rem;
     font-weight: 600;
     letter-spacing: -0.01em;
     margin-bottom: 0.625rem;
@@ -904,6 +910,34 @@ footer p {
     font-size: 0.8em;
 }
 
+/* Feature card list styling (bullet points in audience cards) */
+.feature-card ul {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-2) 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.feature-card li {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    padding-left: 1.25rem;
+    position: relative;
+}
+.feature-card li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.6;
+}
+
 /* ============================================================
    BOTTOM CTA
    ============================================================ */
@@ -911,7 +945,6 @@ footer p {
 .home-cta {
     text-align: center;
     padding: var(--space-6) 0 var(--space-5);
-    border-top: 1px solid var(--border);
     margin-top: var(--space-4);
 }
 .home-cta h2 {
@@ -976,6 +1009,9 @@ footer p {
     .features-grid {
         grid-template-columns: 1fr;
         gap: var(--space-2);
+    }
+    .features-grid-2col {
+        grid-template-columns: 1fr;
     }
     .terminal {
         margin: 0 var(--space-1);
