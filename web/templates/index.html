@@ -4,12 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AES — Agentic Engineering Standard</title>
+    <meta name="description" content="AES is the open standard for giving AI agents persistent memory, skills, and project context. Structured once, useful forever — across every AI tool.">
+    <meta property="og:title" content="AES — The Open Standard for Agent Engineering">
+    <meta property="og:description" content="Give AI agents persistent memory, skills, and deep project context. Works across Claude, Cursor, Copilot, and Windsurf.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://aes-official.com">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="AES — The Open Standard for Agent Engineering">
+    <meta name="twitter:description" content="Give AI agents persistent memory, skills, and deep project context.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=4">
+    <link rel="stylesheet" href="/static/style.css?v=9">
 </head>
 <body class="page-home">
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
     <header>
         <nav>
             <div class="nav-left">
@@ -30,22 +39,25 @@
         </nav>
     </header>
 
-    <main>
-        <section class="home-hero">
+    <main id="main-content">
+        <section class="home-hero" aria-label="Introduction">
             <div class="hero-content">
                 <div class="hero-text">
                     <div class="hero-badge">
                         <span class="badge-dot"></span>
                         <span>Open Standard &middot; v1.0</span>
                     </div>
-                    <h1>Your AI agents forget everything.<br>Let's <span class="hero-gradient">fix that</span>.</h1>
-                    <p class="hero-tagline">Give your agents persistent memory, deep project knowledge, and real skills. Structured once, useful forever &mdash; across every AI tool you use.</p>
+                    <h1>The open standard for<br><span class="hero-gradient">agent engineering</span>.</h1>
+                    <p class="hero-tagline">Give your AI agents persistent memory, deep project knowledge, and real skills &mdash; structured once, useful forever, portable across every tool.</p>
                     <div class="cta-buttons">
-                        <a href="/docs" class="btn btn-large btn-ghost">Read the Docs</a>
+                        <a href="/docs" class="btn btn-large btn-primary">Get Started</a>
+                        <a href="https://github.com/user-1221/agentic-engineering-standard" class="btn btn-large btn-ghost">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -0.2em; margin-right: 0.375rem;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> View on GitHub
+                        </a>
                         {{if not .User}}
-                            <a href="/login" class="btn btn-large btn-primary">Try in 60s</a>
+                            <a href="/login" class="btn btn-large btn-ghost">Try in 60s</a>
                         {{else}}
-                            <a href="/dashboard" class="btn btn-large btn-primary">Dashboard</a>
+                            <a href="/dashboard" class="btn btn-large btn-ghost">Dashboard</a>
                         {{end}}
                     </div>
                 </div>
@@ -56,36 +68,61 @@
                             <span>.agent/</span>
                         </div>
                         <ul class="hero-tree-list">
+                            <li class="tree-group-label">Identity</li>
                             <li class="tree-item-file"><span class="tree-dot yaml"></span>agent.yaml</li>
                             <li class="tree-item-file"><span class="tree-dot md"></span>instructions.md</li>
                             <li class="tree-item-file"><span class="tree-dot yaml"></span>permissions.yaml</li>
+                            <li class="tree-group-label">Capabilities</li>
                             <li class="tree-item-dir"><span class="tree-dot dir"></span>skills/</li>
                             <li class="tree-item-dir"><span class="tree-dot dir"></span>workflows/</li>
-                            <li class="tree-item-dir"><span class="tree-dot dir"></span>memory/</li>
                             <li class="tree-item-dir"><span class="tree-dot dir"></span>commands/</li>
+                            <li class="tree-group-label">Persistence</li>
+                            <li class="tree-item-dir"><span class="tree-dot dir"></span>memory/</li>
+                            <li class="tree-item-dir"><span class="tree-dot dir"></span>registry/</li>
                         </ul>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="home-why">
+        <section class="home-why animate-in" aria-label="Problem and solution">
             <div class="why-grid">
-                <div class="why-card why-problem">
+                <div class="why-card why-problem animate-in stagger-1">
                     <span class="why-label">The problem</span>
-                    <p>Your agents don't understand your project.</p>
+                    <h3>Every session starts from zero</h3>
+                    <p>Your agent doesn't know your architecture, your conventions, or your deployment process. You explain it again. And again. Context lost, momentum killed.</p>
                 </div>
                 <div class="why-arrow">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
                 </div>
-                <div class="why-card why-solution">
+                <div class="why-card why-solution animate-in stagger-2">
                     <span class="why-label">The standard</span>
-                    <p>Now they do.</p>
+                    <h3>Every session builds on the last</h3>
+                    <p>AES gives your agent structured memory, proven skills, and deep project context. Checked into git, portable across every AI tool you use.</p>
                 </div>
             </div>
         </section>
 
-        <section class="home-terminal">
+        <section class="home-anatomy animate-in" aria-label="Directory structure">
+            <span class="section-label">What you're building</span>
+            <h2>Your project's <code>.agent/</code> brain</h2>
+            <p class="anatomy-desc">Instructions teach your agent how to think. Skills give it capabilities. Memory lets it learn from experience. Permissions keep it safe. All in one directory, checked into git.</p>
+            <div class="anatomy-tree">
+                <pre class="tree-block"><code><span class="tree-dir">.agent/</span>
+  <span class="tree-file">agent.yaml</span>          <span class="tree-ann"># Who the agent is</span>
+  <span class="tree-file">instructions.md</span>     <span class="tree-ann"># How it thinks about your project</span>
+  <span class="tree-file">permissions.yaml</span>    <span class="tree-ann"># What it's allowed to do</span>
+  <span class="tree-dir">skills/</span>             <span class="tree-ann"># What it knows how to do</span>
+    <span class="tree-file">deploy.skill.yaml</span>
+    <span class="tree-file">deploy.md</span>
+  <span class="tree-dir">workflows/</span>          <span class="tree-ann"># How work flows through stages</span>
+  <span class="tree-dir">memory/</span>             <span class="tree-ann"># What it's learned over time</span>
+  <span class="tree-dir">commands/</span>           <span class="tree-ann"># Complex tasks it can run</span>
+  <span class="tree-dir">registry/</span>           <span class="tree-ann"># Installed community skills</span></code></pre>
+            </div>
+        </section>
+
+        <section class="home-terminal animate-in" aria-label="Quick start">
             <div class="terminal">
                 <div class="terminal-header">
                     <div class="terminal-dots">
@@ -110,31 +147,13 @@
             </div>
         </section>
 
-        <section class="home-anatomy">
-            <span class="section-label">What you're building</span>
-            <h2>Your project's <code>.agent/</code> brain</h2>
-            <p class="anatomy-desc">Instructions teach your agent how to think. Skills give it capabilities. Memory lets it learn from experience. Permissions keep it safe. All in one directory, checked into git.</p>
-            <div class="anatomy-tree">
-                <pre class="tree-block"><code><span class="tree-dir">.agent/</span>
-  <span class="tree-file">agent.yaml</span>          <span class="tree-ann"># Who the agent is</span>
-  <span class="tree-file">instructions.md</span>     <span class="tree-ann"># How it thinks about your project</span>
-  <span class="tree-file">permissions.yaml</span>    <span class="tree-ann"># What it's allowed to do</span>
-  <span class="tree-dir">skills/</span>             <span class="tree-ann"># What it knows how to do</span>
-    <span class="tree-file">deploy.skill.yaml</span>
-    <span class="tree-file">deploy.md</span>
-  <span class="tree-dir">workflows/</span>          <span class="tree-ann"># How work flows through stages</span>
-  <span class="tree-dir">memory/</span>             <span class="tree-ann"># What it's learned over time</span>
-  <span class="tree-dir">commands/</span>           <span class="tree-ann"># Complex tasks it can run</span>
-  <span class="tree-dir">registry/</span>           <span class="tree-ann"># Installed community skills</span></code></pre>
-            </div>
-        </section>
-
-        <section class="home-features">
+        <section class="home-features animate-in" aria-label="Features">
             <span class="section-label">Why it matters</span>
             <h2>Built for how you actually work</h2>
             <div class="features-grid-2col">
-                <div class="feature-card">
+                <div class="feature-card animate-in stagger-1">
                     <h3>For individual developers</h3>
+                    <p class="feature-benefit">Your agent becomes a specialist</p>
                     <ul>
                         <li>Install a template and your agent already knows the best practices for your domain &mdash; ML pipelines, web apps, DevOps, research</li>
                         <li>Access proven skills built by experienced engineers. Deploy, test, review &mdash; one command to install, zero learning curve</li>
@@ -142,8 +161,9 @@
                         <li>Works across Claude, Cursor, Copilot, Windsurf &mdash; switch tools without starting over</li>
                     </ul>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card animate-in stagger-2">
                     <h3>For teams</h3>
+                    <p class="feature-benefit">Every AI works from the same architecture</p>
                     <ul>
                         <li>In the agentic era, each developer builds a complete feature with their AI. AES ensures every agent thinks with the same architecture, conventions, and design principles</li>
                         <li>New teammate? <code>aes init --from your-team/template</code> &mdash; their agent already understands the project like a veteran</li>
@@ -154,23 +174,40 @@
             </div>
         </section>
 
-        <section class="home-why home-before-after">
+        <section class="home-ecosystem animate-in" aria-label="Ecosystem">
+            <span class="section-label">The ecosystem</span>
+            <h2>A growing library of agent skills</h2>
+            <p class="ecosystem-desc">Install proven skills built by experienced engineers. One command, zero learning curve.</p>
+            <div class="ecosystem-grid">
+                <div class="ecosystem-skill"><span class="skill-name">deploy</span><span class="skill-meta">CI/CD & infrastructure</span></div>
+                <div class="ecosystem-skill"><span class="skill-name">code-review</span><span class="skill-meta">Quality & best practices</span></div>
+                <div class="ecosystem-skill"><span class="skill-name">security-audit</span><span class="skill-meta">Vulnerability scanning</span></div>
+                <div class="ecosystem-skill"><span class="skill-name">db-migrate</span><span class="skill-meta">Schema migrations</span></div>
+                <div class="ecosystem-skill"><span class="skill-name">ml-experiment</span><span class="skill-meta">Training & evaluation</span></div>
+                <div class="ecosystem-skill"><span class="skill-name">docs-gen</span><span class="skill-meta">API documentation</span></div>
+            </div>
+            <div class="ecosystem-cta">
+                <a href="/docs" class="btn btn-ghost">Browse the registry &rarr;</a>
+            </div>
+        </section>
+
+        <section class="home-why home-before-after animate-in" aria-label="Before and after comparison">
             <div class="why-grid">
-                <div class="why-card why-problem">
+                <div class="why-card why-problem animate-in stagger-1">
                     <span class="why-label">Without AES</span>
                     <p>"Set up the project like I explained last time. Oh wait, you don't remember. Let me re-explain the architecture, the deployment process, the coding conventions..."</p>
                 </div>
                 <div class="why-arrow">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
                 </div>
-                <div class="why-card why-solution">
+                <div class="why-card why-solution animate-in stagger-2">
                     <span class="why-label">With AES</span>
                     <p>The agent already knows. It read the instructions. It has the deployment skill. It remembers last session's decisions. It just... works.</p>
                 </div>
             </div>
         </section>
 
-        <section class="home-cta">
+        <section class="home-cta animate-in" aria-label="Install">
             <h2>Stop re-explaining your codebase to AI</h2>
             <div class="install-command">
                 <code>pip install aes-cli</code>
@@ -201,6 +238,20 @@
             });
         });
     });
+    (function() {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+        document.querySelectorAll('.animate-in').forEach(function(el) {
+            observer.observe(el);
+        });
+    })();
     </script>
 </body>
 </html>
