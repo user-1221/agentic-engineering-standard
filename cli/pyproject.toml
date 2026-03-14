@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aes-cli"
-version = "0.3.0"
+version = "0.3.1"
 description = "CLI tool for the Agentic Engineering Standard"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -21,6 +21,8 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Code Generators",
 ]
 keywords = ["agentic", "ai", "engineering", "standard", "cli"]
