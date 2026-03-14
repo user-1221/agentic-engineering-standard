@@ -42,6 +42,7 @@ cli/aes.spec
 server/docs/
 server/deploy/
 web/README.md
+web/Makefile
 web/deploy/
 
 # Compiled Go binaries

@@ -502,6 +502,12 @@ footer p {
    HOME PAGE — scoped to body.page-home
    ============================================================ */
 
+.page-home {
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-attachment: fixed;
+}
+
 /* Hero badge */
 .hero-badge {
     display: inline-flex;
@@ -533,7 +539,7 @@ footer p {
 /* Home hero */
 .home-hero {
     text-align: center;
-    padding: var(--space-8) 0 var(--space-6);
+    padding: var(--space-7) 0 var(--space-5);
     position: relative;
     overflow: hidden;
 }
@@ -710,7 +716,7 @@ a:focus-visible {
    ============================================================ */
 
 .home-why {
-    padding: var(--space-7) var(--space-4);
+    padding: var(--space-6) var(--space-4);
     margin: 0 calc(-1 * var(--space-4));
     position: relative;
 }
@@ -726,7 +732,7 @@ a:focus-visible {
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: var(--space-5) var(--space-4);
+    padding: var(--space-4) var(--space-3);
     transition: border-color 0.15s;
 }
 .why-card:hover {
@@ -775,7 +781,7 @@ a:focus-visible {
    ============================================================ */
 
 .home-terminal {
-    padding: var(--space-7) 0;
+    padding: var(--space-6) 0;
     position: relative;
 }
 .terminal {
@@ -850,7 +856,7 @@ a:focus-visible {
 
 .home-anatomy {
     text-align: center;
-    padding: var(--space-7) 0;
+    padding: var(--space-6) 0;
     position: relative;
 }
 .home-anatomy h2 {
@@ -903,7 +909,7 @@ a:focus-visible {
 
 .home-features {
     text-align: center;
-    padding: var(--space-7) var(--space-4);
+    padding: var(--space-6) var(--space-4);
     margin: 0 calc(-1 * var(--space-4));
     position: relative;
 }
@@ -933,7 +939,7 @@ a:focus-visible {
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: var(--space-5);
+    padding: var(--space-4);
     transition: border-color 0.15s;
 }
 .feature-card:hover {
@@ -977,8 +983,32 @@ a:focus-visible {
     font-size: 0.8em;
 }
 
-/* Feature card list styling (bullet points in audience cards) */
-.feature-card ul {
+/* Feature card list styling (icon per bullet) */
+.feature-list-icons {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-2) 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+}
+.feature-list-icons li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+}
+.li-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-top: 0.2em;
+    color: var(--accent);
+}
+/* Legacy bullet list (kept for other pages) */
+.feature-card ul:not(.feature-list-icons) {
     list-style: none;
     padding: 0;
     margin: var(--space-2) 0 0;
@@ -986,14 +1016,14 @@ a:focus-visible {
     flex-direction: column;
     gap: 0.75rem;
 }
-.feature-card li {
+.feature-card ul:not(.feature-list-icons) li {
     color: var(--text-muted);
     font-size: 0.9375rem;
     line-height: 1.6;
     padding-left: 1.25rem;
     position: relative;
 }
-.feature-card li::before {
+.feature-card ul:not(.feature-list-icons) li::before {
     content: '';
     position: absolute;
     left: 0;
@@ -1005,14 +1035,264 @@ a:focus-visible {
 }
 
 /* ============================================================
+   HOW IT WORKS
+   ============================================================ */
+
+.home-how {
+    text-align: center;
+    padding: var(--space-6) var(--space-4);
+    margin: 0 calc(-1 * var(--space-4));
+    position: relative;
+}
+.home-how h2 {
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-5);
+    color: var(--gray-6);
+}
+.how-steps {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: var(--space-3);
+    max-width: 820px;
+    margin: 0 auto;
+}
+.how-step {
+    flex: 1;
+    max-width: 220px;
+    text-align: center;
+}
+.how-step-number {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+}
+.how-step-icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-subtle);
+    border: 1px solid var(--accent-border);
+    border-radius: 16px;
+    color: var(--accent);
+    margin: 0 auto var(--space-2);
+}
+.how-step-icon svg {
+    width: 24px;
+    height: 24px;
+}
+.how-step h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-6);
+    margin-bottom: 0.5rem;
+}
+.how-step p {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+.how-step p code {
+    font-size: 0.8em;
+}
+.how-step-arrow {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 3.5rem;
+    opacity: 0.4;
+}
+
+/* ============================================================
+   STATS BAR
+   ============================================================ */
+
+.home-stats {
+    padding: var(--space-4) var(--space-4);
+    margin: 0 calc(-1 * var(--space-4));
+    position: relative;
+}
+.stats-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-5);
+    max-width: 760px;
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-5);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+.stat-number {
+    font-family: var(--mono);
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--gray-6);
+    letter-spacing: -0.02em;
+}
+.stat-label {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+.stat-divider {
+    width: 1px;
+    height: 2.5rem;
+    background: var(--border);
+}
+
+/* ============================================================
+   BEFORE/AFTER COMPARISON
+   ============================================================ */
+
+.home-compare {
+    text-align: center;
+    padding: var(--space-6) var(--space-4);
+    margin: 0 calc(-1 * var(--space-4));
+    position: relative;
+}
+.compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+    max-width: 820px;
+    margin: var(--space-4) auto 0;
+    text-align: left;
+}
+.compare-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+    overflow: hidden;
+}
+.compare-without {
+    border-color: rgba(255, 68, 68, 0.2);
+}
+.compare-with {
+    border-color: rgba(0, 112, 243, 0.2);
+}
+.compare-label {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+.compare-label-bad {
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.08);
+}
+.compare-label-good {
+    color: var(--accent);
+    background: var(--accent-subtle);
+}
+.compare-terminal {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.compare-msg {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+}
+.msg-role {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 0.5rem;
+}
+.msg-user {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+}
+.msg-user .msg-role {
+    color: var(--success);
+}
+.msg-agent {
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-muted);
+}
+.msg-agent .msg-role {
+    color: var(--accent);
+}
+.msg-step {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-left: 1rem;
+}
+.msg-step svg {
+    color: var(--success);
+    flex-shrink: 0;
+}
+.msg-step code {
+    font-size: 0.75rem;
+}
+.msg-done {
+    color: var(--success);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-left: 1rem;
+}
+.msg-done svg {
+    color: var(--success);
+    flex-shrink: 0;
+}
+.msg-fade {
+    color: #555;
+    font-style: italic;
+    font-size: 0.75rem;
+    text-align: center;
+    padding: 0.25rem;
+}
+
+/* ============================================================
    ECOSYSTEM SECTION
    ============================================================ */
 
 .home-ecosystem {
     text-align: center;
-    padding: var(--space-7) var(--space-4);
+    padding: var(--space-6) var(--space-4);
     margin: 0 calc(-1 * var(--space-4));
     position: relative;
+}
+.home-ecosystem::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(0, 112, 243, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
 }
 .home-ecosystem h2 {
     font-size: clamp(2rem, 4.5vw, 2.75rem);
@@ -1054,6 +1334,11 @@ a:focus-visible {
     font-weight: 500;
     color: var(--text);
 }
+.skill-icon {
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-bottom: 0.25rem;
+}
 .skill-meta {
     font-size: 0.8125rem;
     color: var(--text-muted);
@@ -1070,7 +1355,10 @@ a:focus-visible {
 .home-why::after,
 .home-terminal::after,
 .home-anatomy::after,
+.home-how::after,
 .home-features::after,
+.home-compare::after,
+.home-stats::after,
 .home-ecosystem::after {
     content: '';
     display: block;
@@ -1086,8 +1374,8 @@ a:focus-visible {
 
 .home-cta {
     text-align: center;
-    padding: var(--space-7) 0 var(--space-6);
-    margin-top: var(--space-5);
+    padding: var(--space-6) 0 var(--space-5);
+    margin-top: var(--space-3);
 }
 .home-cta h2 {
     font-size: clamp(1.5rem, 3vw, 2rem);
@@ -1133,7 +1421,7 @@ a:focus-visible {
 
 @media (max-width: 768px) {
     .home-hero {
-        padding: var(--space-6) 0 var(--space-5);
+        padding: var(--space-5) 0 var(--space-4);
     }
     .home-hero h1 {
         font-size: clamp(2rem, 6vw, 2.5rem);
@@ -1173,15 +1461,44 @@ a:focus-visible {
         transform: rotate(90deg);
     }
     .home-why {
-        padding: var(--space-6) var(--space-4);
+        padding: var(--space-5) var(--space-3);
     }
     .home-terminal {
-        padding: var(--space-6) 0;
+        padding: var(--space-5) 0;
     }
     .home-anatomy,
+    .home-how,
     .home-features,
+    .home-compare,
+    .home-stats,
     .home-ecosystem {
-        padding: var(--space-6) var(--space-4);
+        padding: var(--space-5) var(--space-3);
+    }
+    .how-steps {
+        flex-direction: column;
+        align-items: center;
+    }
+    .how-step {
+        max-width: 300px;
+    }
+    .how-step-arrow {
+        padding-top: 0;
+        transform: rotate(90deg);
+    }
+    .compare-grid {
+        grid-template-columns: 1fr;
+    }
+    .stats-bar {
+        flex-wrap: wrap;
+        gap: var(--space-3);
+        padding: var(--space-3);
+    }
+    .stat-divider {
+        display: none;
+    }
+    .stat-item {
+        flex: 1;
+        min-width: 100px;
     }
     .ecosystem-grid {
         grid-template-columns: repeat(2, 1fr);

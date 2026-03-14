@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=9">
+    <link rel="stylesheet" href="/static/style.css?v=12">
 </head>
 <body class="page-home">
     <a href="#main-content" class="skip-to-content">Skip to content</a>
@@ -90,7 +90,7 @@
                 <div class="why-card why-problem animate-in stagger-1">
                     <span class="why-label">The problem</span>
                     <h3>Every session starts from zero</h3>
-                    <p>Your agent doesn't know your architecture, your conventions, or your deployment process. You explain it again. And again. Context lost, momentum killed.</p>
+                    <p>Your agent doesn't know your architecture, conventions, or deployment. You re-explain every session.</p>
                 </div>
                 <div class="why-arrow">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
@@ -98,7 +98,7 @@
                 <div class="why-card why-solution animate-in stagger-2">
                     <span class="why-label">The standard</span>
                     <h3>Every session builds on the last</h3>
-                    <p>AES gives your agent structured memory, proven skills, and deep project context. Checked into git, portable across every AI tool you use.</p>
+                    <p>AES gives your agent structured memory, real skills, and deep project context. Checked into git, portable across tools.</p>
                 </div>
             </div>
         </section>
@@ -106,7 +106,7 @@
         <section class="home-anatomy animate-in" aria-label="Directory structure">
             <span class="section-label">What you're building</span>
             <h2>Your project's <code>.agent/</code> brain</h2>
-            <p class="anatomy-desc">Instructions teach your agent how to think. Skills give it capabilities. Memory lets it learn from experience. Permissions keep it safe. All in one directory, checked into git.</p>
+            <p class="anatomy-desc">Identity, skills, memory, and permissions &mdash; one directory, checked into git.</p>
             <div class="anatomy-tree">
                 <pre class="tree-block"><code><span class="tree-dir">.agent/</span>
   <span class="tree-file">agent.yaml</span>          <span class="tree-ann"># Who the agent is</span>
@@ -147,29 +147,120 @@
             </div>
         </section>
 
+        <section class="home-how animate-in" aria-label="How it works">
+            <span class="section-label">How it works</span>
+            <h2>Three steps to a smarter agent</h2>
+            <div class="how-steps">
+                <div class="how-step animate-in stagger-1">
+                    <div class="how-step-number">1</div>
+                    <div class="how-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 10l7-7 7 7"/></svg>
+                    </div>
+                    <h3>Initialize</h3>
+                    <p><code>aes init</code> scaffolds a <code>.agent/</code> directory tailored to your project</p>
+                </div>
+                <div class="how-step-arrow">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                </div>
+                <div class="how-step animate-in stagger-2">
+                    <div class="how-step-number">2</div>
+                    <div class="how-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>
+                    </div>
+                    <h3>Develop</h3>
+                    <p>Your agent learns your codebase. Memory builds. Skills get refined every session</p>
+                </div>
+                <div class="how-step-arrow">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                </div>
+                <div class="how-step animate-in stagger-3">
+                    <div class="how-step-number">3</div>
+                    <div class="how-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                    </div>
+                    <h3>Share</h3>
+                    <p>Publish skills to the registry. Install templates. Reuse across every project</p>
+                </div>
+            </div>
+        </section>
+
         <section class="home-features animate-in" aria-label="Features">
             <span class="section-label">Why it matters</span>
             <h2>Built for how you actually work</h2>
             <div class="features-grid-2col">
                 <div class="feature-card animate-in stagger-1">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </div>
                     <h3>For individual developers</h3>
                     <p class="feature-benefit">Your agent becomes a specialist</p>
-                    <ul>
-                        <li>Install a template and your agent already knows the best practices for your domain &mdash; ML pipelines, web apps, DevOps, research</li>
-                        <li>Access proven skills built by experienced engineers. Deploy, test, review &mdash; one command to install, zero learning curve</li>
-                        <li>Your agent compounds what it learns. Memory persists. Skills get refined. Every session makes it smarter</li>
-                        <li>Works across Claude, Cursor, Copilot, Windsurf &mdash; switch tools without starting over</li>
+                    <ul class="feature-list-icons">
+                        <li>
+                            <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                            <span>Templates give your agent domain expertise out of the box &mdash; ML, web, DevOps, research</span>
+                        </li>
+                        <li>
+                            <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span>Install proven skills from the registry. One command, zero learning curve</span>
+                        </li>
+                        <li>
+                            <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>
+                            <span>Memory persists across sessions. Every conversation makes your agent smarter</span>
+                        </li>
+                        <li>
+                            <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                            <span>Works across Claude, Cursor, Copilot, Windsurf &mdash; switch without starting over</span>
+                        </li>
                     </ul>
                 </div>
                 <div class="feature-card animate-in stagger-2">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
                     <h3>For teams</h3>
                     <p class="feature-benefit">Every AI works from the same architecture</p>
-                    <ul>
-                        <li>In the agentic era, each developer builds a complete feature with their AI. AES ensures every agent thinks with the same architecture, conventions, and design principles</li>
-                        <li>New teammate? <code>aes init --from your-team/template</code> &mdash; their agent already understands the project like a veteran</li>
-                        <li>No more "we do it this way" meetings. The instructions, permissions, and skills are in <code>.agent/</code>, checked into git, always in sync</li>
-                        <li>Each person ships independently, but everything fits together because the agents share the same foundation</li>
+                    <ul class="feature-list-icons">
+                        <li>
+                            <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            <span>Every agent works from the same architecture, conventions, and design principles</span>
+                        </li>
+                        <li>
+                            <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                            <span>New teammate? <code>aes init --from your-team/template</code> &mdash; instant project context</span>
+                        </li>
+                        <li>
+                            <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                            <span>Instructions, permissions, and skills live in <code>.agent/</code>, always in sync via git</span>
+                        </li>
+                        <li>
+                            <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"/></svg>
+                            <span>Ship independently. Everything fits because agents share the same foundation</span>
+                        </li>
                     </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-stats animate-in" aria-label="Stats">
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-number">4</span>
+                    <span class="stat-label">Domain templates</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-number">20+</span>
+                    <span class="stat-label">Community skills</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-number">4</span>
+                    <span class="stat-label">AI tools supported</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-number">1</span>
+                    <span class="stat-label">Standard to learn</span>
                 </div>
             </div>
         </section>
@@ -179,30 +270,61 @@
             <h2>A growing library of agent skills</h2>
             <p class="ecosystem-desc">Install proven skills built by experienced engineers. One command, zero learning curve.</p>
             <div class="ecosystem-grid">
-                <div class="ecosystem-skill"><span class="skill-name">deploy</span><span class="skill-meta">CI/CD & infrastructure</span></div>
-                <div class="ecosystem-skill"><span class="skill-name">code-review</span><span class="skill-meta">Quality & best practices</span></div>
-                <div class="ecosystem-skill"><span class="skill-name">security-audit</span><span class="skill-meta">Vulnerability scanning</span></div>
-                <div class="ecosystem-skill"><span class="skill-name">db-migrate</span><span class="skill-meta">Schema migrations</span></div>
-                <div class="ecosystem-skill"><span class="skill-name">ml-experiment</span><span class="skill-meta">Training & evaluation</span></div>
-                <div class="ecosystem-skill"><span class="skill-name">docs-gen</span><span class="skill-meta">API documentation</span></div>
+                <div class="ecosystem-skill">
+                    <svg class="skill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                    <span class="skill-name">deploy</span><span class="skill-meta">CI/CD & infrastructure</span>
+                </div>
+                <div class="ecosystem-skill">
+                    <svg class="skill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <span class="skill-name">code-review</span><span class="skill-meta">Quality & best practices</span>
+                </div>
+                <div class="ecosystem-skill">
+                    <svg class="skill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span class="skill-name">security-audit</span><span class="skill-meta">Vulnerability scanning</span>
+                </div>
+                <div class="ecosystem-skill">
+                    <svg class="skill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                    <span class="skill-name">db-migrate</span><span class="skill-meta">Schema migrations</span>
+                </div>
+                <div class="ecosystem-skill">
+                    <svg class="skill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16.5h10"/></svg>
+                    <span class="skill-name">ml-experiment</span><span class="skill-meta">Training & evaluation</span>
+                </div>
+                <div class="ecosystem-skill">
+                    <svg class="skill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    <span class="skill-name">docs-gen</span><span class="skill-meta">API documentation</span>
+                </div>
             </div>
             <div class="ecosystem-cta">
                 <a href="/docs" class="btn btn-ghost">Browse the registry &rarr;</a>
             </div>
         </section>
 
-        <section class="home-why home-before-after animate-in" aria-label="Before and after comparison">
-            <div class="why-grid">
-                <div class="why-card why-problem animate-in stagger-1">
-                    <span class="why-label">Without AES</span>
-                    <p>"Set up the project like I explained last time. Oh wait, you don't remember. Let me re-explain the architecture, the deployment process, the coding conventions..."</p>
+        <section class="home-compare animate-in" aria-label="Before and after comparison">
+            <span class="section-label">See the difference</span>
+            <div class="compare-grid">
+                <div class="compare-card compare-without animate-in stagger-1">
+                    <span class="compare-label compare-label-bad">Without AES</span>
+                    <div class="compare-terminal">
+                        <div class="compare-msg msg-user"><span class="msg-role">You</span> Deploy the app to staging</div>
+                        <div class="compare-msg msg-agent"><span class="msg-role">Agent</span> What's your deployment process?</div>
+                        <div class="compare-msg msg-user"><span class="msg-role">You</span> Docker + GitHub Actions, like I said last time...</div>
+                        <div class="compare-msg msg-agent"><span class="msg-role">Agent</span> What registry do you push to?</div>
+                        <div class="compare-msg msg-user"><span class="msg-role">You</span> ECR. I already told you this yesterday</div>
+                        <div class="compare-msg msg-agent"><span class="msg-role">Agent</span> What are the environment variables?</div>
+                        <div class="compare-msg msg-fade">...20 messages later, still configuring</div>
+                    </div>
                 </div>
-                <div class="why-arrow">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-                </div>
-                <div class="why-card why-solution animate-in stagger-2">
-                    <span class="why-label">With AES</span>
-                    <p>The agent already knows. It read the instructions. It has the deployment skill. It remembers last session's decisions. It just... works.</p>
+                <div class="compare-card compare-with animate-in stagger-2">
+                    <span class="compare-label compare-label-good">With AES</span>
+                    <div class="compare-terminal">
+                        <div class="compare-msg msg-user"><span class="msg-role">You</span> Deploy the app to staging</div>
+                        <div class="compare-msg msg-agent"><span class="msg-role">Agent</span> Running deploy skill...</div>
+                        <div class="compare-msg msg-step"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Built Docker image <code>app:v2.4.1</code></div>
+                        <div class="compare-msg msg-step"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Pushed to ECR staging registry</div>
+                        <div class="compare-msg msg-step"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Deployed via GitHub Actions</div>
+                        <div class="compare-msg msg-done"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Staging is live at staging.app.com</div>
+                    </div>
                 </div>
             </div>
         </section>
