@@ -331,7 +331,7 @@ class TestUploadPackage:
 
         assert result["visibility"] == "public"
 
-    def test_500_still_raises_httperror(self, tmp_path):
+    def test_500_still_raises_error(self, tmp_path):
         tarball = tmp_path / "deploy-1.0.0.tar.gz"
         tarball.write_bytes(b"fake tarball content")
 
@@ -345,7 +345,7 @@ class TestUploadPackage:
 
         with patch.dict(os.environ, {"AES_REGISTRY_KEY": "test-token"}):
             with patch("aes.registry.urllib.request.urlopen", side_effect=err_500):
-                with pytest.raises(urllib.error.HTTPError):
+                with pytest.raises(RuntimeError, match="HTTP 500"):
                     upload_package(
                         tarball_path=tarball,
                         name="deploy",

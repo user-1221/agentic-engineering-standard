@@ -76,6 +76,104 @@ func (s *Storage) WriteIndex(data []byte) error {
 	return atomicWrite(indexPath, data)
 }
 
+// PackageMeta holds metadata sent by the CLI when publishing a package.
+type PackageMeta struct {
+	Description string
+	Tags        []string
+	Type        string // "skill" or "template"
+	Visibility  string // "public" or "private"
+	SHA256      string
+}
+
+// UpdateIndexEntry atomically updates a single package's entry in index.json.
+// Only the entry for the given package name is modified — other packages are untouched.
+func (s *Storage) UpdateIndexEntry(name, version string, meta PackageMeta) error {
+	s.indexMu.Lock()
+	defer s.indexMu.Unlock()
+
+	index, err := s.readIndexLocked()
+	if err != nil {
+		return err
+	}
+
+	pkgs, _ := index["packages"].(map[string]interface{})
+	if pkgs == nil {
+		pkgs = map[string]interface{}{}
+		index["packages"] = pkgs
+	}
+
+	// Get or create the package entry
+	pkg, _ := pkgs[name].(map[string]interface{})
+	if pkg == nil {
+		pkg = map[string]interface{}{
+			"versions": map[string]interface{}{},
+		}
+	}
+
+	pkg["description"] = meta.Description
+	if meta.Type != "" {
+		pkg["type"] = meta.Type
+	}
+	if meta.Visibility != "" {
+		pkg["visibility"] = meta.Visibility
+	}
+	if len(meta.Tags) > 0 {
+		tags := make([]interface{}, len(meta.Tags))
+		for i, t := range meta.Tags {
+			tags[i] = t
+		}
+		pkg["tags"] = tags
+	}
+
+	versions, _ := pkg["versions"].(map[string]interface{})
+	if versions == nil {
+		versions = map[string]interface{}{}
+	}
+	versions[version] = map[string]interface{}{
+		"url":          fmt.Sprintf("packages/%s/%s.tar.gz", name, version),
+		"sha256":       meta.SHA256,
+		"published_at": time.Now().UTC().Format(time.RFC3339),
+	}
+	pkg["versions"] = versions
+	pkg["latest"] = version // server always sets latest to the newly published version
+
+	pkgs[name] = pkg
+
+	formatted, err := json.MarshalIndent(index, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal index: %w", err)
+	}
+
+	indexPath := filepath.Join(s.dataDir, "index.json")
+	// Backup before write
+	if _, statErr := os.Stat(indexPath); statErr == nil {
+		ts := time.Now().UTC().Format("2006-01-02T15-04-05Z")
+		backupPath := filepath.Join(s.backupDir, "index.json."+ts)
+		src, readErr := os.ReadFile(indexPath)
+		if readErr == nil {
+			_ = os.WriteFile(backupPath, src, 0640)
+		}
+	}
+
+	return atomicWrite(indexPath, append(formatted, '\n'))
+}
+
+// readIndexLocked reads index.json (caller must hold indexMu).
+func (s *Storage) readIndexLocked() (map[string]interface{}, error) {
+	data, err := os.ReadFile(filepath.Join(s.dataDir, "index.json"))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return map[string]interface{}{"packages": map[string]interface{}{}}, nil
+		}
+		return nil, err
+	}
+	var index map[string]interface{}
+	if err := json.Unmarshal(data, &index); err != nil {
+		return nil, fmt.Errorf("parse index.json: %w", err)
+	}
+	return index, nil
+}
+
 // ReadPackage opens a package tarball for reading. Caller must close the file.
 func (s *Storage) ReadPackage(name, version string) (*os.File, int64, error) {
 	path := filepath.Join(s.dataDir, "packages", name, version+".tar.gz")

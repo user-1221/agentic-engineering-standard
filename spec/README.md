@@ -32,7 +32,7 @@ my-project/
 ## Quick Start
 
 ```bash
-pip install aes-cli
+pipx install aes-cli
 cd my-project
 aes init                    # scaffold .agent/ directory
 aes validate                # check files against schemas + dependency graph

@@ -190,7 +190,7 @@ MESSAGES: dict = {
     "init.specific_label": "{type}-specific",
     "init.synced_to": "Synced to {count} tool config(s):",
     "init.mcp_configured": "MCP: {file} configured (AES registry tools)",
-    "init.mcp_install_hint": "Install MCP server: pip install aes-cli[mcp]",
+    "init.mcp_install_hint": "Install MCP server: pipx install aes-cli[mcp]",
     "init.next_steps": "Next: Start a new agent session, then type /setup to fine-tune{hint}.",
     "init.or_begin": ", or {trigger} to begin",
     "init.from_template": "Initialized from template:",

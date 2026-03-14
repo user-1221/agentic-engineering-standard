@@ -8,6 +8,27 @@ This project maintains two version tracks:
 
 ## [Unreleased]
 
+## [cli-v0.4.1] — 2026-03-14
+
+### Security
+- Fix XSS in dashboard token revoke button (inline JS context)
+- Fix path traversal in `aes sync` — validate all paths from agent.yaml before read/write
+- Fix tarball extraction to reject symlinks and hardlinks
+- Add registry URL validation to prevent SSRF via `AES_REGISTRY_URL`
+- Restrict `PUT /index.json` to admin scope; server auto-updates index on package publish
+- Fix IPv6 parsing in registry `clientIP()` — use `net.SplitHostPort` + `IsLoopback()`
+- Use constant-time comparison for CSRF token validation
+- Sanitize command/skill IDs in sync targets to prevent path separator injection
+- Remove internal error details from user-facing messages (web + registry)
+- Add `HttpOnly`/`Secure`/`SameSite` to OAuth state cookie clearing
+- Wrap HTTP errors in CLI to prevent token leakage in tracebacks
+- Add `.env`, `*.pem`, `*.key`, `secrets/**` to default publish exclusions
+- Increase OAuth state entropy from 128-bit to 256-bit
+
+### Changed
+- Server auto-updates `index.json` on package publish via `X-AES-*` headers
+- CLI no longer calls `PUT /index.json` directly — metadata sent as headers on package PUT
+
 ## [cli-v0.4.0] — 2026-03-14
 
 ### Added

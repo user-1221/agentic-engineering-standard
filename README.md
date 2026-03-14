@@ -35,7 +35,8 @@ my-project/
 
 ```bash
 # Install the CLI
-cd cli && pip install -e .
+pipx install aes-cli            # recommended
+# cd cli && pip install -e .    # or from source in a venv
 
 # Scaffold a new AES project
 aes init
@@ -106,7 +107,10 @@ The `aes-mcp` command exposes the AES registry as a [Model Context Protocol](htt
 
 ```bash
 # Install with MCP extras
-cd cli && pip install -e ".[mcp]"
+pipx install "aes-cli[mcp]"
+
+# Or from source in a venv
+# cd cli && pip install -e ".[mcp]"
 
 # Run the MCP server
 aes-mcp

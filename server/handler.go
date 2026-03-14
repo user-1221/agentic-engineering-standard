@@ -1,12 +1,17 @@
 package main
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 )
+
+func sha256sum(data []byte) [32]byte {
+	return sha256.Sum256(data)
+}
 
 // Version is set at build time via ldflags.
 var Version = "dev"
@@ -95,9 +100,13 @@ func (s *Server) handleGetIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handlePutIndex(w http.ResponseWriter, r *http.Request) {
-	// Auth required
+	// Auth required — admin scope only
 	token, ok := s.authenticate(w, r)
 	if !ok {
+		return
+	}
+	if !hasScope(token, "admin") {
+		s.jsonError(w, "admin scope required for index updates", http.StatusForbidden)
 		return
 	}
 
@@ -210,7 +219,13 @@ func (s *Server) handlePutPackage(w http.ResponseWriter, r *http.Request) {
 
 	// Check package-level access
 	if !s.tokens.CheckPackageAccess(token, name) {
-		s.jsonError(w, fmt.Sprintf("token %q is not authorized to publish package %q", token.Name, name), http.StatusForbidden)
+		s.jsonError(w, "not authorized to publish this package", http.StatusForbidden)
+		s.logger.Log("warn", map[string]interface{}{
+			"event":      "publish_denied",
+			"token_name": token.Name,
+			"package":    name,
+			"ip":         clientIP(r),
+		})
 		return
 	}
 
@@ -241,6 +256,25 @@ func (s *Server) handlePutPackage(w http.ResponseWriter, r *http.Request) {
 			s.logger.Log("error", map[string]interface{}{"handler": "PutPackage", "error": err.Error()})
 		}
 		return
+	}
+
+	// Auto-update index with package metadata from headers
+	sha := fmt.Sprintf("%x", sha256sum(data))
+	meta := PackageMeta{
+		Description: r.Header.Get("X-AES-Description"),
+		Type:        r.Header.Get("X-AES-Type"),
+		Visibility:  r.Header.Get("X-AES-Visibility"),
+		SHA256:      sha,
+	}
+	if tags := r.Header.Get("X-AES-Tags"); tags != "" {
+		meta.Tags = strings.Split(tags, ",")
+		for i := range meta.Tags {
+			meta.Tags[i] = strings.TrimSpace(meta.Tags[i])
+		}
+	}
+	if err := s.storage.UpdateIndexEntry(name, version, meta); err != nil {
+		s.logger.Log("error", map[string]interface{}{"handler": "PutPackage", "error": "index update failed: " + err.Error()})
+		// Package was stored successfully, index update is best-effort
 	}
 
 	s.logger.Audit(map[string]interface{}{
@@ -376,6 +410,16 @@ func parsePackagePath(path string) (string, string, error) {
 	version := strings.TrimSuffix(filename, ".tar.gz")
 
 	return name, version, nil
+}
+
+// hasScope checks whether a token entry includes the given scope.
+func hasScope(entry *TokenEntry, scope string) bool {
+	for _, s := range entry.Scopes {
+		if s == scope {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Server) jsonError(w http.ResponseWriter, msg string, code int) {

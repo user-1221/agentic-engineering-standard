@@ -17,6 +17,21 @@ INDEX_PATH = "index.json"
 PACKAGES_PATH = "packages"
 
 
+def _validate_registry_url(url: str) -> str:
+    """Validate registry URL to prevent SSRF attacks."""
+    from urllib.parse import urlparse
+
+    parsed = urlparse(url)
+    if parsed.scheme not in ("https", "http"):
+        raise ValueError(
+            f"Invalid registry URL scheme {parsed.scheme!r}: only http/https allowed"
+        )
+    hostname = (parsed.hostname or "").lower()
+    if hostname in ("localhost", "127.0.0.1", "::1", "0.0.0.0"):
+        raise ValueError("Registry URL must not point to localhost")
+    return url
+
+
 def _parse_version(v: str) -> Tuple[int, int, int]:
     """Parse a semver string into (major, minor, patch)."""
     match = re.match(r"^(\d+)\.(\d+)\.(\d+)", v)
@@ -110,7 +125,9 @@ def parse_registry_source(source: str) -> Tuple[str, str]:
 
 def fetch_index(registry_url: Optional[str] = None) -> dict:
     """Fetch and parse the registry ``index.json``."""
-    base = registry_url or os.environ.get("AES_REGISTRY_URL", REGISTRY_URL)
+    base = _validate_registry_url(
+        registry_url or os.environ.get("AES_REGISTRY_URL", REGISTRY_URL)
+    )
     url = f"{base.rstrip('/')}/{INDEX_PATH}"
 
     req = urllib.request.Request(url)
@@ -133,7 +150,9 @@ def download_package(
 
     Returns the local path to the downloaded file.
     """
-    base = registry_url or os.environ.get("AES_REGISTRY_URL", REGISTRY_URL)
+    base = _validate_registry_url(
+        registry_url or os.environ.get("AES_REGISTRY_URL", REGISTRY_URL)
+    )
     url = f"{base.rstrip('/')}/{PACKAGES_PATH}/{name}/{version}.tar.gz"
 
     tarball_path = dest / f"{name}-{version}.tar.gz"
@@ -171,7 +190,9 @@ def upload_package(
 
     Returns the updated index entry for this package.
     """
-    base = registry_url or os.environ.get("AES_REGISTRY_URL", REGISTRY_URL)
+    base = _validate_registry_url(
+        registry_url or os.environ.get("AES_REGISTRY_URL", REGISTRY_URL)
+    )
     token = os.environ.get("AES_REGISTRY_KEY")
     if not token:
         raise RuntimeError(
@@ -182,11 +203,16 @@ def upload_package(
     tarball_data = tarball_path.read_bytes()
     sha = hashlib.sha256(tarball_data).hexdigest()
 
-    # Upload tarball
+    # Upload tarball — server auto-updates index from X-AES-* headers
     upload_url = f"{base.rstrip('/')}/{PACKAGES_PATH}/{name}/{version}.tar.gz"
     req = urllib.request.Request(upload_url, data=tarball_data, method="PUT")
     req.add_header("Authorization", f"Bearer {token}")
     req.add_header("Content-Type", "application/gzip")
+    req.add_header("X-AES-Description", description)
+    req.add_header("X-AES-Type", pkg_type)
+    req.add_header("X-AES-Visibility", visibility)
+    if tags:
+        req.add_header("X-AES-Tags", ",".join(tags))
     try:
         urllib.request.urlopen(req, timeout=120)
     except urllib.error.HTTPError as exc:
@@ -195,50 +221,27 @@ def upload_package(
                 f"Version {version} of '{name}' already exists in the registry. "
                 "Bump the version in your skill manifest and try again."
             ) from None
-        raise
-
-    # Fetch current index
-    try:
-        index = fetch_index(registry_url)
-    except (urllib.error.URLError, urllib.error.HTTPError):
-        index = {"packages": {}}
-
-    # Update index
-    packages = index.setdefault("packages", {})
-    pkg = packages.setdefault(name, {
-        "description": description,
-        "latest": version,
-        "versions": {},
-    })
-    pkg["description"] = description
-    pkg["type"] = pkg_type
-    pkg["visibility"] = visibility
-    if tags:
-        pkg["tags"] = tags
+        # Wrap to avoid leaking auth headers in tracebacks
+        raise RuntimeError(
+            f"Registry upload failed (HTTP {exc.code}): {exc.reason}"
+        ) from None
 
     from datetime import datetime, timezone
-    pkg["versions"][version] = {
-        "url": f"{PACKAGES_PATH}/{name}/{version}.tar.gz",
-        "sha256": sha,
-        "published_at": datetime.now(timezone.utc).isoformat(),
+
+    return {
+        "description": description,
+        "type": pkg_type,
+        "visibility": visibility,
+        "tags": tags or [],
+        "latest": version,
+        "versions": {
+            version: {
+                "url": f"{PACKAGES_PATH}/{name}/{version}.tar.gz",
+                "sha256": sha,
+                "published_at": datetime.now(timezone.utc).isoformat(),
+            }
+        },
     }
-
-    # Update "latest" if this version is higher
-    try:
-        if _parse_version(version) >= _parse_version(pkg.get("latest", "0.0.0")):
-            pkg["latest"] = version
-    except ValueError:
-        pkg["latest"] = version
-
-    # Upload updated index
-    index_data = json.dumps(index, indent=2).encode()
-    index_url = f"{base.rstrip('/')}/{INDEX_PATH}"
-    req = urllib.request.Request(index_url, data=index_data, method="PUT")
-    req.add_header("Authorization", f"Bearer {token}")
-    req.add_header("Content-Type", "application/json")
-    urllib.request.urlopen(req, timeout=30)
-
-    return pkg
 
 
 def search_packages(

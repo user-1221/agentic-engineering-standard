@@ -26,6 +26,22 @@ func setupTestServer(t *testing.T) (*Server, string) {
 	return srv, raw
 }
 
+// setupTestServerWithAdmin creates a server with both a regular and an admin token.
+func setupTestServerWithAdmin(t *testing.T) (*Server, string, string) {
+	t.Helper()
+	srv, publishToken := setupTestServer(t)
+	adminRaw, _ := srv.tokens.CreateToken("admin")
+	// Upgrade the admin token's scopes
+	srv.tokens.mu.Lock()
+	for i := range srv.tokens.tokens {
+		if srv.tokens.tokens[i].Name == "admin" {
+			srv.tokens.tokens[i].Scopes = []string{"publish", "admin"}
+		}
+	}
+	srv.tokens.mu.Unlock()
+	return srv, publishToken, adminRaw
+}
+
 func TestHealthEndpoint(t *testing.T) {
 	srv, _ := setupTestServer(t)
 	req := httptest.NewRequest("GET", "/health", nil)
@@ -157,13 +173,13 @@ func TestPutIndexRequiresAuth(t *testing.T) {
 }
 
 func TestPutAndGetIndex(t *testing.T) {
-	srv, token := setupTestServer(t)
+	srv, _, adminToken := setupTestServerWithAdmin(t)
 
 	indexData := `{"packages":{"deploy":{"description":"Deploy","latest":"1.0.0","versions":{"1.0.0":{"url":"packages/deploy/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}}}}}`
 
 	// PUT index
 	putReq := httptest.NewRequest("PUT", "/index.json", bytes.NewReader([]byte(indexData)))
-	putReq.Header.Set("Authorization", "Bearer "+token)
+	putReq.Header.Set("Authorization", "Bearer "+adminToken)
 	putReq.Header.Set("Content-Type", "application/json")
 	putW := httptest.NewRecorder()
 	srv.Router().ServeHTTP(putW, putReq)
@@ -186,10 +202,10 @@ func TestPutAndGetIndex(t *testing.T) {
 }
 
 func TestPutIndexRejectsInvalidJSON(t *testing.T) {
-	srv, token := setupTestServer(t)
+	srv, _, adminToken := setupTestServerWithAdmin(t)
 
 	req := httptest.NewRequest("PUT", "/index.json", bytes.NewReader([]byte("not json")))
-	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Authorization", "Bearer "+adminToken)
 	w := httptest.NewRecorder()
 	srv.Router().ServeHTTP(w, req)
 
@@ -242,7 +258,7 @@ func TestSecurityHeaders(t *testing.T) {
 }
 
 func TestGetIndexFiltersPrivatePackages(t *testing.T) {
-	srv, token := setupTestServer(t)
+	srv, token, adminToken := setupTestServerWithAdmin(t)
 
 	// Put an index with one public and one private package
 	indexData := `{"packages":{
@@ -250,7 +266,7 @@ func TestGetIndexFiltersPrivatePackages(t *testing.T) {
 		"private-pkg":{"description":"Private","visibility":"private","latest":"1.0.0","versions":{"1.0.0":{"url":"packages/private-pkg/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}}}
 	}}`
 	putReq := httptest.NewRequest("PUT", "/index.json", bytes.NewReader([]byte(indexData)))
-	putReq.Header.Set("Authorization", "Bearer "+token)
+	putReq.Header.Set("Authorization", "Bearer "+adminToken)
 	putW := httptest.NewRecorder()
 	srv.Router().ServeHTTP(putW, putReq)
 	if putW.Code != 200 {
@@ -296,7 +312,7 @@ func TestGetIndexFiltersPrivatePackages(t *testing.T) {
 }
 
 func TestGetPrivatePackageRequiresAuth(t *testing.T) {
-	srv, token := setupTestServer(t)
+	srv, token, adminToken := setupTestServerWithAdmin(t)
 
 	// Upload a package
 	content := []byte("private package content")
@@ -311,7 +327,7 @@ func TestGetPrivatePackageRequiresAuth(t *testing.T) {
 	// Mark it private in the index
 	indexData := `{"packages":{"secret":{"description":"Secret pkg","visibility":"private","latest":"1.0.0","versions":{"1.0.0":{"url":"packages/secret/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}}}}}`
 	putIdxReq := httptest.NewRequest("PUT", "/index.json", bytes.NewReader([]byte(indexData)))
-	putIdxReq.Header.Set("Authorization", "Bearer "+token)
+	putIdxReq.Header.Set("Authorization", "Bearer "+adminToken)
 	putIdxW := httptest.NewRecorder()
 	srv.Router().ServeHTTP(putIdxW, putIdxReq)
 	if putIdxW.Code != 200 {
@@ -344,7 +360,7 @@ func TestGetPrivatePackageRequiresAuth(t *testing.T) {
 }
 
 func TestGetPublicPackageNoAuth(t *testing.T) {
-	srv, token := setupTestServer(t)
+	srv, token, adminToken := setupTestServerWithAdmin(t)
 
 	// Upload a package
 	content := []byte("public package content")
@@ -359,7 +375,7 @@ func TestGetPublicPackageNoAuth(t *testing.T) {
 	// Mark it public in the index
 	indexData := `{"packages":{"openpkg":{"description":"Open pkg","visibility":"public","latest":"1.0.0","versions":{"1.0.0":{"url":"packages/openpkg/1.0.0.tar.gz","sha256":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"}}}}}`
 	putIdxReq := httptest.NewRequest("PUT", "/index.json", bytes.NewReader([]byte(indexData)))
-	putIdxReq.Header.Set("Authorization", "Bearer "+token)
+	putIdxReq.Header.Set("Authorization", "Bearer "+adminToken)
 	putIdxW := httptest.NewRecorder()
 	srv.Router().ServeHTTP(putIdxW, putIdxReq)
 	if putIdxW.Code != 200 {

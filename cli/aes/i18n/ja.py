@@ -190,7 +190,7 @@ MESSAGES: dict = {
     "init.specific_label": "{type}向け",
     "init.synced_to": "{count} 件のツール設定に同期しました:",
     "init.mcp_configured": "MCP: {file} を設定しました（AESレジストリツール）",
-    "init.mcp_install_hint": "MCPサーバーのインストール: pip install aes-cli[mcp]",
+    "init.mcp_install_hint": "MCPサーバーのインストール: pipx install aes-cli[mcp]",
     "init.next_steps": "次のステップ: 新しいエージェントセッションを開始し、/setup で調整{hint}。",
     "init.or_begin": "、または {trigger} で開始",
     "init.from_template": "テンプレートから初期化しました:",

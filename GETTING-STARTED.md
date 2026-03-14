@@ -38,6 +38,12 @@ The `.agent/` directory is the source of truth. The tool-specific files (`CLAUDE
 ## Step 1: Install the CLI
 
 ```bash
+pipx install aes-cli
+```
+
+Or inside a virtual environment:
+
+```bash
 pip install aes-cli
 ```
 
@@ -131,6 +137,9 @@ aes init --language python
 
 ```bash
 # Install with MCP support
+pipx install "aes-cli[mcp]"
+
+# Or inside a virtual environment
 pip install aes-cli[mcp]
 
 # Or from source

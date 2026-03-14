@@ -77,7 +77,8 @@ class ClaudeTarget(SyncTarget):
 
         # 3. .claude/commands/*.md (user-defined commands)
         for cmd in ctx.commands:
-            rel_path = f".claude/commands/{cmd['id']}.md"
+            cmd_id = cmd['id'].replace("/", "-").replace("\\", "-")
+            rel_path = f".claude/commands/{cmd_id}.md"
             cmd_content = AES_SENTINEL_MD + "\n" + cmd.get("content", "")
             action = self._check_conflict(ctx.project_root, rel_path, force)
             plan.files.append(GeneratedFile(
@@ -89,7 +90,8 @@ class ClaudeTarget(SyncTarget):
 
         # 4. .claude/commands/skills/<id>.md (skill runbooks as slash commands)
         for skill_id, runbook in ctx.skill_runbooks.items():
-            rel_path = f".claude/commands/skills/{skill_id}.md"
+            safe_id = skill_id.replace("/", "-").replace("\\", "-")
+            rel_path = f".claude/commands/skills/{safe_id}.md"
             skill_content = AES_SENTINEL_MD + "\n" + runbook
 
             # Append per-skill metadata (negative triggers, permissions)

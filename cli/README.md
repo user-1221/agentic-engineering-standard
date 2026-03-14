@@ -7,6 +7,9 @@ AES treats agent instructions, skills, permissions, and memory as **first-class 
 ## Installation
 
 ```bash
+pipx install aes-cli
+
+# Or inside a virtual environment
 pip install aes-cli
 ```
 

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -75,7 +76,7 @@ func csrfProtect(secure bool, next http.Handler) http.Handler {
 		// Validate on POST
 		if r.Method == "POST" {
 			formToken := r.FormValue("csrf_token")
-			if formToken == "" || formToken != csrfToken {
+			if formToken == "" || subtle.ConstantTimeCompare([]byte(formToken), []byte(csrfToken)) != 1 {
 				http.Error(w, "Invalid CSRF token", http.StatusForbidden)
 				return
 			}

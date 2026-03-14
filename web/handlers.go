@@ -79,7 +79,7 @@ func (a *App) handleIndex(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// Generate state parameter
-	raw := make([]byte, 16)
+	raw := make([]byte, 32)
 	rand.Read(raw)
 	state := hex.EncodeToString(raw)
 
@@ -106,10 +106,13 @@ func (a *App) handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 
 	// Clear state cookie
 	http.SetCookie(w, &http.Cookie{
-		Name:   "oauth_state",
-		Value:  "",
-		Path:   "/",
-		MaxAge: -1,
+		Name:     "oauth_state",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   a.isSecure(),
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	code := r.URL.Query().Get("code")
@@ -218,7 +221,7 @@ func (a *App) handleTokenCreate(w http.ResponseWriter, r *http.Request) {
 	rawToken, err := a.Tokens.CreateToken(fullName)
 	if err != nil {
 		log.Printf("create token error: %v", err)
-		a.renderError(w, "Failed to create token: "+err.Error(), http.StatusInternalServerError)
+		a.renderError(w, "Failed to create token. Please try again.", http.StatusInternalServerError)
 		return
 	}
 

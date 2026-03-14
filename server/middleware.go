@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -206,21 +207,22 @@ func (rw *responseWriter) Write(b []byte) (int, error) {
 // Proxy headers (X-Real-IP, X-Forwarded-For) are only trusted when the
 // request comes from loopback (i.e. via nginx reverse proxy).
 func clientIP(r *http.Request) string {
-	// Strip port from RemoteAddr
-	addr := r.RemoteAddr
-	if idx := strings.LastIndex(addr, ":"); idx != -1 {
-		addr = addr[:idx]
+	// Use net.SplitHostPort to correctly handle both IPv4 and IPv6
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
 	}
 
 	// Only trust proxy headers from loopback (nginx)
-	if addr == "127.0.0.1" || addr == "::1" {
-		if ip := r.Header.Get("X-Real-IP"); ip != "" {
-			return ip
+	ip := net.ParseIP(host)
+	if ip != nil && ip.IsLoopback() {
+		if realIP := r.Header.Get("X-Real-IP"); realIP != "" {
+			return realIP
 		}
-		if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
-			return strings.TrimSpace(strings.Split(ip, ",")[0])
+		if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
+			return strings.TrimSpace(strings.Split(fwd, ",")[0])
 		}
 	}
 
-	return addr
+	return host
 }

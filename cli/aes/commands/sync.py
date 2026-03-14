@@ -30,6 +30,19 @@ console = Console()
 SYNC_MANIFEST = ".aes-sync.json"
 
 
+def _validate_subpath(base: Path, child: Path) -> None:
+    """Ensure *child* resolves to a location under *base*.
+
+    Raises click.ClickException on path traversal attempts.
+    """
+    try:
+        child.resolve().relative_to(base.resolve())
+    except ValueError:
+        raise click.ClickException(
+            f"Path traversal blocked: {child} escapes {base}"
+        )
+
+
 def run_sync(
     project_root: Path,
     target_names: Optional[List[str]] = None,
@@ -60,6 +73,7 @@ def run_sync(
         for gf in sync_plan.files:
             if gf.action in ("create", "update"):
                 full_path = project_root / gf.relative_path
+                _validate_subpath(project_root, full_path)
                 full_path.parent.mkdir(parents=True, exist_ok=True)
                 full_path.write_text(gf.content)
                 sync_manifest["files"][gf.relative_path] = {
@@ -106,6 +120,7 @@ def _load_agent_context(project_root: Path) -> AgentContext:
     instructions: Optional[str] = None
     instructions_rel = agent_section.get("instructions", "instructions.md")
     instructions_path = agent_dir / instructions_rel
+    _validate_subpath(agent_dir, instructions_path)
     if instructions_path.exists():
         instructions = instructions_path.read_text()
 
@@ -114,6 +129,7 @@ def _load_agent_context(project_root: Path) -> AgentContext:
     orchestrator_rel = agent_section.get("orchestrator")
     if orchestrator_rel:
         orchestrator_path = agent_dir / orchestrator_rel
+        _validate_subpath(agent_dir, orchestrator_path)
         if orchestrator_path.exists():
             orchestrator = orchestrator_path.read_text()
 
@@ -125,12 +141,14 @@ def _load_agent_context(project_root: Path) -> AgentContext:
         runbook_rel = skill_ref.get("runbook")
         if runbook_rel:
             runbook_path = agent_dir / runbook_rel
+            _validate_subpath(agent_dir, runbook_path)
             if runbook_path.exists():
                 skill_runbooks[skill_id] = runbook_path.read_text()
         # Load skill manifest for name/description/activation metadata
         manifest_rel = skill_ref.get("manifest")
         if manifest_rel:
             skill_manifest_path = agent_dir / manifest_rel
+            _validate_subpath(agent_dir, skill_manifest_path)
             if skill_manifest_path.exists():
                 with open(skill_manifest_path) as f:
                     skill_data = yaml.safe_load(f) or {}
@@ -154,6 +172,7 @@ def _load_agent_context(project_root: Path) -> AgentContext:
     permissions: Optional[dict] = None
     permissions_rel = agent_section.get("permissions", PERMISSIONS_FILE)
     permissions_path = agent_dir / permissions_rel
+    _validate_subpath(agent_dir, permissions_path)
     if permissions_path.exists():
         with open(permissions_path) as f:
             permissions = yaml.safe_load(f) or {}
@@ -163,6 +182,7 @@ def _load_agent_context(project_root: Path) -> AgentContext:
     for cmd_ref in manifest.get("commands", []):
         cmd_data = dict(cmd_ref)
         cmd_path = agent_dir / cmd_ref["path"]
+        _validate_subpath(agent_dir, cmd_path)
         if cmd_path.exists():
             cmd_data["content"] = cmd_path.read_text()
         else:
@@ -320,6 +340,7 @@ def sync_cmd(
 
             if gf.action in ("create", "update") and not dry_run:
                 full_path = project_root / gf.relative_path
+                _validate_subpath(project_root, full_path)
                 full_path.parent.mkdir(parents=True, exist_ok=True)
                 full_path.write_text(gf.content)
                 sync_manifest["files"][gf.relative_path] = {
