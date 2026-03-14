@@ -8,6 +8,15 @@ This project maintains two version tracks:
 
 ## [Unreleased]
 
+## [cli-v0.4.3] — 2026-03-14
+
+### Added
+- Add `/build` command to all framework-based project types (API, Web app, CLI, Library, Frontend) — previously only domain types (ML, Web, DevOps, Research) and the generic fallback had workflow commands
+- Add upgrade instructions to README, CLI README, and Getting Started guide
+
+### Fixed
+- Fix test suite locale isolation — tests now force `AES_LANG=en` via conftest fixture so they pass regardless of user's `~/.aes/config.yaml` locale setting
+
 ## [cli-v0.4.2] — 2026-03-14
 
 ### Changed

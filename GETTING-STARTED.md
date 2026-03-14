@@ -59,6 +59,15 @@ Verify:
 aes --help
 ```
 
+### Upgrading
+
+```bash
+pipx upgrade aes-cli            # if installed with pipx
+pip install --upgrade aes-cli   # if installed with pip
+```
+
+After upgrading, run `aes sync` in your project to regenerate tool-specific configs (`CLAUDE.md`, `.cursorrules`, etc.) with the new version's sync logic. Your `.agent/` source files are not modified by the upgrade.
+
 ---
 
 ## Step 2: Initialize Your Project

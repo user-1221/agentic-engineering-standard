@@ -18,7 +18,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from aes.domains import DomainConfig, SkillDef, WorkflowDef, WorkflowStateDef, WorkflowTransitionDef
+from aes.domains import CommandDef, DomainConfig, SkillDef, WorkflowDef, WorkflowStateDef, WorkflowTransitionDef, _BUILD_COMMAND
 
 
 # ---------------------------------------------------------------------------
@@ -125,6 +125,7 @@ _API_WORKFLOW = WorkflowDef(
 )
 
 API_CONFIG = DomainConfig(
+    workflow_commands=[_BUILD_COMMAND],
     instructions_description="API service with endpoints, authentication, and database.",
     instructions_quick_ref="",  # filled by framework overlay
     instructions_project_structure="",  # generic, filled by overlay or /setup
@@ -177,6 +178,7 @@ _FRONTEND_WORKFLOW = WorkflowDef(
 )
 
 FRONTEND_CONFIG = DomainConfig(
+    workflow_commands=[_BUILD_COMMAND],
     instructions_description="Frontend application with components, routing, and state management.",
     instructions_rules=[
         "**Component-first** -- build small, reusable components.",
@@ -202,6 +204,7 @@ FRONTEND_CONFIG = DomainConfig(
 )
 
 FULLSTACK_CONFIG = DomainConfig(
+    workflow_commands=[_BUILD_COMMAND],
     instructions_description="Full-stack application with frontend, API, and database.",
     instructions_rules=[
         "**Type safety everywhere** -- shared types between frontend and API.",
@@ -227,6 +230,7 @@ FULLSTACK_CONFIG = DomainConfig(
 )
 
 CLI_CONFIG = DomainConfig(
+    workflow_commands=[_BUILD_COMMAND],
     instructions_description="Command-line tool with subcommands, argument parsing, and user interaction.",
     instructions_rules=[
         "**Clear error messages** -- users see stderr, make it helpful.",
@@ -251,6 +255,7 @@ CLI_CONFIG = DomainConfig(
 )
 
 LIBRARY_CONFIG = DomainConfig(
+    workflow_commands=[_BUILD_COMMAND],
     instructions_description="Reusable library or package for other projects to consume.",
     instructions_rules=[
         "**Public API is a contract** -- don't break it without a major version bump.",

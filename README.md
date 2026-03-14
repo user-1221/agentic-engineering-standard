@@ -38,6 +38,12 @@ my-project/
 pipx install aes-cli            # recommended
 # cd cli && pip install -e .    # or from source in a venv
 
+# Update to the latest version
+pipx upgrade aes-cli            # if installed with pipx
+# pip install --upgrade aes-cli # if installed with pip
+# Then re-sync to apply any changes to generated configs
+# aes sync
+
 # Scaffold a new AES project
 aes init
 
