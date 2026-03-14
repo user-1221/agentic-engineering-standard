@@ -8,6 +8,12 @@ This project maintains two version tracks:
 
 ## [Unreleased]
 
+## [cli-v0.4.2] — 2026-03-14
+
+### Changed
+- Recommend `pipx` as primary install method across all docs, landing page, and CLI hints (PEP 668 compatibility)
+- Keep `pip` as fallback for virtual environment users
+
 ## [cli-v0.4.1] — 2026-03-14
 
 ### Security
