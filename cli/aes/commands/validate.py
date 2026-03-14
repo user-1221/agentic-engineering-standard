@@ -8,6 +8,7 @@ import click
 from rich.console import Console
 
 from aes.config import AGENT_DIR
+from aes.i18n import t
 from aes.validator import validate_agent_dir
 
 console = Console()
@@ -25,11 +26,11 @@ def validate_cmd(path: str, strict: bool) -> None:
     agent_dir = project_root / AGENT_DIR
 
     if not agent_dir.exists():
-        console.print(f"[red]Error:[/] No {AGENT_DIR}/ directory found at {project_root}")
-        console.print("[dim]Run 'aes init' to create one.[/]")
+        console.print(f"[red]{t('common.error')}:[/] {t('common.no_agent_dir', agent_dir=AGENT_DIR, path=project_root)}")
+        console.print(f"[dim]{t('common.run_init_hint')}[/]")
         raise SystemExit(1)
 
-    console.print(f"[bold]Validating[/] {agent_dir}")
+    console.print(f"[bold]{t('validate.validating')}[/] {agent_dir}")
     console.print()
 
     results = validate_agent_dir(agent_dir)
@@ -43,20 +44,20 @@ def validate_cmd(path: str, strict: bool) -> None:
         is_warning = result.valid and result.errors
         if is_warning and strict:
             # Promote warnings to errors in strict mode
-            console.print(f"  [red]FAIL[/] {rel_path}")
+            console.print(f"  [red]{t('validate.fail')}[/] {rel_path}")
             for error in result.errors:
                 console.print(f"       {error}")
             failed += 1
         elif is_warning:
-            console.print(f"  [yellow]WARN[/] {rel_path}")
+            console.print(f"  [yellow]{t('validate.warn')}[/] {rel_path}")
             for error in result.errors:
                 console.print(f"       {error}")
             warnings += 1
         elif result.valid:
-            console.print(f"  [green]PASS[/] {rel_path}")
+            console.print(f"  [green]{t('validate.pass')}[/] {rel_path}")
             passed += 1
         else:
-            console.print(f"  [red]FAIL[/] {rel_path}")
+            console.print(f"  [red]{t('validate.fail')}[/] {rel_path}")
             for error in result.errors:
                 console.print(f"       {error}")
             failed += 1
@@ -64,14 +65,14 @@ def validate_cmd(path: str, strict: bool) -> None:
     console.print()
     summary_parts = []
     if passed:
-        summary_parts.append(f"{passed} passed")
+        summary_parts.append(t("validate.passed", count=passed))
     if warnings:
-        summary_parts.append(f"{warnings} warning(s)")
+        summary_parts.append(t("validate.warnings", count=warnings))
     if failed:
-        summary_parts.append(f"{failed} failed")
+        summary_parts.append(t("validate.failed", count=failed))
 
     if failed == 0:
-        console.print(f"[green]All valid.[/] {', '.join(summary_parts)}.")
+        console.print(f"[green]{t('validate.all_valid')}[/] {', '.join(summary_parts)}.")
     else:
         console.print(f"[red]{', '.join(summary_parts)}.[/]")
         raise SystemExit(1)

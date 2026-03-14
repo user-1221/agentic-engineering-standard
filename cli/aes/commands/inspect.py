@@ -13,6 +13,7 @@ from rich.console import Console
 from rich.table import Table
 
 from aes.config import AGENT_DIR
+from aes.i18n import t
 from aes.registry import (
     fetch_index,
     download_package,
@@ -41,7 +42,7 @@ def _render_workflow_diagram(workflow: dict) -> str:
     transitions = workflow.get("transitions", [])
 
     if not states or not transitions:
-        return "  (no states or transitions defined)"
+        return f"  ({t('inspect.no_states')})"
 
     lines = []
     # Find initial and terminal states
@@ -66,9 +67,9 @@ def _render_workflow_diagram(workflow: dict) -> str:
         while current:
             targets = tx_map.get(current, [])
             next_state = None
-            for t in targets:
-                if t not in visited and t not in terminal:
-                    next_state = t
+            for tgt in targets:
+                if tgt not in visited and tgt not in terminal:
+                    next_state = tgt
                     break
             if next_state:
                 forward_chain.append(next_state)
@@ -79,7 +80,7 @@ def _render_workflow_diagram(workflow: dict) -> str:
 
         lines.append("  " + " --> ".join(forward_chain))
         if terminal:
-            lines.append("  Terminal: " + ", ".join(terminal))
+            lines.append(f"  {t('inspect.terminal', states=', '.join(terminal))}")
 
         # Show backward transitions
         backward = [tx for tx in transitions if tx.get("to") in visited and
@@ -88,7 +89,7 @@ def _render_workflow_diagram(workflow: dict) -> str:
         for tx in backward:
             lines.append(f"  (loop) {tx['from']} --> {tx['to']}: {tx.get('description', 'reframe')}")
 
-    return "\n".join(lines) if lines else "  (could not render diagram)"
+    return "\n".join(lines) if lines else f"  ({t('inspect.no_states')})"
 
 
 def _is_local_path(target: str) -> bool:
@@ -106,12 +107,12 @@ def _inspect_local(path: str) -> None:
     agent_dir = project_root / AGENT_DIR
 
     if not agent_dir.exists():
-        console.print(f"[red]Error:[/] No {AGENT_DIR}/ directory found at {project_root}")
+        console.print(f"[red]{t('common.error')}:[/] {t('common.no_agent_dir', agent_dir=AGENT_DIR, path=project_root)}")
         raise SystemExit(1)
 
     manifest_path = agent_dir / "agent.yaml"
     if not manifest_path.exists():
-        console.print(f"[red]Error:[/] No agent.yaml found in {agent_dir}")
+        console.print(f"[red]{t('common.error')}:[/] {t('common.no_manifest', manifest='agent.yaml', agent_dir=agent_dir)}")
         raise SystemExit(1)
 
     manifest = _load_yaml(manifest_path)
@@ -120,24 +121,24 @@ def _inspect_local(path: str) -> None:
     console.print()
     console.print(f"[bold]{manifest.get('name', 'unknown')}[/] v{manifest.get('version', '?')}")
     console.print(f"  {manifest.get('description', '')}")
-    console.print(f"  Domain: {manifest.get('domain', 'unspecified')} | "
-                  f"Language: {manifest.get('runtime', {}).get('language', '?')} | "
-                  f"AES: {manifest.get('aes', '?')}")
+    console.print(f"  {t('inspect.domain', domain=manifest.get('domain', 'unspecified'))} | "
+                  f"{t('inspect.language', language=manifest.get('runtime', {}).get('language', '?'))} | "
+                  f"{t('inspect.aes_version', version=manifest.get('aes', '?'))}")
     console.print()
 
     # Skills table
     skills = manifest.get("skills", [])
     if skills:
-        table = Table(title="Skills", show_header=True, header_style="bold")
-        table.add_column("ID", style="cyan")
-        table.add_column("Manifest")
-        table.add_column("Runbook")
-        table.add_column("Status")
+        table = Table(title=t("inspect.skills_table"), show_header=True, header_style="bold")
+        table.add_column(t("inspect.col_id"), style="cyan")
+        table.add_column(t("inspect.col_manifest"))
+        table.add_column(t("inspect.col_runbook"))
+        table.add_column(t("inspect.col_status"))
 
         for skill in skills:
             manifest_exists = (agent_dir / skill.get("manifest", "")).exists() if skill.get("manifest") else False
             runbook_exists = (agent_dir / skill.get("runbook", "")).exists() if skill.get("runbook") else False
-            status = "[green]OK[/]" if manifest_exists and runbook_exists else "[red]MISSING[/]"
+            status = f"[green]{t('inspect.ok')}[/]" if manifest_exists and runbook_exists else f"[red]{t('inspect.missing')}[/]"
             table.add_row(
                 skill.get("id", "?"),
                 skill.get("manifest", "-"),
@@ -150,11 +151,11 @@ def _inspect_local(path: str) -> None:
     # Registries
     registries = manifest.get("registries", [])
     if registries:
-        table = Table(title="Registries", show_header=True, header_style="bold")
-        table.add_column("ID", style="cyan")
-        table.add_column("Path")
-        table.add_column("Description")
-        table.add_column("Entries")
+        table = Table(title=t("inspect.registries_table"), show_header=True, header_style="bold")
+        table.add_column(t("inspect.col_id"), style="cyan")
+        table.add_column(t("inspect.col_path"))
+        table.add_column(t("inspect.col_description"))
+        table.add_column(t("inspect.col_entries"))
 
         for reg in registries:
             reg_path = agent_dir / reg["path"]
@@ -186,16 +187,16 @@ def _inspect_local(path: str) -> None:
                 wf_data = _load_yaml(wf_path)
                 n_states = len(wf_data.get("states", {}))
                 n_transitions = len(wf_data.get("transitions", []))
-                console.print(f"[bold]Workflow:[/] {wf_ref['id']} ({n_states} states, {n_transitions} transitions)")
+                console.print(f"[bold]{t('inspect.workflow')}[/] {wf_ref['id']} ({n_states} states, {n_transitions} transitions)")
                 console.print(_render_workflow_diagram(wf_data))
                 console.print()
 
     # Commands
     commands = manifest.get("commands", [])
     if commands:
-        table = Table(title="Commands", show_header=True, header_style="bold")
-        table.add_column("Trigger", style="cyan")
-        table.add_column("Description")
+        table = Table(title=t("inspect.commands_table"), show_header=True, header_style="bold")
+        table.add_column(t("inspect.col_trigger"), style="cyan")
+        table.add_column(t("inspect.col_description"))
         for cmd in commands:
             table.add_row(
                 cmd.get("trigger", f"/{cmd.get('id', '?')}"),
@@ -205,17 +206,17 @@ def _inspect_local(path: str) -> None:
         console.print()
 
     # Summary
-    console.print("[bold]Summary[/]")
-    console.print(f"  Skills:     {len(skills)}")
-    console.print(f"  Registries: {len(registries)}")
-    console.print(f"  Workflows:  {len(workflows)}")
-    console.print(f"  Commands:   {len(commands)}")
+    console.print(f"[bold]{t('inspect.summary')}[/]")
+    console.print(f"  {t('inspect.skills_count', count=len(skills))}")
+    console.print(f"  {t('inspect.registries_count', count=len(registries))}")
+    console.print(f"  {t('inspect.workflows_count', count=len(workflows))}")
+    console.print(f"  {t('inspect.commands_count', count=len(commands))}")
 
     # Resources
     resources = manifest.get("resources", {})
     if resources:
-        console.print(f"  CPU limit:  {resources.get('max_cpu_percent', '-')}%")
-        console.print(f"  Mem limit:  {resources.get('max_memory_percent', '-')}%")
+        console.print(f"  {t('inspect.cpu_limit', value=resources.get('max_cpu_percent', '-'))}")
+        console.print(f"  {t('inspect.mem_limit', value=resources.get('max_memory_percent', '-'))}")
     console.print()
 
 
@@ -226,23 +227,23 @@ def _inspect_local(path: str) -> None:
 def _render_registry_metadata(name: str, pkg: dict, selected_version: str) -> None:
     """Render registry-level metadata for a package."""
     console.print()
-    console.print(f"[bold]{name}[/] v{selected_version}  [dim](registry)[/]")
+    console.print(f"[bold]{name}[/] v{selected_version}  [dim]({t('inspect.registry_label')})[/]")
     console.print(f"  {pkg.get('description', '')}")
-    console.print(f"  Type: {pkg.get('type', 'skill')} | "
-                  f"Visibility: {pkg.get('visibility', 'public')}")
+    console.print(f"  {t('inspect.type_label', type=pkg.get('type', 'skill'))} | "
+                  f"{t('inspect.visibility_label', visibility=pkg.get('visibility', 'public'))}")
 
     tags = pkg.get("tags", [])
     if tags:
-        console.print(f"  Tags: {', '.join(tags)}")
+        console.print(f"  {t('inspect.tags_label', tags=', '.join(tags))}")
     console.print()
 
     # Versions table
     versions_dict = pkg.get("versions", {})
     if versions_dict:
-        table = Table(title="Versions", show_header=True, header_style="bold")
-        table.add_column("Version", style="cyan")
-        table.add_column("Published")
-        table.add_column("SHA256", style="dim")
+        table = Table(title=t("inspect.versions_table"), show_header=True, header_style="bold")
+        table.add_column(t("inspect.col_version"), style="cyan")
+        table.add_column(t("inspect.col_published"))
+        table.add_column(t("inspect.col_sha256"), style="dim")
 
         sorted_versions = sorted(
             versions_dict.items(),
@@ -251,7 +252,7 @@ def _render_registry_metadata(name: str, pkg: dict, selected_version: str) -> No
         )
 
         for ver, info in sorted_versions:
-            marker = " [bold green](latest)[/]" if ver == pkg.get("latest") else ""
+            marker = f" [bold green]({t('inspect.latest')})[/]" if ver == pkg.get("latest") else ""
             published = info.get("published_at", "?")
             if isinstance(published, str) and "T" in published:
                 published = published.split("T")[0]
@@ -268,16 +269,16 @@ def _inspect_remote_skill(extract_dir: Path) -> None:
     if not manifests:
         manifests = list(extract_dir.rglob("skill.yaml"))
     if not manifests:
-        console.print("[dim]No skill manifest found in package.[/]")
+        console.print(f"[dim]{t('inspect.no_skill_manifest')}[/]")
         return
 
     manifest = _load_yaml(manifests[0])
 
-    console.print("[bold]Skill Details[/]")
-    console.print(f"  ID:          {manifest.get('id', '?')}")
-    console.print(f"  Name:        {manifest.get('name', '?')}")
-    console.print(f"  Version:     {manifest.get('version', '?')}")
-    console.print(f"  Description: {manifest.get('description', '')}")
+    console.print(f"[bold]{t('inspect.skill_details')}[/]")
+    console.print(f"  {t('inspect.field_id', value=manifest.get('id', '?'))}")
+    console.print(f"  {t('inspect.field_name', value=manifest.get('name', '?'))}")
+    console.print(f"  {t('inspect.field_version', value=manifest.get('version', '?'))}")
+    console.print(f"  {t('inspect.field_description', value=manifest.get('description', ''))}")
     console.print()
 
     # Inputs
@@ -287,40 +288,40 @@ def _inspect_remote_skill(extract_dir: Path) -> None:
     env_inputs = inputs.get("environment", [])
 
     if required or optional:
-        table = Table(title="Inputs", show_header=True, header_style="bold")
-        table.add_column("Name", style="cyan")
-        table.add_column("Type")
-        table.add_column("Required")
-        table.add_column("Description")
+        table = Table(title=t("inspect.inputs_table"), show_header=True, header_style="bold")
+        table.add_column(t("search.col_name"), style="cyan")
+        table.add_column(t("search.col_type"))
+        table.add_column(t("inspect.col_required"))
+        table.add_column(t("search.col_description"))
 
         for inp in required:
             table.add_row(
                 inp.get("name", "?"),
                 inp.get("type", "?"),
-                "[green]Yes[/]",
+                f"[green]{t('inspect.yes')}[/]",
                 inp.get("description", ""),
             )
         for inp in optional:
             table.add_row(
                 inp.get("name", "?"),
                 inp.get("type", "?"),
-                "No",
+                t("inspect.no"),
                 inp.get("description", ""),
             )
         console.print(table)
         console.print()
 
     if env_inputs:
-        console.print(f"  Environment: {', '.join(env_inputs)}")
+        console.print(f"  {t('inspect.environment', vars=', '.join(env_inputs))}")
         console.print()
 
     # Outputs
     outputs = manifest.get("outputs", [])
     if outputs:
-        table = Table(title="Outputs", show_header=True, header_style="bold")
-        table.add_column("Name", style="cyan")
-        table.add_column("Type")
-        table.add_column("Description")
+        table = Table(title=t("inspect.outputs_table"), show_header=True, header_style="bold")
+        table.add_column(t("search.col_name"), style="cyan")
+        table.add_column(t("search.col_type"))
+        table.add_column(t("search.col_description"))
 
         for out in outputs:
             table.add_row(
@@ -335,26 +336,26 @@ def _inspect_remote_skill(extract_dir: Path) -> None:
     depends_on = manifest.get("depends_on", [])
     blocks = manifest.get("blocks", [])
     if depends_on or blocks:
-        console.print("[bold]Dependencies[/]")
+        console.print(f"[bold]{t('inspect.dependencies')}[/]")
         if depends_on:
-            console.print(f"  Depends on: {', '.join(str(d) for d in depends_on)}")
+            console.print(f"  {t('inspect.depends_on', deps=', '.join(str(d) for d in depends_on))}")
         if blocks:
-            console.print(f"  Blocks:     {', '.join(str(b) for b in blocks)}")
+            console.print(f"  {t('inspect.blocks', deps=', '.join(str(b) for b in blocks))}")
         console.print()
 
     # Triggers
     triggers = manifest.get("triggers", [])
     if triggers:
-        console.print("[bold]Triggers[/]")
-        for t in triggers:
-            label = t.get("command", t.get("cron", t.get("description", "")))
-            console.print(f"  [{t.get('type', '?')}] {label}")
+        console.print(f"[bold]{t('inspect.triggers')}[/]")
+        for trig in triggers:
+            label = trig.get("command", trig.get("cron", trig.get("description", "")))
+            console.print(f"  [{trig.get('type', '?')}] {label}")
         console.print()
 
     # Negative triggers
     neg_triggers = manifest.get("negative_triggers", [])
     if neg_triggers:
-        console.print("[bold]Negative Triggers[/]")
+        console.print(f"[bold]{t('inspect.negative_triggers')}[/]")
         for nt in neg_triggers:
             console.print(f"  [red]- {nt}[/]")
         console.print()
@@ -362,7 +363,7 @@ def _inspect_remote_skill(extract_dir: Path) -> None:
     # Tags
     tags = manifest.get("tags", [])
     if tags:
-        console.print(f"  Tags: {', '.join(tags)}")
+        console.print(f"  {t('inspect.tags_label', tags=', '.join(tags))}")
         console.print()
 
 
@@ -374,7 +375,7 @@ def _inspect_remote_template(extract_dir: Path) -> None:
             _inspect_local(str(project_root))
             return
 
-    console.print("[dim]No .agent/ directory found in template package.[/]")
+    console.print(f"[dim]{t('inspect.no_agent_in_template')}[/]")
 
 
 def _inspect_remote(target: str) -> None:
@@ -382,20 +383,20 @@ def _inspect_remote(target: str) -> None:
     try:
         name, version_spec = parse_registry_source(target)
     except ValueError as exc:
-        console.print(f"[red]Error:[/] {exc}")
+        console.print(f"[red]{t('common.error')}:[/] {exc}")
         raise SystemExit(1)
 
     try:
         index = fetch_index()
     except Exception as exc:
-        console.print(f"[red]Error:[/] Failed to fetch registry: {exc}")
-        console.print("[dim]Check your network or set AES_REGISTRY_URL.[/]")
+        console.print(f"[red]{t('common.error')}:[/] {t('search.fetch_failed', exc=exc)}")
+        console.print(f"[dim]{t('search.network_hint')}[/]")
         raise SystemExit(1)
 
     packages = index.get("packages", {})
     if name not in packages:
-        console.print(f"[red]Error:[/] Package '{name}' not found in registry.")
-        console.print("[dim]Use 'aes search' to find available packages.[/]")
+        console.print(f"[red]{t('common.error')}:[/] {t('inspect.package_not_found', name=name)}")
+        console.print(f"[dim]{t('inspect.use_search_hint')}[/]")
         raise SystemExit(1)
 
     pkg = packages[name]
@@ -406,8 +407,7 @@ def _inspect_remote(target: str) -> None:
     version = resolve_version(version_spec, available)
     if version is None:
         console.print(
-            f"[red]Error:[/] No version of '{name}' matches '{version_spec}'. "
-            f"Available: {', '.join(available)}"
+            f"[red]{t('common.error')}:[/] {t('inspect.no_version_match', name=name, spec=version_spec, available=', '.join(available))}"
         )
         raise SystemExit(1)
 
@@ -423,8 +423,8 @@ def _inspect_remote(target: str) -> None:
         try:
             tarball = download_package(name, version, sha256_expected, tmp_dir)
         except Exception as exc:
-            console.print(f"[yellow]Warning:[/] Could not download package: {exc}")
-            console.print("[dim]Showing registry metadata only.[/]")
+            console.print(f"[yellow]{t('common.warning')}:[/] {t('inspect.download_warning', exc=exc)}")
+            console.print(f"[dim]{t('inspect.metadata_only')}[/]")
             return
 
         with tarfile.open(tarball, "r:gz") as tar:

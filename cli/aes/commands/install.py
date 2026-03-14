@@ -14,6 +14,7 @@ import yaml
 from rich.console import Console
 
 from aes.config import AGENT_DIR, MANIFEST_FILE, SKILLS_DIR, VENDOR_DIR
+from aes.i18n import t
 from aes.registry import (
     download_package,
     fetch_index,
@@ -145,6 +146,11 @@ def _safe_extract(tar: tarfile.TarFile, dest: Path) -> None:
     Safe for Python 3.9 (no ``data_filter`` yet).
     """
     for member in tar.getmembers():
+        # Reject symlinks and hardlinks — they can point outside dest
+        if member.issym() or member.islnk():
+            raise click.ClickException(
+                f"Refusing to extract symlink/hardlink: {member.name}"
+            )
         member_path = os.path.normpath(member.name)
         if member_path.startswith("..") or os.path.isabs(member_path):
             raise click.ClickException(
@@ -251,7 +257,7 @@ def _install_registry(source: str, project_root: Path, force: bool) -> str:
     version_info = pkg["versions"][version]
     sha256_expected = version_info["sha256"]
 
-    console.print(f"[dim]Downloading {name}@{version}...[/]")
+    console.print(f"[dim]{t('install.downloading', name=name, version=version)}[/]")
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp_dir = Path(tmp)
@@ -274,7 +280,7 @@ def _install_from_deps(project_root: Path, force: bool) -> None:
 
     deps = manifest.get("dependencies", {}).get("skills", {})
     if not deps:
-        console.print("[dim]No skill dependencies declared in agent.yaml[/]")
+        console.print(f"[dim]{t('install.no_deps')}[/]")
         return
 
     installed = 0
@@ -286,31 +292,31 @@ def _install_from_deps(project_root: Path, force: bool) -> None:
         try:
             if source_type == "local":
                 _install_local(source, project_root, force)
-                console.print(f"  [green]Installed:[/] {name} ← {source}")
+                console.print(f"  [green]{t('install.installed')}[/] {name} ← {source}")
                 installed += 1
             elif source_type == "tarball":
                 _install_tarball(Path(source), project_root, force)
-                console.print(f"  [green]Installed:[/] {name} ← {source}")
+                console.print(f"  [green]{t('install.installed')}[/] {name} ← {source}")
                 installed += 1
             elif source_type == "registry":
                 _install_registry(source, project_root, force)
-                console.print(f"  [green]Installed:[/] {name} ← {source}")
+                console.print(f"  [green]{t('install.installed')}[/] {name} ← {source}")
                 installed += 1
             elif source_type == "git":
                 console.print(
-                    f"  [yellow]Skipped:[/] {name} — git sources not yet supported"
+                    f"  [yellow]{t('install.skipped_git', name=name)}[/]"
                 )
                 skipped += 1
             else:
-                console.print(f"  [red]Error:[/] {name} — unknown source: {source}")
+                console.print(f"  [red]{t('install.error_unknown_source', name=name, source=source)}[/]")
                 errored += 1
         except click.ClickException as exc:
-            console.print(f"  [red]Error:[/] {name} — {exc.format_message()}")
+            console.print(f"  [red]{t('install.error_dep', name=name, exc=exc.format_message())}[/]")
             errored += 1
 
     console.print()
     console.print(
-        f"[bold]Summary:[/] {installed} installed, {skipped} skipped, {errored} errored"
+        f"[bold]{t('common.summary')}:[/] {t('install.dep_summary', installed=installed, skipped=skipped, errored=errored)}"
     )
 
 
@@ -349,7 +355,7 @@ def install_cmd(source: Optional[str], path: str, force: bool) -> None:
     agent_dir = project_root / AGENT_DIR
 
     if not agent_dir.exists():
-        console.print(f"[red]Error:[/] No {AGENT_DIR}/ directory found at {project_root}")
+        console.print(f"[red]{t('common.error')}:[/] {t('common.no_agent_dir', agent_dir=AGENT_DIR, path=project_root)}")
         raise SystemExit(1)
 
     if source is None:
@@ -360,18 +366,18 @@ def install_cmd(source: Optional[str], path: str, force: bool) -> None:
 
     if source_type == "tarball":
         skill_id = _install_tarball(Path(source).resolve(), project_root, force)
-        console.print(f"[green]Installed skill:[/] {skill_id}")
+        console.print(f"[green]{t('install.installed_skill')}[/] {skill_id}")
     elif source_type == "local":
         skill_id = _install_local(source, project_root, force)
-        console.print(f"[green]Installed skill:[/] {skill_id}")
+        console.print(f"[green]{t('install.installed_skill')}[/] {skill_id}")
     elif source_type == "registry":
         skill_id = _install_registry(source, project_root, force)
-        console.print(f"[green]Installed skill:[/] {skill_id}")
+        console.print(f"[green]{t('install.installed_skill')}[/] {skill_id}")
     elif source_type == "git":
         console.print(
-            f"[yellow]Not yet supported:[/] git sources ({source})"
+            f"[yellow]{t('install.git_not_supported', source=source)}[/]"
         )
-        console.print("[dim]Only tarball, local, and registry install are available.[/]")
+        console.print(f"[dim]{t('install.tarball_local_only')}[/]")
     else:
         raise click.ClickException(
             f"Cannot determine source type for '{source}'. "

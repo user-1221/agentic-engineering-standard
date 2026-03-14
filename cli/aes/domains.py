@@ -1380,3 +1380,16 @@ DOMAIN_CONFIGS: Dict[str, DomainConfig] = {
     "devops": DEVOPS_CONFIG,
     "research": RESEARCH_CONFIG,
 }
+
+
+def get_domain_config(domain: str, locale: str = "en") -> Optional[DomainConfig]:
+    """Return domain config for the given locale, falling back to English."""
+    if locale == "ja":
+        try:
+            from aes.i18n.domains_ja import DOMAIN_CONFIGS as JA_CONFIGS
+            config = JA_CONFIGS.get(domain)
+            if config:
+                return config
+        except ImportError:
+            pass
+    return DOMAIN_CONFIGS.get(domain)

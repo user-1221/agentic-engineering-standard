@@ -11,6 +11,7 @@ import click
 from rich.console import Console
 
 from aes.config import AGENT_DIR, MANIFEST_FILE
+from aes.i18n import t
 from aes.targets import TARGETS, TARGET_NAMES, AgentContext, SyncPlan
 
 console = Console()
@@ -44,12 +45,12 @@ def status_cmd(path: str) -> None:
     agent_dir = project_root / AGENT_DIR
 
     if not agent_dir.exists():
-        console.print(f"[red]Error:[/] No {AGENT_DIR}/ directory found at {project_root}")
-        console.print("[dim]Run 'aes init' to create one.[/]")
+        console.print(f"[red]{t('common.error')}:[/] {t('common.no_agent_dir', agent_dir=AGENT_DIR, path=project_root)}")
+        console.print(f"[dim]{t('common.run_init_hint')}[/]")
         raise SystemExit(1)
 
     if not (agent_dir / MANIFEST_FILE).exists():
-        console.print(f"[red]Error:[/] No {MANIFEST_FILE} found in {agent_dir}")
+        console.print(f"[red]{t('common.error')}:[/] {t('common.no_manifest', manifest=MANIFEST_FILE, agent_dir=agent_dir)}")
         raise SystemExit(1)
 
     sync_manifest = _load_sync_manifest(project_root)
@@ -57,8 +58,8 @@ def status_cmd(path: str) -> None:
     tracked_files = sync_manifest.get("files", {})
 
     if not synced_at:
-        console.print("[yellow]No sync history found.[/]")
-        console.print("[dim]Run 'aes sync' to generate tool configs.[/]")
+        console.print(f"[yellow]{t('status.no_sync_history')}[/]")
+        console.print(f"[dim]{t('status.run_sync_hint')}[/]")
         return
 
     # Re-generate all plans in memory
@@ -96,15 +97,15 @@ def status_cmd(path: str) -> None:
                 modified_sources.append(rel_path)
             elif on_disk_hash != stored_hash:
                 # Output was hand-edited after sync
-                output_status.append((rel_path, "manually edited"))
+                output_status.append((rel_path, t("status.manually_edited")))
             else:
-                output_status.append((rel_path, "up to date"))
+                output_status.append((rel_path, t("status.up_to_date")))
         else:
             # Tracked file no longer generated (target removed?)
             if on_disk_hash == stored_hash:
-                output_status.append((rel_path, "up to date (target removed)"))
+                output_status.append((rel_path, t("status.target_removed")))
             else:
-                output_status.append((rel_path, "manually edited"))
+                output_status.append((rel_path, t("status.manually_edited")))
 
     # Files that would be generated but aren't tracked yet
     for rel_path in would_generate:
@@ -112,42 +113,42 @@ def status_cmd(path: str) -> None:
             untracked_would.append(rel_path)
 
     # Print report
-    console.print(f"[bold].agent/ status[/]  (last synced: {synced_at})")
+    console.print(f"[bold]{t('status.title')}[/]  ({t('status.last_synced', time=synced_at)})")
     console.print()
 
     needs_sync = False
 
     if modified_sources:
         needs_sync = True
-        console.print("  [yellow]Source changed (needs sync):[/]")
+        console.print(f"  [yellow]{t('status.source_changed')}[/]")
         for rp in modified_sources:
             console.print(f"    [yellow]~[/] {rp}")
         console.print()
 
     if missing_outputs:
         needs_sync = True
-        console.print("  [red]Missing outputs:[/]")
+        console.print(f"  [red]{t('status.missing_outputs')}[/]")
         for rp in missing_outputs:
             console.print(f"    [red]-[/] {rp}")
         console.print()
 
     if untracked_would:
         needs_sync = True
-        console.print("  [yellow]New outputs (not yet synced):[/]")
+        console.print(f"  [yellow]{t('status.new_outputs')}[/]")
         for rp in untracked_would:
             console.print(f"    [green]+[/] {rp}")
         console.print()
 
     if output_status:
-        console.print("  [dim]Synced outputs:[/]")
+        console.print(f"  [dim]{t('status.synced_outputs')}[/]")
         for rp, status in output_status:
-            if status == "up to date":
+            if status == t("status.up_to_date"):
                 console.print(f"    [green]=[/] {rp}  [dim]({status})[/]")
             else:
                 console.print(f"    [yellow]![/] {rp}  [dim]({status})[/]")
         console.print()
 
     if needs_sync:
-        console.print("[yellow]Action:[/] run `aes sync` to update tool configs.")
+        console.print(f"[yellow]{t('status.action_sync')}[/]")
     else:
-        console.print("[green]Everything up to date.[/]")
+        console.print(f"[green]{t('status.everything_up_to_date')}[/]")

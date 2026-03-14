@@ -1,0 +1,311 @@
+{% if domain_config and domain_config.instructions_description %}
+# {{ name }} — エージェント指示書
+
+{{ domain_config.instructions_description }}
+
+## クイックリファレンス
+
+```bash
+{{ domain_config.instructions_quick_ref }}
+```
+
+## プロジェクト構成
+
+```
+{{ domain_config.instructions_project_structure }}
+```
+
+## 重要ルール
+
+{% for rule in domain_config.instructions_rules %}
+{{ loop.index }}. {{ rule }}
+{% endfor %}
+
+## 主要ワークフロー
+
+{% for phase in domain_config.instructions_workflow_phases %}
+### フェーズ {{ loop.index }}: {{ phase.title }}
+
+{{ phase.content }}
+
+{% endfor %}
+
+## 基本原則
+
+{{ domain_config.instructions_key_principle }}
+
+## よくある落とし穴
+
+{% if domain_config.instructions_gotchas %}
+{% for gotcha in domain_config.instructions_gotchas %}
+- {{ gotcha }}
+{% endfor %}
+{% else %}
+<!-- エージェント: プロジェクト固有の落とし穴を追加してください — 苦労して得た教訓、よくあるミス、分かりにくい動作。 -->
+{% endif %}
+
+## AES ファイルフォーマット
+
+`.agent/` ファイルを作成・編集する際は、以下のフォーマットに正確に従ってください。
+
+### スキルマニフェスト (`.skill.yaml`)
+
+```yaml
+aes_skill: "1.0"
+
+id: "my-skill"
+name: "My Skill"
+version: "1.0.0"
+description: "このスキルの説明"
+
+stage: 1
+phase: "processing"
+
+inputs:
+  required:
+    - name: "input_name"
+      type: "string"
+      description: "この入力の説明"
+  optional:
+    - name: "limit"
+      type: "int"
+      default: 50
+      description: "最大アイテム数"
+  environment:
+    - "API_KEY"
+
+outputs:
+  - name: "result"
+    type: "list[str]"
+    description: "生成するもの"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/run.py --stage my-skill"
+
+error_handling:
+  strategy: "per-item-isolation"   # または: fail-fast, retry-with-backoff, skip-on-error
+
+code:
+  primary: "pipeline/my_skill.py"
+
+depends_on:
+  - "previous-skill"
+blocks:
+  - "next-skill"
+tags:
+  - "my-tag"
+```
+
+### ワークフロー (`.yaml`)
+
+```yaml
+aes_workflow: "1.0"
+
+id: "my-workflow"
+entity: "item"
+description: "このワークフローが追跡するもの"
+
+states:
+  pending:
+    description: "処理待ち"
+    initial: true
+  processed:
+    description: "正常に処理完了"
+    terminal: true
+  failed:
+    description: "処理失敗"
+    terminal: true
+
+transitions:
+  - from: "pending"
+    to: "processed"
+    skill: "process"
+    conditions:
+      - "入力が有効"
+  - from: "pending"
+    to: "failed"
+    conditions:
+      - "処理エラー"
+
+idempotency:
+  pattern: "status-gated"
+```
+
+重要ルール: `aes_skill`/`aes_workflow` バージョンキーは**必須**です。`inputs` は `required`/`optional`/`environment` 配列を持つ**オブジェクト**であり、フラットなリストではありません。`states` はステートIDをキーとする**オブジェクト**であり、配列ではありません。`trigger`（文字列）ではなく `triggers`（`type` を持つオブジェクトの配列）を使用してください。`error_strategy` ではなく `error_handling.strategy` を使用してください。`code_location` ではなく `code.primary` を使用してください。
+{% else %}
+# {{ name }} — エージェント指示書
+
+<!-- エージェント: このシステムが何をするか、主な制約を1-2文で記述してください。
+     コードが存在する場合: README + エントリポイント + パッケージ設定を読んでください。
+     新規プロジェクトの場合: ユーザーに何を作るか確認してください。 -->
+
+## クイックリファレンス
+
+```bash
+<!-- エージェント: このプロジェクトの3-5個の一般的なコマンドを列挙してください。
+     コードが存在する場合: package.json scripts, Makefile, pyproject.toml, Cargo.toml, go.mod を確認。
+     新規プロジェクトの場合: 技術スタック ({{ language }}) から推測するか、ユーザーに確認。 -->
+```
+
+## プロジェクト構成
+
+```
+<!-- エージェント: ディレクトリツリーに各主要ディレクトリの目的を注釈してください。
+     コードが存在する場合: ディレクトリ一覧を取得し、各ディレクトリの内容を説明。
+     新規プロジェクトの場合: 技術スタックに基づいて計画された構成を記述。 -->
+```
+
+## 重要ルール
+
+<!-- エージェント: このプロジェクトの3-5個の不変の制約を列挙してください。
+     コードが存在する場合: リンター設定 (.eslintrc, ruff.toml, .golangci.yml)、
+     CIパイプライン (.github/workflows/)、README、コードコメントから抽出。
+     新規プロジェクトの場合: 言語バージョン、セキュリティ要件、規約について確認。
+     例: "Python 3.9+ — `from __future__ import annotations` を全ファイルで使用。" -->
+
+1. **グレースフルフェイル** — 各アイテムをtry/exceptでラップし、エラーをログして続行。
+
+## ドメインモデル
+
+<!-- エージェント: コアエンティティ、関係性、主要なデータフローを記述してください。
+     コードが存在する場合: models/, schemas/, types/, データベースマイグレーション、APIルートを確認。
+     新規プロジェクトの場合: 「主要なエンティティとその関係は？」と確認。 -->
+
+## 主要ワークフロー
+
+<!-- エージェント: 典型的な開発サイクルの3-5フェーズを定義してください。
+     コードが存在する場合: スクリプト、CIパイプライン、プロジェクト構成から推測。
+     新規プロジェクトの場合: 「このプロジェクトの典型的なタスクのワークフローは？」と確認。 -->
+
+### フェーズ 1: 要件収集
+
+<!-- エージェント: 開始前にエージェントが知るべきことは？
+     コードが存在する場合: テストフィクスチャ、設定ファイル、入力例を確認。
+     新規プロジェクトの場合: ユーザーに確認。 -->
+
+### フェーズ 2: 実行
+
+<!-- エージェント: エージェントは何をしますか？どのコマンドを実行しますか？
+     コードが存在する場合: ビルド、実行、テストコマンドを特定。
+     新規プロジェクトの場合: 技術スタックから推測。 -->
+
+### フェーズ 3: 結果分析（スキップ禁止）
+
+<!-- エージェント: 実行後にエージェントが確認すべきことは？
+     コードが存在する場合: テストスイート、リンター、型チェッカー、CIチェックを確認。
+     新規プロジェクトの場合: 品質ゲートについて確認。 -->
+
+### フェーズ 4: イテレーション
+
+<!-- エージェント: 結果を改善するためにエージェントが調整できるレバーは？
+     コードが存在する場合: 設定のノブ、フィーチャーフラグ、最適化パターンを確認。
+     新規プロジェクトの場合: ユーザーに確認。 -->
+
+### フェーズ 5: デリバリー
+
+<!-- エージェント: エージェントは最終結果をどのように提供しますか？
+     コードが存在する場合: デプロイスクリプト、パブリッシュコマンド、出力ディレクトリを確認。
+     新規プロジェクトの場合: 提供メカニズムについて確認。 -->
+
+## 基本原則
+
+エージェントの仕事はコマンドを実行するだけではありません。理解し、分析し、イテレーションし、品質を提供することです。
+
+## よくある落とし穴
+
+<!-- エージェント: 苦労して得た教訓とよくある落とし穴を列挙してください。
+     コードが存在する場合: コメント内の回避策、TODO/FIXME/HACKマーカー、
+     エラーが発生しやすいパターン、設定の落とし穴を.env.exampleから確認。
+     新規プロジェクトの場合: 「過去に問題になったことは？」と確認。 -->
+
+## AES ファイルフォーマット
+
+`.agent/` ファイルを作成・編集する際は、以下のフォーマットに正確に従ってください。
+
+### スキルマニフェスト (`.skill.yaml`)
+
+```yaml
+aes_skill: "1.0"
+
+id: "my-skill"
+name: "My Skill"
+version: "1.0.0"
+description: "このスキルの説明"
+
+stage: 1
+phase: "processing"
+
+inputs:
+  required:
+    - name: "input_name"
+      type: "string"
+      description: "この入力の説明"
+  optional:
+    - name: "limit"
+      type: "int"
+      default: 50
+      description: "最大アイテム数"
+  environment:
+    - "API_KEY"
+
+outputs:
+  - name: "result"
+    type: "list[str]"
+    description: "生成するもの"
+
+triggers:
+  - type: "manual"
+    command: "python scripts/run.py --stage my-skill"
+
+error_handling:
+  strategy: "per-item-isolation"   # または: fail-fast, retry-with-backoff, skip-on-error
+
+code:
+  primary: "pipeline/my_skill.py"
+
+depends_on:
+  - "previous-skill"
+blocks:
+  - "next-skill"
+tags:
+  - "my-tag"
+```
+
+### ワークフロー (`.yaml`)
+
+```yaml
+aes_workflow: "1.0"
+
+id: "my-workflow"
+entity: "item"
+description: "このワークフローが追跡するもの"
+
+states:
+  pending:
+    description: "処理待ち"
+    initial: true
+  processed:
+    description: "正常に処理完了"
+    terminal: true
+  failed:
+    description: "処理失敗"
+    terminal: true
+
+transitions:
+  - from: "pending"
+    to: "processed"
+    skill: "process"
+    conditions:
+      - "入力が有効"
+  - from: "pending"
+    to: "failed"
+    conditions:
+      - "処理エラー"
+
+idempotency:
+  pattern: "status-gated"
+```
+
+重要ルール: `aes_skill`/`aes_workflow` バージョンキーは**必須**です。`inputs` は `required`/`optional`/`environment` 配列を持つ**オブジェクト**であり、フラットなリストではありません。`states` はステートIDをキーとする**オブジェクト**であり、配列ではありません。`trigger`（文字列）ではなく `triggers`（`type` を持つオブジェクトの配列）を使用してください。`error_strategy` ではなく `error_handling.strategy` を使用してください。`code_location` ではなく `code.primary` を使用してください。
+{% endif %}

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aes-cli"
-version = "0.3.1"
+version = "0.4.0"
 description = "CLI tool for the Agentic Engineering Standard"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -51,7 +51,7 @@ Repository = "https://github.com/user-1221/agentic-engineering-standard"
 Documentation = "https://github.com/user-1221/agentic-engineering-standard/tree/main/spec"
 
 [tool.setuptools.package-data]
-aes = ["scaffold/*.jinja", "schemas/*.json"]
+aes = ["scaffold/*.jinja", "scaffold/**/*.jinja", "schemas/*.json"]
 
 [tool.setuptools.packages.find]
 where = ["."]

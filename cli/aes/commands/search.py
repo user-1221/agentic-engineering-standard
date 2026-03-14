@@ -8,6 +8,7 @@ import click
 from rich.console import Console
 from rich.table import Table
 
+from aes.i18n import t
 from aes.registry import fetch_index, search_packages, _parse_version
 
 console = Console()
@@ -65,17 +66,17 @@ def search_cmd(
     try:
         index = fetch_index()
     except Exception as exc:
-        console.print(f"[red]Error:[/] Failed to fetch registry: {exc}")
-        console.print("[dim]Check your network or set AES_REGISTRY_URL.[/]")
+        console.print(f"[red]{t('common.error')}:[/] {t('search.fetch_failed', exc=exc)}")
+        console.print(f"[dim]{t('search.network_hint')}[/]")
         raise SystemExit(1)
 
     results = search_packages(query=query, tag=tag, domain=domain, index=index, pkg_type=pkg_type)
 
     if not results:
         if query:
-            console.print(f"[dim]No packages matching '{query}'.[/]")
+            console.print(f"[dim]{t('search.no_match', query=query)}[/]")
         else:
-            console.print("[dim]No packages found in registry.[/]")
+            console.print(f"[dim]{t('search.no_packages')}[/]")
         return
 
     total = len(results)
@@ -84,15 +85,15 @@ def search_cmd(
     if limit is not None and limit > 0:
         sorted_results = sorted_results[:limit]
 
-    table = Table(title="AES Registry")
-    table.add_column("Name", style="bold")
-    table.add_column("Type", style="cyan")
-    table.add_column("Latest")
-    table.add_column("Description")
-    table.add_column("Tags", style="dim")
+    table = Table(title=t("search.table_title"))
+    table.add_column(t("search.col_name"), style="bold")
+    table.add_column(t("search.col_type"), style="cyan")
+    table.add_column(t("search.col_latest"))
+    table.add_column(t("search.col_description"))
+    table.add_column(t("search.col_tags"), style="dim")
     if verbose:
-        table.add_column("Versions", style="dim")
-        table.add_column("Published", style="dim")
+        table.add_column(t("search.col_versions"), style="dim")
+        table.add_column(t("search.col_published"), style="dim")
 
     for pkg in sorted_results:
         row = [
@@ -100,7 +101,7 @@ def search_cmd(
             str(pkg.get("type", "skill")),
             str(pkg["latest"]),
             str(pkg["description"]),
-            ", ".join(str(t) for t in pkg.get("tags", [])),
+            ", ".join(str(tg) for tg in pkg.get("tags", [])),
         ]
         if verbose:
             row.append(str(pkg.get("version_count", len(pkg.get("versions", [])))))
@@ -114,6 +115,6 @@ def search_cmd(
 
     shown = len(sorted_results)
     if limit is not None and shown < total:
-        console.print(f"\n[dim]{shown} of {total} package(s) shown (--limit {limit}).[/]")
+        console.print(f"\n[dim]{t('search.shown_of_total', shown=shown, total=total, limit=limit)}[/]")
     else:
-        console.print(f"\n[dim]{total} package(s) found.[/]")
+        console.print(f"\n[dim]{t('search.total_found', total=total)}[/]")

@@ -8,7 +8,15 @@ This project maintains two version tracks:
 
 ## [Unreleased]
 
-### CLI
+## [cli-v0.4.0] — 2026-03-14
+
+### Added
+- **i18n support**: First-run interactive language selection (English / Japanese)
+- All CLI output (prompts, status messages, errors, labels) translated to Japanese
+- Japanese scaffold templates for generated `.agent/` content (instructions, skills, orchestrator, commands, operations)
+- Japanese domain configs for ML, Web, DevOps, and Research domains
+- Global user config at `~/.aes/config.yaml` for persisting language preference
+- Language override via `AES_LANG` environment variable or hidden `--lang` flag
 - `aes inspect` supports remote registry packages (`aes inspect deploy`, `aes inspect deploy@1.0.0`)
 - `aes search` adds `--sort-by` (name/latest/version), `--limit N`, and `--verbose`/`-v` options
 - Add file-watching token reload for registry server

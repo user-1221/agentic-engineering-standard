@@ -15,11 +15,15 @@ import yaml
 from rich.console import Console
 
 from aes.config import AGENT_DIR, MANIFEST_FILE
+from aes.i18n import t
 
 console = Console()
 
 # Files/patterns excluded from template packages by default (privacy-sensitive)
-_TEMPLATE_DEFAULT_EXCLUDES = ["memory/**", "local.yaml", "overrides/**"]
+_TEMPLATE_DEFAULT_EXCLUDES = [
+    "memory/**", "local.yaml", "overrides/**",
+    ".env", ".env.*", "*.pem", "*.key", "secrets/**",
+]
 
 
 def _publish_skill_dir(skill_dir: Path, output_dir: Path) -> Path:
@@ -69,7 +73,7 @@ def _publish_from_manifest(
 
     skills = data.get("skills", [])
     if not skills:
-        console.print("[dim]No skills declared in agent.yaml[/]")
+        console.print(f"[dim]{t('publish.no_skills')}[/]")
         return 0
 
     agent_dir = project_root / AGENT_DIR
@@ -84,12 +88,12 @@ def _publish_from_manifest(
 
         manifest_rel = skill_ref.get("manifest")
         if not manifest_rel:
-            console.print(f"  [yellow]Skipped:[/] {skill_id} — no manifest path")
+            console.print(f"  [yellow]{t('publish.skipped_no_manifest', skill_id=skill_id)}[/]")
             continue
 
         manifest_file = agent_dir / manifest_rel
         if not manifest_file.exists():
-            console.print(f"  [yellow]Skipped:[/] {skill_id} — manifest not found: {manifest_rel}")
+            console.print(f"  [yellow]{t('publish.skipped_not_found', skill_id=skill_id, path=manifest_rel)}[/]")
             continue
 
         # Determine if the skill lives in its own directory or is flat
@@ -123,7 +127,7 @@ def _publish_from_manifest(
                 tarball = _publish_skill_dir(staging, output_dir)
 
         console.print(
-            f"  [green]Published:[/] {tarball.name}  ({tarball.stat().st_size / 1024:.1f} KB)"
+            f"  [green]{t('publish.published_tarball', name=tarball.name, size=f'{tarball.stat().st_size / 1024:.1f}')}[/]"
         )
         published += 1
 
@@ -153,13 +157,13 @@ def _validate_before_publish(project_root: Path) -> bool:
 
     agent_dir = project_root / AGENT_DIR
     if not agent_dir.exists():
-        console.print(f"[red]Error:[/] No {AGENT_DIR}/ directory found at {project_root}")
+        console.print(f"[red]{t('common.error')}:[/] {t('common.no_agent_dir', agent_dir=AGENT_DIR, path=project_root)}")
         return False
 
     results = validate_agent_dir(agent_dir)
     failures = [r for r in results if not r.valid]
     if failures:
-        console.print("[red]Validation failed:[/]")
+        console.print(f"[red]{t('publish.validation_failed')}[/]")
         for r in failures:
             for err in r.errors:
                 console.print(f"  {r.file_path.name}: {err}")
@@ -220,15 +224,15 @@ def _publish_template_dir(
 
 def _prompt_visibility() -> str:
     """Interactively prompt the user for package visibility."""
-    console.print("\n[bold]Package visibility:[/]\n")
+    console.print(f"\n[bold]{t('publish.visibility_title')}[/]\n")
     choices = [
-        ("public", "Anyone can search and download"),
-        ("private", "Requires a valid registry token"),
+        ("public", t("publish.visibility_public")),
+        ("private", t("publish.visibility_private")),
     ]
     for i, (name, desc) in enumerate(choices, 1):
         console.print(f"  [bold cyan][{i}][/] {name} — {desc}")
     console.print()
-    idx = click.prompt("Choice", type=click.IntRange(1, len(choices)), default=1)
+    idx = click.prompt(t("common.choice"), type=click.IntRange(1, len(choices)), default=1)
     return choices[idx - 1][0]
 
 
@@ -247,11 +251,11 @@ def _upload_to_registry(
     try:
         upload_package(tarball, skill_id, version, description, tags,
                        pkg_type=pkg_type, visibility=visibility)
-        console.print(f"  [green]Uploaded to registry:[/] {skill_id}@{version}")
+        console.print(f"  [green]{t('publish.uploaded', id=skill_id, version=version)}[/]")
     except RuntimeError as exc:
-        console.print(f"  [red]Registry upload failed:[/] {exc}")
+        console.print(f"  [red]{t('publish.upload_failed', exc=exc)}[/]")
     except Exception as exc:
-        console.print(f"  [red]Registry upload error:[/] {exc}")
+        console.print(f"  [red]{t('publish.upload_error', exc=exc)}[/]")
 
 
 def _upload_tarballs_from_dir(
@@ -365,9 +369,9 @@ def publish_cmd(
         tname = mdata.get("name", "unknown")
         tver = mdata.get("version", "0.0.0")
 
-        console.print(f"[green]Published template:[/] {tarball}")
-        console.print(f"  Name: {tname} v{tver}")
-        console.print(f"  Size: {tarball.stat().st_size / 1024:.1f} KB")
+        console.print(f"[green]{t('publish.published_template')}[/] {tarball}")
+        console.print(f"  {t('publish.name_version', name=tname, version=tver)}")
+        console.print(f"  {t('publish.size', size=f'{tarball.stat().st_size / 1024:.1f}')}")
 
         # List what's excluded
         if not include_all:
@@ -375,7 +379,7 @@ def publish_cmd(
             if include_memory:
                 excluded = [p for p in excluded if not p.startswith("memory")]
             if excluded:
-                console.print(f"  Excluded: {', '.join(excluded)}")
+                console.print(f"  {t('publish.excluded', patterns=', '.join(excluded))}")
 
         if registry:
             _upload_to_registry(
@@ -387,7 +391,7 @@ def publish_cmd(
             )
         else:
             console.print()
-            console.print("[dim]Use --registry to upload to the AES registry.[/]")
+            console.print(f"[dim]{t('publish.use_registry')}[/]")
         return
 
     if skill_path:
@@ -410,23 +414,23 @@ def publish_cmd(
         else:
             sid, sver = "unknown", "0.0.0"
 
-        console.print(f"[green]Published:[/] {tarball}")
-        console.print(f"  Skill: {sid} v{sver}")
-        console.print(f"  Size: {tarball.stat().st_size / 1024:.1f} KB")
+        console.print(f"[green]{t('publish.published')}[/] {tarball}")
+        console.print(f"  {t('publish.skill_version', id=sid, version=sver)}")
+        console.print(f"  {t('publish.size', size=f'{tarball.stat().st_size / 1024:.1f}')}")
 
         if registry:
             _upload_to_registry(tarball, sid, sver, mdata.get("description", ""), mdata.get("tags"),
                                 visibility=visibility)
         else:
             console.print()
-            console.print("[dim]Use --registry to upload to the AES registry.[/]")
+            console.print(f"[dim]{t('publish.use_registry')}[/]")
     else:
         # Publish from agent.yaml
         project_root = Path(path).resolve()
         count = _publish_from_manifest(project_root, output_dir, skill)
         if count:
             console.print()
-            console.print(f"[green]Published {count} skill(s)[/] to {output_dir}")
+            console.print(f"[green]{t('publish.published_count', count=count, dir=output_dir)}[/]")
 
             if registry:
                 _upload_tarballs_from_dir(output_dir, project_root, skill, visibility=visibility)

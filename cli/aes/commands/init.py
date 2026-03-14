@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import click
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 from rich.console import Console
 from rich.panel import Panel
 from rich.tree import Tree
@@ -32,9 +32,10 @@ from aes.config import (
 )
 from aes.commands.install import _safe_extract
 from aes.commands.sync import run_sync
-from aes.domains import AGENT_INTEGRATED_BASE_CONFIG, DEV_ASSIST_BASE_CONFIG, DOMAIN_CONFIGS
+from aes.domains import AGENT_INTEGRATED_BASE_CONFIG, DEV_ASSIST_BASE_CONFIG, DOMAIN_CONFIGS, get_domain_config
 from aes.analyzer import analyze_project, ProjectAnalysis
 from aes.frameworks import resolve_config
+from aes.i18n import t
 
 console = Console()
 
@@ -133,8 +134,8 @@ def _init_from_registry(source: str, project_root: Path) -> None:
     # Check for existing .agent/ directory
     agent_dir = project_root / AGENT_DIR
     if agent_dir.exists():
-        console.print(f"[yellow]Warning:[/] {AGENT_DIR}/ already exists at {project_root}")
-        if not click.confirm("Overwrite existing files?", default=False):
+        console.print(f"[yellow]{t('common.warning')}:[/] {t('init.overwrite_warning', agent_dir=AGENT_DIR, path=project_root)}")
+        if not click.confirm(t("init.overwrite_confirm"), default=False):
             raise SystemExit(1)
 
     # Download and extract
@@ -170,15 +171,15 @@ def _init_from_registry(source: str, project_root: Path) -> None:
     mcp_written = _write_mcp_config(project_root)
 
     console.print()
-    console.print(f"[green]Initialized from template:[/] {name}@{version}")
-    console.print(f"  Source: {source}")
-    console.print(f"  Installed to: {agent_dir}")
+    console.print(f"[green]{t('init.from_template')}[/] {name}@{version}")
+    console.print(f"  {t('init.source', source=source)}")
+    console.print(f"  {t('init.installed_to', path=agent_dir)}")
     if synced_files > 0:
-        console.print(f"  Synced to {synced_files} tool-specific config file(s).")
+        console.print(f"  {t('init.synced_files', count=synced_files)}")
     if mcp_written:
-        console.print(f"  Created {MCP_CONFIG_FILE} (AES registry MCP server)")
+        console.print(f"  {t('init.created_mcp', file=MCP_CONFIG_FILE)}")
     console.print()
-    console.print("[dim]Done! Start a new agent session to use the template.[/]")
+    console.print(f"[dim]{t('init.done_template')}[/]")
 
 
 def _init_from_tarball(tarball_path: Path, project_root: Path) -> None:
@@ -186,8 +187,8 @@ def _init_from_tarball(tarball_path: Path, project_root: Path) -> None:
     agent_dir = project_root / AGENT_DIR
 
     if agent_dir.exists():
-        console.print(f"[yellow]Warning:[/] {AGENT_DIR}/ already exists at {project_root}")
-        if not click.confirm("Overwrite existing files?", default=False):
+        console.print(f"[yellow]{t('common.warning')}:[/] {t('init.overwrite_warning', agent_dir=AGENT_DIR, path=project_root)}")
+        if not click.confirm(t("init.overwrite_confirm"), default=False):
             raise SystemExit(1)
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -215,39 +216,45 @@ def _init_from_tarball(tarball_path: Path, project_root: Path) -> None:
     mcp_written = _write_mcp_config(project_root)
 
     console.print()
-    console.print(f"[green]Initialized from template:[/] {tarball_path.name}")
-    console.print(f"  Installed to: {agent_dir}")
+    console.print(f"[green]{t('init.from_template')}[/] {tarball_path.name}")
+    console.print(f"  {t('init.installed_to', path=agent_dir)}")
     if synced_files > 0:
-        console.print(f"  Synced to {synced_files} tool-specific config file(s).")
+        console.print(f"  {t('init.synced_files', count=synced_files)}")
     if mcp_written:
-        console.print(f"  Created {MCP_CONFIG_FILE} (AES registry MCP server)")
+        console.print(f"  {t('init.created_mcp', file=MCP_CONFIG_FILE)}")
     console.print()
-    console.print("[dim]Done! Start a new agent session to use the template.[/]")
+    console.print(f"[dim]{t('init.done_template')}[/]")
 
 
 # ---------------------------------------------------------------------------
 # Interactive picker (when nothing detected)
 # ---------------------------------------------------------------------------
 
-_MODE_CHOICES = [
-    ("Dev-Assist — Agent builds the project, then steps back", "dev-assist"),
-    ("Agent-Integrated — Agent is embedded in the running product", "agent-integrated"),
-]
+def _get_mode_choices() -> list:
+    return [
+        (t("init.mode_dev_assist"), "dev-assist"),
+        (t("init.mode_agent_integrated"), "agent-integrated"),
+    ]
 
-_DEV_ASSIST_TYPES = [
-    ("API service", "api"),
-    ("Web app", "fullstack"),
-    ("CLI tool", "cli-tool"),
-    ("Library / Package", "library"),
-    ("DevOps / Infra", "devops"),
-    ("Skip", "other"),
-]
 
-_AGENT_INTEGRATED_TYPES = [
-    ("ML pipeline", "ml"),
-    ("Research / Content pipeline", "research"),
-    ("Custom", "other"),
-]
+def _get_dev_assist_types() -> list:
+    return [
+        (t("init.type_api"), "api"),
+        (t("init.type_fullstack"), "fullstack"),
+        (t("init.type_cli"), "cli-tool"),
+        (t("init.type_library"), "library"),
+        (t("init.type_devops"), "devops"),
+        (t("init.type_skip"), "other"),
+    ]
+
+
+def _get_agent_integrated_types() -> list:
+    return [
+        (t("init.type_ml"), "ml"),
+        (t("init.type_research"), "research"),
+        (t("init.type_custom"), "other"),
+    ]
+
 
 _LANGUAGE_CHOICES = ["python", "typescript", "javascript", "go", "rust", "java"]
 
@@ -273,32 +280,34 @@ def _interactive_pick(analysis: ProjectAnalysis) -> tuple:
 
     Returns ``(project_type, language, frameworks, mode)`` chosen by the user.
     """
+    mode_choices = _get_mode_choices()
+
     console.print()
-    console.print("[bold]How will the agent work with this project?[/]\n")
+    console.print(f"[bold]{t('init.mode_prompt')}[/]\n")
 
     # --- Step 1: Mode ---
-    for i, (label, _) in enumerate(_MODE_CHOICES, 1):
+    for i, (label, _) in enumerate(mode_choices, 1):
         console.print(f"  [bold cyan][{i}][/] {label}")
     console.print()
 
     mode_idx = click.prompt(
-        "Choice",
-        type=click.IntRange(1, len(_MODE_CHOICES)),
+        t("common.choice"),
+        type=click.IntRange(1, len(mode_choices)),
         default=1,
     )
-    _, chosen_mode = _MODE_CHOICES[mode_idx - 1]
+    _, chosen_mode = mode_choices[mode_idx - 1]
 
     # --- Step 2: Project type based on mode ---
-    type_choices = _DEV_ASSIST_TYPES if chosen_mode == "dev-assist" else _AGENT_INTEGRATED_TYPES
+    type_choices = _get_dev_assist_types() if chosen_mode == "dev-assist" else _get_agent_integrated_types()
 
     console.print()
-    console.print("[bold]What type of project?[/]\n")
+    console.print(f"[bold]{t('init.type_prompt')}[/]\n")
     for i, (label, _) in enumerate(type_choices, 1):
         console.print(f"  [bold cyan][{i}][/] {label}")
     console.print()
 
     type_idx = click.prompt(
-        "Choice",
+        t("common.choice"),
         type=click.IntRange(1, len(type_choices)),
         default=len(type_choices),
     )
@@ -314,13 +323,13 @@ def _interactive_pick(analysis: ProjectAnalysis) -> tuple:
 
     # --- Language ---
     console.print()
-    console.print("[bold]Language?[/]\n")
+    console.print(f"[bold]{t('init.language_prompt')}[/]\n")
     for i, lang in enumerate(_LANGUAGE_CHOICES, 1):
         console.print(f"  [bold cyan][{i}][/] {lang.title()}")
     console.print()
 
     lang_idx = click.prompt(
-        "Choice",
+        t("common.choice"),
         type=click.IntRange(1, len(_LANGUAGE_CHOICES)),
         default=1,
     )
@@ -332,14 +341,14 @@ def _interactive_pick(analysis: ProjectAnalysis) -> tuple:
 
     if fw_options:
         console.print()
-        console.print("[bold]Framework?[/] (optional, Enter to skip)\n")
+        console.print(f"[bold]{t('init.framework_prompt')}[/]\n")
         for i, fw in enumerate(fw_options, 1):
             console.print(f"  [bold cyan][{i}][/] {fw.title()}")
-        console.print(f"  [bold cyan][{len(fw_options) + 1}][/] None")
+        console.print(f"  [bold cyan][{len(fw_options) + 1}][/] {t('init.framework_none')}")
         console.print()
 
         fw_idx = click.prompt(
-            "Choice",
+            t("common.choice"),
             type=click.IntRange(1, len(fw_options) + 1),
             default=len(fw_options) + 1,
         )
@@ -352,23 +361,24 @@ def _interactive_pick(analysis: ProjectAnalysis) -> tuple:
 def _format_detection_summary(analysis: ProjectAnalysis) -> str:
     """Build a detection summary string for display."""
     lines = []
-    lines.append(f"  Language:   [cyan]{analysis.language}[/]")
+    lines.append(f"  [cyan]{analysis.language}[/]".rjust(10) if False else
+                 f"  {t('init.detection_language', value=f'[cyan]{analysis.language}[/]')}")
     if analysis.frameworks:
         fw_str = " + ".join(analysis.frameworks)
-        lines.append(f"  Framework:  [cyan]{fw_str}[/]")
-    lines.append(f"  Type:       [cyan]{analysis.project_type}[/]")
+        lines.append(f"  {t('init.detection_framework', value=f'[cyan]{fw_str}[/]')}")
+    lines.append(f"  {t('init.detection_type', value=f'[cyan]{analysis.project_type}[/]')}")
     if analysis.has_tests:
         cmd_hint = f" ({analysis.test_command})" if analysis.test_command else ""
-        lines.append(f"  Tests:      [green]found[/]{cmd_hint}")
+        lines.append(f"  {t('init.detection_tests')}{cmd_hint}")
     if analysis.has_ci:
-        lines.append(f"  CI/CD:      [green]found[/]")
+        lines.append(f"  {t('init.detection_ci')}")
     if analysis.has_docker:
-        lines.append(f"  Docker:     [green]found[/]")
+        lines.append(f"  {t('init.detection_docker')}")
     if analysis.has_database:
-        lines.append(f"  Database:   [green]migrations found[/]")
+        lines.append(f"  {t('init.detection_database')}")
     if analysis.existing_agent_configs:
         tools = ", ".join(analysis.existing_agent_configs.keys())
-        lines.append(f"  Existing:   [yellow]{tools}[/]")
+        lines.append(f"  {t('init.detection_existing', tools=f'[yellow]{tools}[/]')}")
     return "\n".join(lines)
 
 
@@ -390,15 +400,15 @@ def _print_post_init_summary(
     type_label = project_type.replace("-", " ").title()
     console.print()
     console.print(Panel(
-        f"[bold green]AES Initialized:[/] {name}\n"
+        f"[bold green]{t('init.initialized')}[/] {name}\n"
         f"[dim]{type_label} ({language})[/]",
         expand=False,
     ))
 
     # File tree
-    tree = Tree(f"[bold].agent/[/]")
+    tree = Tree(f"[bold]{t('init.agent_dir_label')}[/]")
     tree.add("agent.yaml")
-    tree.add(f"instructions.md [dim]({type_label}-specific)[/]")
+    tree.add(f"instructions.md [dim]({t('init.specific_label', type=type_label)})[/]")
     tree.add("permissions.yaml")
 
     if skills:
@@ -431,7 +441,7 @@ def _print_post_init_summary(
     # Sync summary
     if synced_files > 0:
         console.print()
-        console.print(f"[green]Synced to {synced_files} tool config(s):[/]")
+        console.print(f"[green]{t('init.synced_to', count=synced_files)}[/]")
         sync_targets = [
             ("Claude Code", "CLAUDE.md"),
             ("Cursor", ".cursorrules"),
@@ -446,16 +456,16 @@ def _print_post_init_summary(
     mcp_path = project_root / MCP_CONFIG_FILE
     if mcp_path.exists():
         console.print()
-        console.print(f"[green]MCP:[/] {MCP_CONFIG_FILE} configured (AES registry tools)")
-        console.print("  [dim]Install MCP server: pip install aes-cli[mcp][/]")
+        console.print(f"[green]{t('init.mcp_configured', file=MCP_CONFIG_FILE)}[/]")
+        console.print(f"  [dim]{t('init.mcp_install_hint')}[/]")
 
     # Next steps
     console.print()
     workflow_hint = ""
     if isinstance(domain_config, DomainConfig) and domain_config.workflow_commands:
         trigger = domain_config.workflow_commands[0].trigger
-        workflow_hint = f", or {trigger} to begin"
-    console.print(f"[dim]Next: Start a new agent session, then type /setup to fine-tune{workflow_hint}.[/]")
+        workflow_hint = t("init.or_begin", trigger=trigger)
+    console.print(f"[dim]{t('init.next_steps', hint=workflow_hint)}[/]")
 
 
 @click.command("init")
@@ -495,6 +505,10 @@ def init_cmd(
       aes init --from ./template.tar.gz            # from local tarball
     """
     project_root = Path(path).resolve()
+
+    # Locale for domain config and template selection
+    from aes.i18n import get_current_locale
+    locale = get_current_locale()
 
     # --from: initialize from registry template or local tarball
     if from_registry:
@@ -537,8 +551,8 @@ def init_cmd(
         if is_interactive and (analysis.frameworks or analysis.project_type != "other"):
             console.print()
             console.print(Panel(
-                f"[bold]Detected:[/]\n{_format_detection_summary(analysis)}",
-                title="Project Analysis",
+                f"[bold]{t('init.detected_label')}[/]\n{_format_detection_summary(analysis)}",
+                title=t("init.detected_title"),
                 expand=False,
             ))
 
@@ -547,7 +561,7 @@ def init_cmd(
             if analysis.frameworks:
                 fw_str = " + ".join(f.title() for f in analysis.frameworks) + " "
             if not click.confirm(
-                f"\nGenerate .agent/ for {fw_str}{type_label}?",
+                f"\n{t('init.confirm_generate', stack=f'{fw_str}{type_label}')}",
                 default=True,
             ):
                 raise SystemExit(0)
@@ -557,7 +571,7 @@ def init_cmd(
                 console.print()
                 for tool, cfg_path in analysis.existing_agent_configs.items():
                     size = cfg_path.stat().st_size
-                    console.print(f"  Found existing: [yellow]{cfg_path.name}[/] ({size / 1024:.1f} KB)")
+                    console.print(f"  {t('init.found_existing', name=cfg_path.name, size=f'{size / 1024:.1f}')}")
 
         elif is_interactive:
             # Nothing detected — show interactive picker
@@ -565,7 +579,7 @@ def init_cmd(
 
             language = picked_lang
             if picked_type in DOMAIN_CONFIGS:
-                detected_domain_config = DOMAIN_CONFIGS.get(picked_type)
+                detected_domain_config = get_domain_config(picked_type, locale)
             elif picked_type != "other":
                 detected_domain_config = resolve_config(
                     project_type=picked_type,
@@ -594,12 +608,12 @@ def init_cmd(
             language = _detect_language(project_root)
 
     if agent_dir.exists():
-        console.print(f"[yellow]Warning:[/] {AGENT_DIR}/ already exists at {project_root}")
-        if not click.confirm("Overwrite existing files?", default=False):
+        console.print(f"[yellow]{t('common.warning')}:[/] {t('init.overwrite_warning', agent_dir=AGENT_DIR, path=project_root)}")
+        if not click.confirm(t("init.overwrite_confirm"), default=False):
             raise SystemExit(1)
 
     # Look up domain config: framework-resolved > explicit domain > None
-    domain_config = detected_domain_config or DOMAIN_CONFIGS.get(domain) or DEV_ASSIST_BASE_CONFIG
+    domain_config = detected_domain_config or get_domain_config(domain, locale) or DEV_ASSIST_BASE_CONFIG
 
     # Create directory structure
     agent_dir.mkdir(exist_ok=True)
@@ -624,9 +638,16 @@ def init_cmd(
         "domain_config": domain_config,
     }
 
-    # Render templates
+    # Render templates (locale-aware: scaffold/ja/ -> scaffold/ fallback)
+    loaders = []
+    if locale != "en":
+        locale_dir = SCAFFOLD_DIR / locale
+        if locale_dir.exists():
+            loaders.append(FileSystemLoader(str(locale_dir)))
+    loaders.append(FileSystemLoader(str(SCAFFOLD_DIR)))
+
     env = Environment(
-        loader=FileSystemLoader(str(SCAFFOLD_DIR)),
+        loader=ChoiceLoader(loaders),
         keep_trailing_newline=True,
     )
 
