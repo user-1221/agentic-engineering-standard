@@ -39,8 +39,10 @@ aes validate                # check files against schemas + dependency graph
 aes sync                    # generate tool configs (Claude, Cursor, Copilot, Windsurf)
 aes status                  # show what changed since last sync
 aes inspect                 # show project structure and stats
+aes inspect deploy          # inspect a remote registry package
 aes search "deploy"         # search the skill registry
 aes search --type template  # search for templates
+aes search --sort-by version --limit 5  # top 5 by semver
 aes install aes-hub/deploy  # install a skill from the registry
 aes init --from aes-hub/ml-pipeline@^2.0  # init from a template
 aes publish --registry      # publish skills to the registry

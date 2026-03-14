@@ -92,13 +92,13 @@ The `aes` CLI (`cli/`) provides:
 |---------|-------------|
 | `aes init` | Scaffold a `.agent/` directory (two-step picker: mode + type, or auto-detect) |
 | `aes validate [path]` | Validate files against JSON schemas + dependency graph checks |
-| `aes inspect [path]` | Show project structure, skills, workflows |
+| `aes inspect [path\|name]` | Show project structure (local) or registry package details (remote) |
 | `aes sync [path]` | Generate tool-specific configs (prompts for target selection) |
 | `aes status [path]` | Show what changed in `.agent/` since last sync |
 | `aes publish [skill]` | Package skills as tarballs, optionally upload to registry (`--registry`) |
 | `aes publish --template` | Package entire `.agent/` directory as a shareable template |
 | `aes install [source]` | Install skills from tarballs, local dirs, or the AES registry |
-| `aes search [query]` | Search the AES package registry by keyword, tag, domain, or type |
+| `aes search [query]` | Search the AES package registry (supports `--sort-by`, `--limit`, `-v`) |
 
 ## MCP Server
 
@@ -150,6 +150,12 @@ aes search --tag ml
 aes search --domain devops
 aes search --type template          # only templates
 aes search --type skill             # only skills
+aes search --sort-by version        # sort by semver (highest first)
+aes search --limit 5 -v             # top 5, verbose (version count + date)
+
+# Inspect a remote package
+aes inspect deploy                  # latest version from registry
+aes inspect deploy@1.0.0            # specific version
 
 # Install a skill from registry
 aes install aes-hub/deploy@^1.0.0

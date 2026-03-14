@@ -295,6 +295,16 @@ aes search --tag ml         # filter by tag
 aes search --domain devops  # filter by domain
 aes search --type template  # only templates
 aes search --type skill     # only skills
+aes search --sort-by latest # sort by publish date (newest first)
+aes search --limit 10 -v   # top 10, verbose (version count + date)
+```
+
+### Inspect a remote package
+
+```bash
+aes inspect deploy                 # inspect latest version from registry
+aes inspect deploy@1.0.0           # inspect specific version
+aes inspect aes-hub/deploy         # with registry prefix
 ```
 
 ### Install a skill
@@ -454,9 +464,11 @@ aes status                     (check if you need to sync)
 | `aes validate` | Check all files are valid and consistent |
 | `aes sync` | Generate tool configs (prompts for target; use `-t claude` to skip prompt) |
 | `aes status` | Check if `.agent/` changed since last sync |
-| `aes inspect` | Show project structure and stats |
+| `aes inspect` | Show project structure and stats (local or remote) |
+| `aes inspect deploy` | Inspect a remote registry package |
 | `aes search "query"` | Search the skill registry |
-| `aes search --type template` | Search for templates only |
+| `aes search --sort-by version` | Sort results by semver (highest first) |
+| `aes search --limit 5 -v` | Top 5 results with version count and date |
 | `aes install aes-hub/name@^1.0` | Install a skill from the registry |
 | `aes install` | Install all dependencies from agent.yaml |
 | `aes init --from aes-hub/name@^1.0` | Initialize project from a shared template |

@@ -8,9 +8,28 @@ import click
 from rich.console import Console
 from rich.table import Table
 
-from aes.registry import fetch_index, search_packages
+from aes.registry import fetch_index, search_packages, _parse_version
 
 console = Console()
+
+
+def _sort_results(results: list, sort_by: str) -> list:
+    """Sort search results by the given key."""
+    if sort_by == "latest":
+        return sorted(
+            results,
+            key=lambda p: p.get("latest_published_at", ""),
+            reverse=True,
+        )
+    elif sort_by == "version":
+        def _ver_key(p: dict) -> tuple:
+            try:
+                return _parse_version(p.get("latest", "0.0.0"))
+            except ValueError:
+                return (0, 0, 0)
+        return sorted(results, key=_ver_key, reverse=True)
+    else:
+        return sorted(results, key=lambda p: p["name"])
 
 
 @click.command("search")
@@ -18,7 +37,18 @@ console = Console()
 @click.option("--tag", default=None, help="Filter by tag")
 @click.option("--domain", default=None, help="Filter by domain (convention: domain as tag)")
 @click.option("--type", "pkg_type", default=None, type=click.Choice(["skill", "template"]), help="Filter by package type")
-def search_cmd(query: str, tag: Optional[str], domain: Optional[str], pkg_type: Optional[str]) -> None:
+@click.option("--sort-by", "sort_by", default="name", type=click.Choice(["name", "latest", "version"]), help="Sort results")
+@click.option("--limit", "limit", default=None, type=int, help="Show only first N results")
+@click.option("--verbose", "-v", is_flag=True, default=False, help="Show version count and publish date")
+def search_cmd(
+    query: str,
+    tag: Optional[str],
+    domain: Optional[str],
+    pkg_type: Optional[str],
+    sort_by: str,
+    limit: Optional[int],
+    verbose: bool,
+) -> None:
     """Search the AES package registry.
 
     \b
@@ -27,6 +57,9 @@ def search_cmd(query: str, tag: Optional[str], domain: Optional[str], pkg_type: 
       aes search --tag ml              # filter by tag
       aes search --domain devops       # filter by domain
       aes search --type template       # filter by type
+      aes search --sort-by version     # sort by semver (highest first)
+      aes search --limit 5             # show top 5 results
+      aes search -v                    # verbose: show version count + date
       aes search                       # list all packages
     """
     try:
@@ -45,21 +78,42 @@ def search_cmd(query: str, tag: Optional[str], domain: Optional[str], pkg_type: 
             console.print("[dim]No packages found in registry.[/]")
         return
 
+    total = len(results)
+    sorted_results = _sort_results(results, sort_by)
+
+    if limit is not None and limit > 0:
+        sorted_results = sorted_results[:limit]
+
     table = Table(title="AES Registry")
     table.add_column("Name", style="bold")
     table.add_column("Type", style="cyan")
     table.add_column("Latest")
     table.add_column("Description")
     table.add_column("Tags", style="dim")
+    if verbose:
+        table.add_column("Versions", style="dim")
+        table.add_column("Published", style="dim")
 
-    for pkg in sorted(results, key=lambda p: p["name"]):
-        table.add_row(
+    for pkg in sorted_results:
+        row = [
             str(pkg["name"]),
             str(pkg.get("type", "skill")),
             str(pkg["latest"]),
             str(pkg["description"]),
             ", ".join(str(t) for t in pkg.get("tags", [])),
-        )
+        ]
+        if verbose:
+            row.append(str(pkg.get("version_count", len(pkg.get("versions", [])))))
+            published = pkg.get("latest_published_at", "?")
+            if isinstance(published, str) and "T" in published:
+                published = published.split("T")[0]
+            row.append(str(published))
+        table.add_row(*row)
 
     console.print(table)
-    console.print(f"\n[dim]{len(results)} package(s) found.[/]")
+
+    shown = len(sorted_results)
+    if limit is not None and shown < total:
+        console.print(f"\n[dim]{shown} of {total} package(s) shown (--limit {limit}).[/]")
+    else:
+        console.print(f"\n[dim]{total} package(s) found.[/]")

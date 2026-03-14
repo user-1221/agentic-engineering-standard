@@ -9,6 +9,8 @@ This project maintains two version tracks:
 ## [Unreleased]
 
 ### CLI
+- `aes inspect` supports remote registry packages (`aes inspect deploy`, `aes inspect deploy@1.0.0`)
+- `aes search` adds `--sort-by` (name/latest/version), `--limit N`, and `--verbose`/`-v` options
 - Add file-watching token reload for registry server
 - Add private package support and `--visibility` flag to `aes publish`
 - Add MCP server (`aes-mcp`) as core dependency

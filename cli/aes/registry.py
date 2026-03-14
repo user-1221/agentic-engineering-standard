@@ -282,6 +282,11 @@ def search_packages(
             if domain.lower() not in [t.lower() for t in pkg_tags]:
                 continue
 
+        # Compute latest_published_at from the latest version entry
+        latest_ver = pkg.get("latest", "")
+        latest_info = pkg.get("versions", {}).get(latest_ver, {})
+        latest_published_at = latest_info.get("published_at", "")
+
         results.append({
             "name": name,
             "description": pkg.get("description", ""),
@@ -289,6 +294,8 @@ def search_packages(
             "tags": pkg.get("tags", []),
             "type": pkg.get("type", "skill"),
             "versions": list(pkg.get("versions", {}).keys()),
+            "version_count": len(pkg.get("versions", {})),
+            "latest_published_at": latest_published_at,
         })
 
     return results

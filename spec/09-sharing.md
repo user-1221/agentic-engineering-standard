@@ -277,7 +277,7 @@ dependencies:
 For manual sharing:
 
 ```bash
-aes package ./skills/train          # creates train-1.0.0.tar.gz
+aes publish ./skills/train          # creates train-1.0.0.tar.gz
 ```
 
 ## Discovery
@@ -295,11 +295,15 @@ The `aes search` command fetches the registry `index.json`, filters packages by 
 
 ### Inspect
 
+`aes inspect` also works with remote registry packages:
+
 ```bash
-aes inspect-skill aes-hub/docker-deploy
+aes inspect deploy                      # inspect latest version
+aes inspect aes-hub/deploy@^1.0.0      # inspect specific version range
+aes inspect deploy@1.0.0               # inspect exact version
 ```
 
-Shows: description, version, inputs/outputs, dependencies, download count.
+Shows registry metadata (all versions, published dates, tags) plus package contents: for skill packages, the full manifest (inputs, outputs, dependencies, triggers); for template packages, the same project overview as local inspect.
 
 ## Composability
 
