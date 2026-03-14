@@ -33,6 +33,8 @@ def aes_search(
     tag: str = "",
     domain: str = "",
     pkg_type: str = "",
+    sort_by: str = "name",
+    limit: int = 0,
 ) -> str:
     """Search the AES package registry for skills and templates.
 
@@ -41,8 +43,10 @@ def aes_search(
         tag: Filter by tag (e.g. "ml", "devops").
         domain: Filter by domain (convention: domain as tag).
         pkg_type: Filter by type: "skill" or "template".
+        sort_by: Sort results: "name" (alphabetical), "latest" (newest first), "version" (highest semver first).
+        limit: Maximum number of results to return (0 = unlimited).
 
-    Returns a JSON array of matching packages.
+    Returns a JSON array of matching packages with version_count and latest_published_at.
     """
     try:
         results = search_packages(
@@ -51,41 +55,148 @@ def aes_search(
             domain=domain or None,
             pkg_type=pkg_type or None,
         )
+
+        # Sort
+        if sort_by == "latest":
+            results.sort(key=lambda p: p.get("latest_published_at", ""), reverse=True)
+        elif sort_by == "version":
+            from aes.registry import _parse_version
+            def _ver_key(p: dict) -> tuple:
+                try:
+                    return _parse_version(p.get("latest", "0.0.0"))
+                except ValueError:
+                    return (0, 0, 0)
+            results.sort(key=_ver_key, reverse=True)
+        else:
+            results.sort(key=lambda p: p["name"])
+
+        # Limit
+        if limit > 0:
+            results = results[:limit]
+
         return json.dumps(results, indent=2)
     except Exception as exc:
         return json.dumps({"error": f"Registry search failed: {exc}"})
 
 
 @mcp.tool()
-def aes_inspect(name: str) -> str:
-    """Show details about a specific package in the AES registry.
+def aes_inspect(name: str, version: str = "") -> str:
+    """Show full details about a package in the AES registry.
 
-    Returns all versions, description, tags, and metadata for the package.
+    Downloads the package tarball and extracts manifest details including
+    inputs, outputs, dependencies, and triggers. Falls back to index
+    metadata only if download fails.
 
     Args:
-        name: Package name to inspect.
+        name: Package name (e.g. "deploy") or with version (e.g. "deploy@1.0.0").
+        version: Optional version constraint (e.g. "1.0.0", "^1.0"). Overrides @ syntax.
     """
+    import tarfile
+    import tempfile
+
+    import yaml
+
+    from aes.registry import (
+        download_package,
+        parse_registry_source,
+        resolve_version,
+    )
+    from aes.commands.install import _safe_extract
+
+    # Parse name and version
+    try:
+        parsed_name, parsed_spec = parse_registry_source(name)
+    except ValueError as exc:
+        return json.dumps({"error": str(exc)})
+
+    version_spec = version or parsed_spec
+
     try:
         index = fetch_index()
     except Exception as exc:
         return json.dumps({"error": f"Failed to fetch registry index: {exc}"})
 
     packages = index.get("packages", {})
-    if name not in packages:
-        return json.dumps({"error": f"Package '{name}' not found in registry."})
+    if parsed_name not in packages:
+        return json.dumps({"error": f"Package '{parsed_name}' not found in registry."})
 
-    pkg = packages[name]
-    return json.dumps(
-        {
-            "name": name,
-            "type": pkg.get("type", "skill"),
-            "description": pkg.get("description", ""),
-            "tags": pkg.get("tags", []),
-            "latest": pkg.get("latest", ""),
-            "versions": pkg.get("versions", {}),
-        },
-        indent=2,
-    )
+    pkg = packages[parsed_name]
+    versions_dict = pkg.get("versions", {})
+    available = list(versions_dict.keys())
+
+    resolved = resolve_version(version_spec, available)
+    if resolved is None:
+        return json.dumps({
+            "error": f"No version of '{parsed_name}' matches '{version_spec}'.",
+            "available": available,
+        })
+
+    result: dict = {
+        "name": parsed_name,
+        "type": pkg.get("type", "skill"),
+        "visibility": pkg.get("visibility", "public"),
+        "description": pkg.get("description", ""),
+        "tags": pkg.get("tags", []),
+        "latest": pkg.get("latest", ""),
+        "inspected_version": resolved,
+        "versions": pkg.get("versions", {}),
+    }
+
+    # Download and extract manifest details
+    version_info = versions_dict[resolved]
+    sha256_expected = version_info.get("sha256", "")
+
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = Path(tmp)
+            with contextlib.redirect_stdout(sys.stderr):
+                tarball = download_package(parsed_name, resolved, sha256_expected, tmp_dir)
+
+            with tarfile.open(tarball, "r:gz") as tar:
+                _safe_extract(tar, tmp_dir)
+
+            # Find skill manifest
+            manifests = list(tmp_dir.rglob("*.skill.yaml"))
+            if not manifests:
+                manifests = list(tmp_dir.rglob("skill.yaml"))
+
+            if manifests:
+                with open(manifests[0]) as f:
+                    manifest_data = yaml.safe_load(f)
+                if isinstance(manifest_data, dict):
+                    result["manifest"] = {
+                        "id": manifest_data.get("id"),
+                        "name": manifest_data.get("name"),
+                        "version": manifest_data.get("version"),
+                        "description": manifest_data.get("description"),
+                        "inputs": manifest_data.get("inputs"),
+                        "outputs": manifest_data.get("outputs"),
+                        "depends_on": manifest_data.get("depends_on"),
+                        "blocks": manifest_data.get("blocks"),
+                        "triggers": manifest_data.get("triggers"),
+                        "negative_triggers": manifest_data.get("negative_triggers"),
+                        "tags": manifest_data.get("tags"),
+                    }
+            else:
+                # Check for template (agent.yaml inside .agent/)
+                agent_yamls = list(tmp_dir.rglob("agent.yaml"))
+                if agent_yamls:
+                    with open(agent_yamls[0]) as f:
+                        agent_data = yaml.safe_load(f)
+                    if isinstance(agent_data, dict):
+                        result["manifest"] = {
+                            "name": agent_data.get("name"),
+                            "version": agent_data.get("version"),
+                            "description": agent_data.get("description"),
+                            "domain": agent_data.get("domain"),
+                            "skills": agent_data.get("skills"),
+                            "workflows": agent_data.get("workflows"),
+                            "commands": agent_data.get("commands"),
+                        }
+    except Exception:
+        result["manifest_note"] = "Could not download package; showing registry metadata only."
+
+    return json.dumps(result, indent=2)
 
 
 @mcp.tool()
