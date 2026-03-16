@@ -66,15 +66,23 @@ func (a *App) Router() http.Handler {
 	return requestLogger(webSecurityHeaders(csrfProtect(a.isSecure(), sessionAuth(a.DB, mux))))
 }
 
+// templateData returns base template data with language detection.
+func (a *App) templateData(r *http.Request) map[string]interface{} {
+	lang := detectLang(r)
+	return map[string]interface{}{
+		"Lang": lang,
+		"T":    getTranslations(lang),
+	}
+}
+
 func (a *App) handleIndex(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
-	user := userFromCtx(r)
-	a.render(w, "index.html", map[string]interface{}{
-		"User": user,
-	})
+	data := a.templateData(r)
+	data["User"] = userFromCtx(r)
+	a.render(w, "index.html", data)
 }
 
 func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +108,7 @@ func (a *App) handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	// Validate state
 	stateCookie, err := r.Cookie("oauth_state")
 	if err != nil || stateCookie.Value == "" || stateCookie.Value != r.URL.Query().Get("state") {
-		a.renderError(w, "Invalid OAuth state. Please try logging in again.", http.StatusBadRequest)
+		a.renderError(w, r, "Invalid OAuth state. Please try logging in again.", http.StatusBadRequest)
 		return
 	}
 
@@ -117,7 +125,7 @@ func (a *App) handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 
 	code := r.URL.Query().Get("code")
 	if code == "" {
-		a.renderError(w, "No authorization code received from GitHub.", http.StatusBadRequest)
+		a.renderError(w, r, "No authorization code received from GitHub.", http.StatusBadRequest)
 		return
 	}
 
@@ -125,7 +133,7 @@ func (a *App) handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	accessToken, err := a.OAuth.ExchangeCode(code)
 	if err != nil {
 		log.Printf("oauth exchange error: %v", err)
-		a.renderError(w, "Failed to authenticate with GitHub. Please try again.", http.StatusInternalServerError)
+		a.renderError(w, r, "Failed to authenticate with GitHub. Please try again.", http.StatusInternalServerError)
 		return
 	}
 
@@ -133,7 +141,7 @@ func (a *App) handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	ghUser, err := a.OAuth.FetchUser(accessToken)
 	if err != nil {
 		log.Printf("fetch github user error: %v", err)
-		a.renderError(w, "Failed to fetch your GitHub profile. Please try again.", http.StatusInternalServerError)
+		a.renderError(w, r, "Failed to fetch your GitHub profile. Please try again.", http.StatusInternalServerError)
 		return
 	}
 
@@ -141,7 +149,7 @@ func (a *App) handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	user, err := a.DB.UpsertUser(ghUser.ID, ghUser.Login, ghUser.Name, ghUser.AvatarURL, ghUser.Email)
 	if err != nil {
 		log.Printf("upsert user error: %v", err)
-		a.renderError(w, "Failed to create your account. Please try again.", http.StatusInternalServerError)
+		a.renderError(w, r, "Failed to create your account. Please try again.", http.StatusInternalServerError)
 		return
 	}
 
@@ -149,7 +157,7 @@ func (a *App) handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	sessionToken, err := a.DB.CreateSession(user.ID)
 	if err != nil {
 		log.Printf("create session error: %v", err)
-		a.renderError(w, "Failed to create session. Please try again.", http.StatusInternalServerError)
+		a.renderError(w, r, "Failed to create session. Please try again.", http.StatusInternalServerError)
 		return
 	}
 
@@ -171,16 +179,16 @@ func (a *App) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	tokens, err := a.DB.ListUserTokens(user.ID)
 	if err != nil {
 		log.Printf("list tokens error: %v", err)
-		a.renderError(w, "Failed to load your tokens.", http.StatusInternalServerError)
+		a.renderError(w, r, "Failed to load your tokens.", http.StatusInternalServerError)
 		return
 	}
 
-	a.render(w, "dashboard.html", map[string]interface{}{
-		"User":      user,
-		"Tokens":    tokens,
-		"MaxTokens": a.Config.MaxTokensPerUser,
-		"CSRFToken": csrfFromCtx(r),
-	})
+	data := a.templateData(r)
+	data["User"] = user
+	data["Tokens"] = tokens
+	data["MaxTokens"] = a.Config.MaxTokensPerUser
+	data["CSRFToken"] = csrfFromCtx(r)
+	a.render(w, "dashboard.html", data)
 }
 
 var validTokenName = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]{0,62}$`)
@@ -196,21 +204,21 @@ func (a *App) handleTokenCreate(w http.ResponseWriter, r *http.Request) {
 	// Check token limit
 	count, err := a.DB.CountUserTokens(user.ID)
 	if err != nil {
-		a.renderError(w, "Failed to check token count.", http.StatusInternalServerError)
+		a.renderError(w, r, "Failed to check token count.", http.StatusInternalServerError)
 		return
 	}
 	if count >= a.Config.MaxTokensPerUser {
-		a.renderError(w, fmt.Sprintf("You have reached the maximum of %d tokens. Revoke an existing token first.", a.Config.MaxTokensPerUser), http.StatusBadRequest)
+		a.renderError(w, r, fmt.Sprintf("You have reached the maximum of %d tokens. Revoke an existing token first.", a.Config.MaxTokensPerUser), http.StatusBadRequest)
 		return
 	}
 
 	name := strings.TrimSpace(r.FormValue("name"))
 	if name == "" {
-		a.renderError(w, "Token name is required.", http.StatusBadRequest)
+		a.renderError(w, r, "Token name is required.", http.StatusBadRequest)
 		return
 	}
 	if !validTokenName.MatchString(name) {
-		a.renderError(w, "Token name must be 1-63 characters, start with a letter or number, and contain only letters, numbers, hyphens, and underscores.", http.StatusBadRequest)
+		a.renderError(w, r, "Token name must be 1-63 characters, start with a letter or number, and contain only letters, numbers, hyphens, and underscores.", http.StatusBadRequest)
 		return
 	}
 
@@ -221,7 +229,7 @@ func (a *App) handleTokenCreate(w http.ResponseWriter, r *http.Request) {
 	rawToken, err := a.Tokens.CreateToken(fullName)
 	if err != nil {
 		log.Printf("create token error: %v", err)
-		a.renderError(w, "Failed to create token. Please try again.", http.StatusInternalServerError)
+		a.renderError(w, r, "Failed to create token. Please try again.", http.StatusInternalServerError)
 		return
 	}
 
@@ -230,15 +238,15 @@ func (a *App) handleTokenCreate(w http.ResponseWriter, r *http.Request) {
 		log.Printf("record token ownership error: %v", err)
 		// Token was created in tokens.json but DB record failed — try to revoke
 		a.Tokens.RevokeToken(fullName)
-		a.renderError(w, "Failed to record token. Please try again.", http.StatusInternalServerError)
+		a.renderError(w, r, "Failed to record token. Please try again.", http.StatusInternalServerError)
 		return
 	}
 
-	a.render(w, "token_created.html", map[string]interface{}{
-		"User":     user,
-		"RawToken": rawToken,
-		"Name":     fullName,
-	})
+	data := a.templateData(r)
+	data["User"] = user
+	data["RawToken"] = rawToken
+	data["Name"] = fullName
+	a.render(w, "token_created.html", data)
 }
 
 func (a *App) handleTokenRevoke(w http.ResponseWriter, r *http.Request) {
@@ -250,13 +258,13 @@ func (a *App) handleTokenRevoke(w http.ResponseWriter, r *http.Request) {
 	user := userFromCtx(r)
 	name := r.FormValue("name")
 	if name == "" {
-		a.renderError(w, "Token name is required.", http.StatusBadRequest)
+		a.renderError(w, r, "Token name is required.", http.StatusBadRequest)
 		return
 	}
 
 	// Verify ownership
 	if err := a.DB.DeleteUserToken(user.ID, name); err != nil {
-		a.renderError(w, "Token not found or you don't own it.", http.StatusBadRequest)
+		a.renderError(w, r, "Token not found or you don't own it.", http.StatusBadRequest)
 		return
 	}
 
@@ -302,9 +310,9 @@ func (a *App) render(w http.ResponseWriter, name string, data interface{}) {
 	}
 }
 
-func (a *App) renderError(w http.ResponseWriter, msg string, status int) {
+func (a *App) renderError(w http.ResponseWriter, r *http.Request, msg string, status int) {
+	data := a.templateData(r)
+	data["Error"] = msg
 	w.WriteHeader(status)
-	a.render(w, "error.html", map[string]interface{}{
-		"Error": msg,
-	})
+	a.render(w, "error.html", data)
 }

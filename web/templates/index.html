@@ -1,24 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{.Lang}}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AES — Agentic Engineering Standard</title>
-    <meta name="description" content="AES is the open standard for giving AI agents persistent memory, skills, and project context. Structured once, useful forever — across every AI tool.">
-    <meta property="og:title" content="AES — The Open Standard for Agent Engineering">
-    <meta property="og:description" content="Give AI agents persistent memory, skills, and deep project context. Works across Claude, Cursor, Copilot, and Windsurf.">
+    <title>{{index .T "site_title"}}</title>
+    <meta name="description" content="{{index .T "meta_desc"}}">
+    <meta property="og:title" content="{{index .T "og_title"}}">
+    <meta property="og:description" content="{{index .T "og_desc"}}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://aes-official.com">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="AES — The Open Standard for Agent Engineering">
-    <meta name="twitter:description" content="Give AI agents persistent memory, skills, and deep project context.">
+    <meta name="twitter:title" content="{{index .T "og_title"}}">
+    <meta name="twitter:description" content="{{index .T "twitter_desc"}}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=12">
+    <link rel="stylesheet" href="/static/style.css?v=13">
 </head>
 <body class="page-home">
-    <a href="#main-content" class="skip-to-content">Skip to content</a>
+    <a href="#main-content" class="skip-to-content">{{index .T "skip_content"}}</a>
     <header>
         <nav>
             <div class="nav-left">
@@ -26,14 +26,14 @@
                 <span class="nav-version">v1.0</span>
             </div>
             <div class="nav-links">
-                <a href="/docs">Docs</a>
+                <a href="/docs">{{index .T "nav_docs"}}</a>
                 <a href="https://github.com/user-1221/agentic-engineering-standard" class="nav-icon" aria-label="GitHub">
                     <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
                 </a>
                 {{if .User}}
-                    <a href="/dashboard" class="btn btn-primary btn-small">Dashboard</a>
+                    <a href="/dashboard" class="btn btn-primary btn-small">{{index .T "nav_dashboard"}}</a>
                 {{else}}
-                    <a href="/login" class="btn btn-primary btn-small">Sign in with GitHub</a>
+                    <a href="/login" class="btn btn-primary btn-small">{{index .T "nav_signin"}}</a>
                 {{end}}
             </div>
         </nav>
@@ -45,19 +45,19 @@
                 <div class="hero-text">
                     <div class="hero-badge">
                         <span class="badge-dot"></span>
-                        <span>Open Standard &middot; v1.0</span>
+                        <span>{{index .T "hero_badge"}}</span>
                     </div>
-                    <h1>The open standard for<br><span class="hero-gradient">agent engineering</span>.</h1>
-                    <p class="hero-tagline">Give your AI agents persistent memory, deep project knowledge, and real skills &mdash; structured once, useful forever, portable across every tool.</p>
+                    <h1>{{index .T "hero_title"}}</h1>
+                    <p class="hero-tagline">{{index .T "hero_tagline"}}</p>
                     <div class="cta-buttons">
-                        <a href="/docs" class="btn btn-large btn-primary">Get Started</a>
+                        <a href="/docs" class="btn btn-large btn-primary">{{index .T "cta_get_started"}}</a>
                         <a href="https://github.com/user-1221/agentic-engineering-standard" class="btn btn-large btn-ghost">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -0.2em; margin-right: 0.375rem;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> View on GitHub
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -0.2em; margin-right: 0.375rem;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> {{index .T "cta_github"}}
                         </a>
                         {{if not .User}}
-                            <a href="/login" class="btn btn-large btn-ghost">Try in 60s</a>
+                            <a href="/login" class="btn btn-large btn-ghost">{{index .T "cta_try"}}</a>
                         {{else}}
-                            <a href="/dashboard" class="btn btn-large btn-ghost">Dashboard</a>
+                            <a href="/dashboard" class="btn btn-large btn-ghost">{{index .T "nav_dashboard"}}</a>
                         {{end}}
                     </div>
                 </div>
@@ -68,15 +68,15 @@
                             <span>.agent/</span>
                         </div>
                         <ul class="hero-tree-list">
-                            <li class="tree-group-label">Identity</li>
+                            <li class="tree-group-label">{{index .T "tree_identity"}}</li>
                             <li class="tree-item-file"><span class="tree-dot yaml"></span>agent.yaml</li>
                             <li class="tree-item-file"><span class="tree-dot md"></span>instructions.md</li>
                             <li class="tree-item-file"><span class="tree-dot yaml"></span>permissions.yaml</li>
-                            <li class="tree-group-label">Capabilities</li>
+                            <li class="tree-group-label">{{index .T "tree_capabilities"}}</li>
                             <li class="tree-item-dir"><span class="tree-dot dir"></span>skills/</li>
                             <li class="tree-item-dir"><span class="tree-dot dir"></span>workflows/</li>
                             <li class="tree-item-dir"><span class="tree-dot dir"></span>commands/</li>
-                            <li class="tree-group-label">Persistence</li>
+                            <li class="tree-group-label">{{index .T "tree_persistence"}}</li>
                             <li class="tree-item-dir"><span class="tree-dot dir"></span>memory/</li>
                             <li class="tree-item-dir"><span class="tree-dot dir"></span>registry/</li>
                         </ul>
@@ -88,37 +88,37 @@
         <section class="home-why animate-in" aria-label="Problem and solution">
             <div class="why-grid">
                 <div class="why-card why-problem animate-in stagger-1">
-                    <span class="why-label">The problem</span>
-                    <h3>Every session starts from zero</h3>
-                    <p>Your agent doesn't know your architecture, conventions, or deployment. You re-explain every session.</p>
+                    <span class="why-label">{{index .T "why_problem_label"}}</span>
+                    <h3>{{index .T "why_problem_title"}}</h3>
+                    <p>{{index .T "why_problem_desc"}}</p>
                 </div>
                 <div class="why-arrow">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
                 </div>
                 <div class="why-card why-solution animate-in stagger-2">
-                    <span class="why-label">The standard</span>
-                    <h3>Every session builds on the last</h3>
-                    <p>AES gives your agent structured memory, real skills, and deep project context. Checked into git, portable across tools.</p>
+                    <span class="why-label">{{index .T "why_solution_label"}}</span>
+                    <h3>{{index .T "why_solution_title"}}</h3>
+                    <p>{{index .T "why_solution_desc"}}</p>
                 </div>
             </div>
         </section>
 
         <section class="home-anatomy animate-in" aria-label="Directory structure">
-            <span class="section-label">What you're building</span>
-            <h2>Your project's <code>.agent/</code> brain</h2>
-            <p class="anatomy-desc">Identity, skills, memory, and permissions &mdash; one directory, checked into git.</p>
+            <span class="section-label">{{index .T "anatomy_label"}}</span>
+            <h2>{{index .T "anatomy_title"}}</h2>
+            <p class="anatomy-desc">{{index .T "anatomy_desc"}}</p>
             <div class="anatomy-tree">
                 <pre class="tree-block"><code><span class="tree-dir">.agent/</span>
-  <span class="tree-file">agent.yaml</span>          <span class="tree-ann"># Who the agent is</span>
-  <span class="tree-file">instructions.md</span>     <span class="tree-ann"># How it thinks about your project</span>
-  <span class="tree-file">permissions.yaml</span>    <span class="tree-ann"># What it's allowed to do</span>
-  <span class="tree-dir">skills/</span>             <span class="tree-ann"># What it knows how to do</span>
+  <span class="tree-file">agent.yaml</span>          <span class="tree-ann">{{index .T "ann_agent"}}</span>
+  <span class="tree-file">instructions.md</span>     <span class="tree-ann">{{index .T "ann_instructions"}}</span>
+  <span class="tree-file">permissions.yaml</span>    <span class="tree-ann">{{index .T "ann_permissions"}}</span>
+  <span class="tree-dir">skills/</span>             <span class="tree-ann">{{index .T "ann_skills"}}</span>
     <span class="tree-file">deploy.skill.yaml</span>
     <span class="tree-file">deploy.md</span>
-  <span class="tree-dir">workflows/</span>          <span class="tree-ann"># How work flows through stages</span>
-  <span class="tree-dir">memory/</span>             <span class="tree-ann"># What it's learned over time</span>
-  <span class="tree-dir">commands/</span>           <span class="tree-ann"># Complex tasks it can run</span>
-  <span class="tree-dir">registry/</span>           <span class="tree-ann"># Installed community skills</span></code></pre>
+  <span class="tree-dir">workflows/</span>          <span class="tree-ann">{{index .T "ann_workflows"}}</span>
+  <span class="tree-dir">memory/</span>             <span class="tree-ann">{{index .T "ann_memory"}}</span>
+  <span class="tree-dir">commands/</span>           <span class="tree-ann">{{index .T "ann_commands"}}</span>
+  <span class="tree-dir">registry/</span>           <span class="tree-ann">{{index .T "ann_registry"}}</span></code></pre>
             </div>
         </section>
 
@@ -130,34 +130,34 @@
                     </div>
                     <span class="terminal-title">terminal</span>
                 </div>
-                <pre class="terminal-body"><code><span class="t-comment"># Install in seconds</span>
+                <pre class="terminal-body"><code><span class="t-comment">{{index .T "term_1"}}</span>
 <span class="t-prompt">$</span> pipx install aes-cli
 
-<span class="t-comment"># Give your project structured agent context</span>
+<span class="t-comment">{{index .T "term_2"}}</span>
 <span class="t-prompt">$</span> aes init
 
-<span class="t-comment"># Make sure your agent setup is complete</span>
+<span class="t-comment">{{index .T "term_3"}}</span>
 <span class="t-prompt">$</span> aes validate
 
-<span class="t-comment"># Find proven skills others have built</span>
+<span class="t-comment">{{index .T "term_4"}}</span>
 <span class="t-prompt">$</span> aes search <span class="t-string">"deploy"</span>
 
-<span class="t-comment"># Add deployment expertise to your agent</span>
+<span class="t-comment">{{index .T "term_5"}}</span>
 <span class="t-prompt">$</span> aes install aes-hub/deploy@^1.0.0</code></pre>
             </div>
         </section>
 
         <section class="home-how animate-in" aria-label="How it works">
-            <span class="section-label">How it works</span>
-            <h2>Three steps to a smarter agent</h2>
+            <span class="section-label">{{index .T "how_label"}}</span>
+            <h2>{{index .T "how_title"}}</h2>
             <div class="how-steps">
                 <div class="how-step animate-in stagger-1">
                     <div class="how-step-number">1</div>
                     <div class="how-step-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 10l7-7 7 7"/></svg>
                     </div>
-                    <h3>Initialize</h3>
-                    <p><code>aes init</code> scaffolds a <code>.agent/</code> directory tailored to your project</p>
+                    <h3>{{index .T "how_step1_title"}}</h3>
+                    <p>{{index .T "how_step1_desc"}}</p>
                 </div>
                 <div class="how-step-arrow">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
@@ -167,8 +167,8 @@
                     <div class="how-step-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>
                     </div>
-                    <h3>Develop</h3>
-                    <p>Your agent learns your codebase. Memory builds. Skills get refined every session</p>
+                    <h3>{{index .T "how_step2_title"}}</h3>
+                    <p>{{index .T "how_step2_desc"}}</p>
                 </div>
                 <div class="how-step-arrow">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
@@ -178,38 +178,38 @@
                     <div class="how-step-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
                     </div>
-                    <h3>Share</h3>
-                    <p>Publish skills to the registry. Install templates. Reuse across every project</p>
+                    <h3>{{index .T "how_step3_title"}}</h3>
+                    <p>{{index .T "how_step3_desc"}}</p>
                 </div>
             </div>
         </section>
 
         <section class="home-features animate-in" aria-label="Features">
-            <span class="section-label">Why it matters</span>
-            <h2>Built for how you actually work</h2>
+            <span class="section-label">{{index .T "feat_label"}}</span>
+            <h2>{{index .T "feat_title"}}</h2>
             <div class="features-grid-2col">
                 <div class="feature-card animate-in stagger-1">
                     <div class="feature-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
                     </div>
-                    <h3>For individual developers</h3>
-                    <p class="feature-benefit">Your agent becomes a specialist</p>
+                    <h3>{{index .T "feat_dev_title"}}</h3>
+                    <p class="feature-benefit">{{index .T "feat_dev_benefit"}}</p>
                     <ul class="feature-list-icons">
                         <li>
                             <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                            <span>Templates give your agent domain expertise out of the box &mdash; ML, web, DevOps, research</span>
+                            <span>{{index .T "feat_dev_1"}}</span>
                         </li>
                         <li>
                             <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            <span>Install proven skills from the registry. One command, zero learning curve</span>
+                            <span>{{index .T "feat_dev_2"}}</span>
                         </li>
                         <li>
                             <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>
-                            <span>Memory persists across sessions. Every conversation makes your agent smarter</span>
+                            <span>{{index .T "feat_dev_3"}}</span>
                         </li>
                         <li>
                             <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                            <span>Works across Claude, Cursor, Copilot, Windsurf &mdash; switch without starting over</span>
+                            <span>{{index .T "feat_dev_4"}}</span>
                         </li>
                     </ul>
                 </div>
@@ -217,24 +217,24 @@
                     <div class="feature-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     </div>
-                    <h3>For teams</h3>
-                    <p class="feature-benefit">Every AI works from the same architecture</p>
+                    <h3>{{index .T "feat_team_title"}}</h3>
+                    <p class="feature-benefit">{{index .T "feat_team_benefit"}}</p>
                     <ul class="feature-list-icons">
                         <li>
                             <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                            <span>Every agent works from the same architecture, conventions, and design principles</span>
+                            <span>{{index .T "feat_team_1"}}</span>
                         </li>
                         <li>
                             <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                            <span>New teammate? <code>aes init --from your-team/template</code> &mdash; instant project context</span>
+                            <span>{{index .T "feat_team_2"}}</span>
                         </li>
                         <li>
                             <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                            <span>Instructions, permissions, and skills live in <code>.agent/</code>, always in sync via git</span>
+                            <span>{{index .T "feat_team_3"}}</span>
                         </li>
                         <li>
                             <svg class="li-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"/></svg>
-                            <span>Ship independently. Everything fits because agents share the same foundation</span>
+                            <span>{{index .T "feat_team_4"}}</span>
                         </li>
                     </ul>
                 </div>
@@ -245,95 +245,95 @@
             <div class="stats-bar">
                 <div class="stat-item">
                     <span class="stat-number">4</span>
-                    <span class="stat-label">Domain templates</span>
+                    <span class="stat-label">{{index .T "stat_templates"}}</span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
                     <span class="stat-number">20+</span>
-                    <span class="stat-label">Community skills</span>
+                    <span class="stat-label">{{index .T "stat_skills"}}</span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
                     <span class="stat-number">4</span>
-                    <span class="stat-label">AI tools supported</span>
+                    <span class="stat-label">{{index .T "stat_tools"}}</span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
                     <span class="stat-number">1</span>
-                    <span class="stat-label">Standard to learn</span>
+                    <span class="stat-label">{{index .T "stat_standard"}}</span>
                 </div>
             </div>
         </section>
 
         <section class="home-ecosystem animate-in" aria-label="Ecosystem">
-            <span class="section-label">The ecosystem</span>
-            <h2>A growing library of agent skills</h2>
-            <p class="ecosystem-desc">Install proven skills built by experienced engineers. One command, zero learning curve.</p>
+            <span class="section-label">{{index .T "eco_label"}}</span>
+            <h2>{{index .T "eco_title"}}</h2>
+            <p class="ecosystem-desc">{{index .T "eco_desc"}}</p>
             <div class="ecosystem-grid">
                 <div class="ecosystem-skill">
                     <svg class="skill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
-                    <span class="skill-name">deploy</span><span class="skill-meta">CI/CD & infrastructure</span>
+                    <span class="skill-name">deploy</span><span class="skill-meta">{{index .T "eco_deploy"}}</span>
                 </div>
                 <div class="ecosystem-skill">
                     <svg class="skill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <span class="skill-name">code-review</span><span class="skill-meta">Quality & best practices</span>
+                    <span class="skill-name">code-review</span><span class="skill-meta">{{index .T "eco_review"}}</span>
                 </div>
                 <div class="ecosystem-skill">
                     <svg class="skill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    <span class="skill-name">security-audit</span><span class="skill-meta">Vulnerability scanning</span>
+                    <span class="skill-name">security-audit</span><span class="skill-meta">{{index .T "eco_security"}}</span>
                 </div>
                 <div class="ecosystem-skill">
                     <svg class="skill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-                    <span class="skill-name">db-migrate</span><span class="skill-meta">Schema migrations</span>
+                    <span class="skill-name">db-migrate</span><span class="skill-meta">{{index .T "eco_db"}}</span>
                 </div>
                 <div class="ecosystem-skill">
                     <svg class="skill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16.5h10"/></svg>
-                    <span class="skill-name">ml-experiment</span><span class="skill-meta">Training & evaluation</span>
+                    <span class="skill-name">ml-experiment</span><span class="skill-meta">{{index .T "eco_ml"}}</span>
                 </div>
                 <div class="ecosystem-skill">
                     <svg class="skill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    <span class="skill-name">docs-gen</span><span class="skill-meta">API documentation</span>
+                    <span class="skill-name">docs-gen</span><span class="skill-meta">{{index .T "eco_docs"}}</span>
                 </div>
             </div>
             <div class="ecosystem-cta">
-                <a href="/docs" class="btn btn-ghost">Browse the registry &rarr;</a>
+                <a href="/docs" class="btn btn-ghost">{{index .T "eco_cta"}}</a>
             </div>
         </section>
 
         <section class="home-compare animate-in" aria-label="Before and after comparison">
-            <span class="section-label">See the difference</span>
+            <span class="section-label">{{index .T "cmp_label"}}</span>
             <div class="compare-grid">
                 <div class="compare-card compare-without animate-in stagger-1">
-                    <span class="compare-label compare-label-bad">Without AES</span>
+                    <span class="compare-label compare-label-bad">{{index .T "cmp_without"}}</span>
                     <div class="compare-terminal">
-                        <div class="compare-msg msg-user"><span class="msg-role">You</span> Deploy the app to staging</div>
-                        <div class="compare-msg msg-agent"><span class="msg-role">Agent</span> What's your deployment process?</div>
-                        <div class="compare-msg msg-user"><span class="msg-role">You</span> Docker + GitHub Actions, like I said last time...</div>
-                        <div class="compare-msg msg-agent"><span class="msg-role">Agent</span> What registry do you push to?</div>
-                        <div class="compare-msg msg-user"><span class="msg-role">You</span> ECR. I already told you this yesterday</div>
-                        <div class="compare-msg msg-agent"><span class="msg-role">Agent</span> What are the environment variables?</div>
-                        <div class="compare-msg msg-fade">...20 messages later, still configuring</div>
+                        <div class="compare-msg msg-user"><span class="msg-role">{{index .T "cmp_you"}}</span> {{index .T "cmp_w1"}}</div>
+                        <div class="compare-msg msg-agent"><span class="msg-role">{{index .T "cmp_agent"}}</span> {{index .T "cmp_a1"}}</div>
+                        <div class="compare-msg msg-user"><span class="msg-role">{{index .T "cmp_you"}}</span> {{index .T "cmp_w2"}}</div>
+                        <div class="compare-msg msg-agent"><span class="msg-role">{{index .T "cmp_agent"}}</span> {{index .T "cmp_a2"}}</div>
+                        <div class="compare-msg msg-user"><span class="msg-role">{{index .T "cmp_you"}}</span> {{index .T "cmp_w3"}}</div>
+                        <div class="compare-msg msg-agent"><span class="msg-role">{{index .T "cmp_agent"}}</span> {{index .T "cmp_a3"}}</div>
+                        <div class="compare-msg msg-fade">{{index .T "cmp_fade"}}</div>
                     </div>
                 </div>
                 <div class="compare-card compare-with animate-in stagger-2">
-                    <span class="compare-label compare-label-good">With AES</span>
+                    <span class="compare-label compare-label-good">{{index .T "cmp_with"}}</span>
                     <div class="compare-terminal">
-                        <div class="compare-msg msg-user"><span class="msg-role">You</span> Deploy the app to staging</div>
-                        <div class="compare-msg msg-agent"><span class="msg-role">Agent</span> Running deploy skill...</div>
-                        <div class="compare-msg msg-step"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Built Docker image <code>app:v2.4.1</code></div>
-                        <div class="compare-msg msg-step"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Pushed to ECR staging registry</div>
-                        <div class="compare-msg msg-step"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Deployed via GitHub Actions</div>
-                        <div class="compare-msg msg-done"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Staging is live at staging.app.com</div>
+                        <div class="compare-msg msg-user"><span class="msg-role">{{index .T "cmp_you"}}</span> {{index .T "cmp_with_w1"}}</div>
+                        <div class="compare-msg msg-agent"><span class="msg-role">{{index .T "cmp_agent"}}</span> {{index .T "cmp_with_a1"}}</div>
+                        <div class="compare-msg msg-step"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> {{index .T "cmp_with_s1"}}</div>
+                        <div class="compare-msg msg-step"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> {{index .T "cmp_with_s2"}}</div>
+                        <div class="compare-msg msg-step"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> {{index .T "cmp_with_s3"}}</div>
+                        <div class="compare-msg msg-done"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> {{index .T "cmp_with_done"}}</div>
                     </div>
                 </div>
             </div>
         </section>
 
         <section class="home-cta animate-in" aria-label="Install">
-            <h2>Stop re-explaining your codebase to AI</h2>
+            <h2>{{index .T "bottom_cta"}}</h2>
             <div class="install-command">
                 <code>pipx install aes-cli</code>
-                <button data-copy="pipx install aes-cli" class="copy-btn" aria-label="Copy install command">Copy</button>
+                <button data-copy="pipx install aes-cli" data-copied="{{index .T "copied"}}" data-copy-label="{{index .T "copy"}}" class="copy-btn" aria-label="Copy install command">{{index .T "copy"}}</button>
             </div>
         </section>
     </main>
@@ -341,12 +341,12 @@
     <footer>
         <div class="footer-inner">
             <div class="footer-badges">
-                <span class="footer-badge">Open Source</span>
-                <span class="footer-badge">Apache 2.0</span>
-                <span class="footer-badge">Tool Agnostic</span>
+                <span class="footer-badge">{{index .T "footer_open_source"}}</span>
+                <span class="footer-badge">{{index .T "footer_apache"}}</span>
+                <span class="footer-badge">{{index .T "footer_tool_agnostic"}}</span>
             </div>
-            <p><a href="https://github.com/user-1221/agentic-engineering-standard">GitHub</a> &middot; <a href="/docs">Docs</a></p>
-            <p class="footer-tagline">Your agents should know your project as well as your senior engineers do.</p>
+            <p><a href="https://github.com/user-1221/agentic-engineering-standard">GitHub</a> &middot; <a href="/docs">{{index .T "nav_docs"}}</a></p>
+            <p class="footer-tagline">{{index .T "footer_tagline"}}</p>
         </div>
     </footer>
 
@@ -355,8 +355,8 @@
         btn.addEventListener('click', function() {
             var text = btn.getAttribute('data-copy');
             navigator.clipboard.writeText(text).then(function() {
-                btn.textContent = 'Copied!';
-                setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+                btn.textContent = btn.getAttribute('data-copied') || 'Copied!';
+                setTimeout(function() { btn.textContent = btn.getAttribute('data-copy-label') || 'Copy'; }, 1500);
             });
         });
     });

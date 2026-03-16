@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{.Lang}}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Token Created — AES</title>
+    <title>{{index .T "tc_title"}}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -47,8 +47,8 @@
         <nav>
             <a href="/" class="logo">AES</a>
             <div class="nav-links">
-                <a href="/docs">Docs</a>
-                <a href="/dashboard">Dashboard</a>
+                <a href="/docs">{{index .T "nav_docs"}}</a>
+                <a href="/dashboard">{{index .T "nav_dashboard"}}</a>
             </div>
         </nav>
     </header>
@@ -56,25 +56,25 @@
     <main>
         <div id="activating" class="token-loading">
             <div class="loading-spinner"></div>
-            <p>Activating token<span class="loading-dots"></span></p>
+            <p>{{index .T "tc_loading"}}<span class="loading-dots"></span></p>
         </div>
 
         <div id="token-result" class="token-created" style="display:none">
-            <h1>Token Created</h1>
-            <p class="warning">Copy this token now. It will not be shown again.</p>
+            <h1>{{index .T "tc_heading"}}</h1>
+            <p class="warning">{{index .T "tc_warning"}}</p>
 
             <div class="token-display">
                 <code id="token-value">{{.RawToken}}</code>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('token-value').textContent)" class="btn btn-small">Copy</button>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('token-value').textContent)" class="btn btn-small">{{index .T "tc_copy"}}</button>
             </div>
 
             <div class="usage-info">
-                <h3>Set up your environment</h3>
+                <h3>{{index .T "tc_setup"}}</h3>
                 <pre><code>export AES_REGISTRY_KEY={{.RawToken}}
 export AES_REGISTRY_URL=https://registry.aes-official.com</code></pre>
             </div>
 
-            <a href="/dashboard" class="btn btn-primary">Back to Dashboard</a>
+            <a href="/dashboard" class="btn btn-primary">{{index .T "tc_back"}}</a>
         </div>
     </main>
 

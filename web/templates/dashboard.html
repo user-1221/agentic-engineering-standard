@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{.Lang}}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard — AES</title>
+    <title>{{index .T "dash_title"}}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14,29 +14,29 @@
         <nav>
             <a href="/" class="logo">AES</a>
             <div class="nav-links">
-                <a href="/docs">Docs</a>
+                <a href="/docs">{{index .T "nav_docs"}}</a>
                 <span class="user-info">
                     {{if .User.AvatarURL}}<img src="{{.User.AvatarURL}}" alt="" class="avatar">{{end}}
                     {{.User.GitHubLogin}}
                 </span>
                 <form method="POST" action="/logout" style="display:inline">
                     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-                    <button type="submit" class="btn btn-small">Logout</button>
+                    <button type="submit" class="btn btn-small">{{index .T "nav_logout"}}</button>
                 </form>
             </div>
         </nav>
     </header>
 
     <main>
-        <h1>Registry Tokens</h1>
-        <p class="subtitle">Tokens let you publish skills and templates to the AES registry.</p>
+        <h1>{{index .T "dash_h1"}}</h1>
+        <p class="subtitle">{{index .T "dash_subtitle"}}</p>
 
         {{if .Tokens}}
         <table class="tokens-table">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Created</th>
+                    <th>{{index .T "dash_th_name"}}</th>
+                    <th>{{index .T "dash_th_created"}}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -49,7 +49,7 @@
                         <form method="POST" action="/dashboard/tokens/revoke" style="display:inline">
                             <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                             <input type="hidden" name="name" value="{{.TokenName}}">
-                            <button type="submit" class="btn btn-small btn-danger" data-token-name="{{.TokenName}}" onclick="return confirm('Revoke token ' + this.getAttribute('data-token-name') + '?')">Revoke</button>
+                            <button type="submit" class="btn btn-small btn-danger" data-token-name="{{.TokenName}}" data-confirm-prefix="{{index $.T "dash_revoke_prefix"}}" data-confirm-suffix="{{index $.T "dash_revoke_suffix"}}" onclick="return confirm(this.getAttribute('data-confirm-prefix') + this.getAttribute('data-token-name') + this.getAttribute('data-confirm-suffix'))">{{index $.T "dash_revoke"}}</button>
                         </form>
                     </td>
                 </tr>
@@ -57,41 +57,41 @@
             </tbody>
         </table>
         {{else}}
-        <p class="empty">No tokens yet. Create one below.</p>
+        <p class="empty">{{index .T "dash_empty"}}</p>
         {{end}}
 
         {{if lt (len .Tokens) .MaxTokens}}
         <div class="create-token">
-            <h2>Create New Token</h2>
+            <h2>{{index .T "dash_create_title"}}</h2>
             <form method="POST" action="/dashboard/tokens/new">
                 <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
                 <div class="form-group">
-                    <label for="name">Token name</label>
+                    <label for="name">{{index .T "dash_token_label"}}</label>
                     <div class="input-prefix">
                         <span class="prefix">{{.User.GitHubLogin}}-</span>
                         <input type="text" id="name" name="name" placeholder="my-project" required pattern="[a-zA-Z0-9][a-zA-Z0-9_-]*" maxlength="63">
                     </div>
-                    <small>Letters, numbers, hyphens, and underscores. Prefixed with your GitHub username.</small>
+                    <small>{{index .T "dash_token_hint"}}</small>
                 </div>
-                <button type="submit" class="btn btn-primary">Create Token</button>
+                <button type="submit" class="btn btn-primary">{{index .T "dash_create_btn"}}</button>
             </form>
         </div>
         {{else}}
-        <p>You've reached the maximum of {{.MaxTokens}} tokens. Revoke one to create a new one.</p>
+        <p>{{index .T "dash_max_pre"}}{{.MaxTokens}}{{index .T "dash_max_post"}}</p>
         {{end}}
 
         <div class="usage-info">
-            <h2>Usage</h2>
-            <pre><code># Set your token
+            <h2>{{index .T "dash_usage_title"}}</h2>
+            <pre><code>{{index .T "dash_usage_set_tok"}}
 export AES_REGISTRY_KEY=aes_tok_...
 
-# Set the registry URL
+{{index .T "dash_usage_set_url"}}
 export AES_REGISTRY_URL=https://registry.aes-official.com
 
-# Publish a skill
+{{index .T "dash_usage_pub_skill"}}
 aes publish --skill deploy --registry -o dist/
 
-# Publish a template
+{{index .T "dash_usage_pub_tmpl"}}
 aes publish --template --registry -o dist/</code></pre>
         </div>
     </main>

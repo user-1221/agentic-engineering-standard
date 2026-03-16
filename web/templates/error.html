@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{.Lang}}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error — AES</title>
+    <title>{{index .T "err_title"}}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14,17 +14,17 @@
         <nav>
             <a href="/" class="logo">AES</a>
             <div class="nav-links">
-                <a href="/docs">Docs</a>
-                <a href="/">Home</a>
+                <a href="/docs">{{index .T "nav_docs"}}</a>
+                <a href="/">{{index .T "nav_home"}}</a>
             </div>
         </nav>
     </header>
 
     <main>
         <div class="error-page">
-            <h1>Something went wrong</h1>
+            <h1>{{index .T "err_heading"}}</h1>
             <p class="error-message">{{.Error}}</p>
-            <a href="/" class="btn">Go Home</a>
+            <a href="/" class="btn">{{index .T "err_go_home"}}</a>
         </div>
     </main>
 
