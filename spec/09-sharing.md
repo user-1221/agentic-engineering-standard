@@ -135,6 +135,66 @@ aes search --type skill                 # list all skills
 aes search --type template --tag ml     # templates tagged "ml"
 ```
 
+## Package Manifest
+
+Every package tarball contains an `aes-manifest.json` at the root of the archive. Inspired by OCI image manifests, it provides a content-addressable inventory of every file in the package.
+
+```json
+{
+  "schemaVersion": 1,
+  "mediaType": "application/vnd.aes.package.v1+tar+gzip",
+  "config": {
+    "name": "ml-pipeline",
+    "version": "2.1.0",
+    "type": "template",
+    "aes": "1.2"
+  },
+  "layers": [
+    {
+      "mediaType": "application/vnd.aes.agent-config.v1+yaml",
+      "digest": "sha256:abc123...",
+      "size": 1234,
+      "path": ".agent/agent.yaml"
+    },
+    {
+      "mediaType": "application/vnd.aes.agent-config.v1+yaml",
+      "digest": "sha256:def456...",
+      "size": 567,
+      "path": ".agent/bom.yaml"
+    }
+  ],
+  "signature": null
+}
+```
+
+### Fields
+
+| Field | Description |
+|-------|-------------|
+| `schemaVersion` | Always `1` for this version |
+| `mediaType` | Package media type |
+| `config.name` | Package name from agent.yaml |
+| `config.version` | Package version from agent.yaml |
+| `config.type` | `"skill"` or `"template"` |
+| `config.aes` | AES spec version |
+| `layers` | Array of file entries |
+| `layers[].mediaType` | File media type (YAML, Markdown, etc.) |
+| `layers[].digest` | SHA256 hash of file contents |
+| `layers[].size` | File size in bytes |
+| `layers[].path` | Path within the package |
+| `signature` | Optional cryptographic signature (reserved for future use) |
+
+### Verification
+
+Tools can verify package integrity by:
+1. Extracting `aes-manifest.json` from the tarball
+2. For each layer, computing the SHA256 of the file and comparing to `digest`
+3. If all digests match, the package is intact
+
+### BOM Inclusion
+
+When `bom.yaml` exists, it is automatically included as a layer in the manifest. This ensures the AI-BOM is always available for inspection without extracting the full package.
+
 ## Versioning
 
 Skills follow [Semantic Versioning](https://semver.org/):

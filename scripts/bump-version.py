@@ -106,6 +106,8 @@ def bump_spec(version: str, *, dry_run: bool = False) -> list[str]:
         (r'aes_skill: "\d+\.\d+"', f'aes_skill: "{version}"'),
         (r'aes_workflow: "\d+\.\d+"', f'aes_workflow: "{version}"'),
         (r'aes_permissions: "\d+\.\d+"', f'aes_permissions: "{version}"'),
+        (r'aes_bom: "\d+\.\d+"', f'aes_bom: "{version}"'),
+        (r'aes_decision: "\d+\.\d+"', f'aes_decision: "{version}"'),
     ]
     for jinja_file in sorted(scaffold_dir.glob("*.jinja")):
         text = jinja_file.read_text()

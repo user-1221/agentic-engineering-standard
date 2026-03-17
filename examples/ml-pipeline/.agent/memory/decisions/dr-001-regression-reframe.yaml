@@ -1,0 +1,15 @@
+aes_decision: "1.2"
+id: "dr-001"
+timestamp: "2026-03-17T14:30:00Z"
+summary: "Chose regression over multiclass for ordinal target"
+context: "Wine quality dataset has 6 integer classes with severe imbalance"
+alternatives:
+  - option: "multiclass classification"
+    reason_rejected: "All models below F1=0.40 quality gate"
+rationale: "Ordinal integer targets with imbalanced classes perform better as regression"
+outcome: "CatBoost R2=0.511, passed quality gate"
+artifacts: ["models/wine-quality-catboost-v1.pkl"]
+approval:
+  status: "auto"
+  approved_by: null
+tags: ["ml", "reframing"]

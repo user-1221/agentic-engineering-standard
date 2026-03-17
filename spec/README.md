@@ -1,4 +1,4 @@
-# Agentic Engineering Standard (AES) v1.1
+# Agentic Engineering Standard (AES) v1.2
 
 ## What Is AES?
 
@@ -63,6 +63,8 @@ aes publish --template --registry  # publish .agent/ as a template
 | 08 | [Commands](08-commands.md) | Multi-phase workflow automation |
 | 09 | [Sharing](09-sharing.md) | Publishing, versioning, dependencies (skills & templates) |
 | 10 | [Agentignore](10-agentignore.md) | `.agentignore` format |
+| 11 | [BOM](11-bom.md) | Agent Bill of Materials (AI-BOM) |
+| 12 | [Decision Records](12-decision-records.md) | Structured agent decision audit trail |
 
 ## Design Principles
 

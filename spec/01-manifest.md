@@ -137,6 +137,47 @@ resources:
   coexistence_note: "Crypto bot has priority"
 ```
 
+### Models
+
+```yaml
+models:
+  - name: "claude-sonnet-4-20250514"
+    provider: "anthropic"           # required
+    version: "20250514"             # optional, for pinning
+    purpose: "primary"              # primary | fallback | embedding | evaluation
+  - name: "text-embedding-3-small"
+    provider: "openai"
+    purpose: "embedding"
+```
+
+Declares which AI models this agent uses. Each entry requires `name` and `provider`. The `purpose` field categorizes how the model is used.
+
+### Provenance
+
+```yaml
+provenance:
+  created_by: "hiro"
+  created_at: "2026-03-01"
+  source: "https://github.com/user-1221/agentic-engineering-standard"
+  signed_by: "hiro@example.com"    # optional
+```
+
+Records where this agent configuration came from. All fields are optional.
+
+### Interop
+
+```yaml
+interop:
+  a2a_card: "https://example.com/.well-known/agent.json"
+  mcp_servers:
+    - name: "fetch"
+      transport: "stdio"            # stdio | sse | streamable-http
+      command: "npx"
+      args: ["-y", "@anthropic/mcp-fetch"]
+```
+
+Cross-protocol references that allow other systems (Google A2A, Anthropic MCP) to discover this agent. The `a2a_card` points to an A2A Agent Card URL. The `mcp_servers` array declares MCP servers this agent uses.
+
 ## Complete Example
 
 ```yaml

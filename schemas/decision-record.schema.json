@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aes.dev/schemas/decision-record/v1",
+  "title": "AES Agent Decision Record",
+  "description": "Validates .agent/memory/decisions/*.yaml — structured records of agent decisions",
+  "type": "object",
+  "required": ["aes_decision", "id", "timestamp", "summary"],
+  "properties": {
+    "aes_decision": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$",
+      "description": "AES spec version for the decision record format"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^dr-\\d{3,}",
+      "description": "Unique decision record ID (e.g., dr-001)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the decision was made (ISO 8601)"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One-line summary of the decision"
+    },
+    "context": {
+      "type": "string",
+      "description": "Background context for the decision"
+    },
+    "alternatives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["option"],
+        "properties": {
+          "option": { "type": "string" },
+          "reason_rejected": { "type": "string" }
+        }
+      }
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Why this decision was chosen over alternatives"
+    },
+    "outcome": {
+      "type": "string",
+      "description": "Result of the decision"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Related files or outputs"
+    },
+    "approval": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["auto", "human-approved", "human-rejected", "pending"]
+        },
+        "approved_by": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

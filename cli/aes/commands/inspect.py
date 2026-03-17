@@ -12,7 +12,7 @@ import yaml
 from rich.console import Console
 from rich.table import Table
 
-from aes.config import AGENT_DIR
+from aes.config import AGENT_DIR, BOM_FILE, DECISIONS_DIR
 from aes.i18n import t
 from aes.registry import (
     fetch_index,
@@ -204,6 +204,47 @@ def _inspect_local(path: str) -> None:
             )
         console.print(table)
         console.print()
+
+    # Models
+    models = manifest.get("models", [])
+    if models:
+        console.print(f"[bold]{t('inspect.models_section')}[/]")
+        for m in models:
+            purpose = m.get("purpose", "")
+            purpose_str = f" [dim]({purpose})[/]" if purpose else ""
+            console.print(f"  {m.get('name', '?')} — {m.get('provider', '?')}{purpose_str}")
+        console.print()
+
+    # Provenance
+    provenance = manifest.get("provenance", {})
+    if provenance:
+        console.print(f"[bold]{t('inspect.provenance_section')}[/]")
+        if provenance.get("created_by"):
+            console.print(f"  {t('inspect.provenance_created_by', value=provenance['created_by'])}")
+        if provenance.get("source"):
+            console.print(f"  {t('inspect.provenance_source', value=provenance['source'])}")
+        console.print()
+
+    # BOM summary
+    bom_path = agent_dir / BOM_FILE
+    if bom_path.exists():
+        bom = _load_yaml(bom_path)
+        n_models = len(bom.get("models", []))
+        n_frameworks = len(bom.get("frameworks", []))
+        n_tools = len(bom.get("tools", []))
+        n_data = len(bom.get("data_sources", []))
+        console.print(f"[bold]{t('inspect.bom_section')}[/]")
+        console.print(f"  {t('inspect.bom_summary', models=n_models, frameworks=n_frameworks, tools=n_tools, data=n_data)}")
+        console.print()
+
+    # Decision records count
+    decisions_dir = agent_dir / DECISIONS_DIR
+    if decisions_dir.exists() and decisions_dir.is_dir():
+        dr_count = len(list(decisions_dir.glob("*.yaml")))
+        if dr_count > 0:
+            console.print(f"[bold]{t('inspect.decisions_section')}[/]")
+            console.print(f"  {t('inspect.decisions_count', count=dr_count)}")
+            console.print()
 
     # Summary
     console.print(f"[bold]{t('inspect.summary')}[/]")

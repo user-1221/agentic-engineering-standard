@@ -1,6 +1,6 @@
 {% if domain_config %}
 # .agent/permissions.yaml — Agent Capability Boundaries
-aes_permissions: "1.1"
+aes_permissions: "1.2"
 
 allow:
   shell:
@@ -80,9 +80,23 @@ resource_limits:
   on_exceeded: "{{ domain_config.permissions_resource_limits.on_exceeded }}"
 {% endif %}
 {% endif %}
+
+# network:
+#   allow:
+#     - "https://api.anthropic.com/*"
+#   deny: []
+#   confirm: []
+
+# process:
+#   allow: ["python", "node", "git"]
+#   deny: []
+
+# data:
+#   classification: "internal"
+#   pii_handling: "prohibit"
 {% else %}
 # .agent/permissions.yaml — Agent Capability Boundaries
-aes_permissions: "1.1"
+aes_permissions: "1.2"
 
 allow:
   shell:
@@ -148,4 +162,18 @@ confirm:
   files:
     delete: "**/*"
   actions: []
+
+# network:
+#   allow:
+#     - "https://api.anthropic.com/*"
+#   deny: []
+#   confirm: []
+
+# process:
+#   allow: ["python", "node", "git"]
+#   deny: []
+
+# data:
+#   classification: "internal"
+#   pii_handling: "prohibit"
 {% endif %}

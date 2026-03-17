@@ -350,6 +350,25 @@ class TestSkillQualityChecks:
         warnings = [r for r in results if r.valid and r.errors]
         assert any("5000" in e for r in warnings for e in r.errors)
 
+    def test_bom_validates_in_agent_dir(self, tmp_path):
+        """bom.yaml is validated when present in .agent/ directory."""
+        agent_dir = tmp_path / ".agent"
+        agent_dir.mkdir()
+        (agent_dir / "agent.yaml").write_text(yaml.dump({
+            "aes": "1.2",
+            "name": "bom-test",
+            "version": "1.0.0",
+            "description": "Test",
+        }))
+        (agent_dir / "bom.yaml").write_text(yaml.dump({
+            "aes_bom": "1.2",
+            "models": [{"name": "test", "provider": "test"}],
+        }))
+        results = validate_agent_dir(agent_dir)
+        bom_results = [r for r in results if r.schema_type == "bom"]
+        assert len(bom_results) == 1
+        assert bom_results[0].valid
+
     def test_skill_count_over_50_warns(self, tmp_path):
         """More than 50 skills triggers a warning."""
         agent_dir = tmp_path / ".agent"
@@ -512,6 +531,313 @@ class TestNewSchemaFields:
 # ---------------------------------------------------------------------------
 # Template validation (dogfooded templates)
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# v1.2 schema validation tests
+# ---------------------------------------------------------------------------
+
+class TestAgentManifestV12:
+    """Test agent.yaml accepts new v1.2 fields (models, provenance, interop)."""
+
+    def test_agent_with_models(self, tmp_path):
+        f = tmp_path / "agent.yaml"
+        f.write_text(yaml.dump({
+            "aes": "1.2",
+            "name": "test-models",
+            "version": "1.0.0",
+            "description": "Test agent with models section",
+            "models": [
+                {"name": "claude-sonnet-4", "provider": "anthropic", "purpose": "primary"},
+            ],
+        }))
+        result = validate_file(f, "agent")
+        assert result.valid, result.errors
+
+    def test_agent_with_provenance(self, tmp_path):
+        f = tmp_path / "agent.yaml"
+        f.write_text(yaml.dump({
+            "aes": "1.2",
+            "name": "test-provenance",
+            "version": "1.0.0",
+            "description": "Test agent with provenance section",
+            "provenance": {
+                "created_by": "hiro",
+                "created_at": "2026-03-01",
+                "source": "https://github.com/example/repo",
+            },
+        }))
+        result = validate_file(f, "agent")
+        assert result.valid, result.errors
+
+    def test_agent_with_interop(self, tmp_path):
+        f = tmp_path / "agent.yaml"
+        f.write_text(yaml.dump({
+            "aes": "1.2",
+            "name": "test-interop",
+            "version": "1.0.0",
+            "description": "Test agent with interop section",
+            "interop": {
+                "a2a_card": "https://example.com/.well-known/agent.json",
+                "mcp_servers": [
+                    {"name": "fetch", "transport": "stdio", "command": "npx"},
+                ],
+            },
+        }))
+        result = validate_file(f, "agent")
+        assert result.valid, result.errors
+
+    def test_model_invalid_purpose_rejected(self, tmp_path):
+        f = tmp_path / "agent.yaml"
+        f.write_text(yaml.dump({
+            "aes": "1.2",
+            "name": "test-bad-purpose",
+            "version": "1.0.0",
+            "description": "Test agent with invalid model purpose",
+            "models": [
+                {"name": "test", "provider": "test", "purpose": "invalid"},
+            ],
+        }))
+        result = validate_file(f, "agent")
+        assert not result.valid
+
+    def test_model_missing_provider_rejected(self, tmp_path):
+        f = tmp_path / "agent.yaml"
+        f.write_text(yaml.dump({
+            "aes": "1.2",
+            "name": "test-no-provider",
+            "version": "1.0.0",
+            "description": "Test agent with model missing provider",
+            "models": [
+                {"name": "test"},
+            ],
+        }))
+        result = validate_file(f, "agent")
+        assert not result.valid
+
+    def test_mcp_server_invalid_transport_rejected(self, tmp_path):
+        f = tmp_path / "agent.yaml"
+        f.write_text(yaml.dump({
+            "aes": "1.2",
+            "name": "test-bad-transport",
+            "version": "1.0.0",
+            "description": "Test agent with invalid MCP transport",
+            "interop": {
+                "mcp_servers": [
+                    {"name": "fetch", "transport": "invalid"},
+                ],
+            },
+        }))
+        result = validate_file(f, "agent")
+        assert not result.valid
+
+
+class TestPermissionsV12:
+    """Test permissions.yaml accepts new v1.2 fields."""
+
+    def test_permissions_with_network(self, tmp_path):
+        f = tmp_path / "permissions.yaml"
+        f.write_text(yaml.dump({
+            "aes_permissions": "1.2",
+            "network": {
+                "allow": ["https://api.anthropic.com/*"],
+                "deny": ["*.internal.corp/*"],
+            },
+        }))
+        result = validate_file(f, "permissions")
+        assert result.valid, result.errors
+
+    def test_permissions_with_process(self, tmp_path):
+        f = tmp_path / "permissions.yaml"
+        f.write_text(yaml.dump({
+            "aes_permissions": "1.2",
+            "process": {
+                "allow": ["python", "node"],
+                "deny": ["curl"],
+            },
+        }))
+        result = validate_file(f, "permissions")
+        assert result.valid, result.errors
+
+    def test_permissions_with_inference(self, tmp_path):
+        f = tmp_path / "permissions.yaml"
+        f.write_text(yaml.dump({
+            "aes_permissions": "1.2",
+            "inference": {
+                "routing": [
+                    {"task": "code-gen", "models": ["claude-sonnet-4"]},
+                ],
+                "max_tokens_per_request": 4096,
+                "max_requests_per_minute": 60,
+            },
+        }))
+        result = validate_file(f, "permissions")
+        assert result.valid, result.errors
+
+    def test_permissions_with_data(self, tmp_path):
+        f = tmp_path / "permissions.yaml"
+        f.write_text(yaml.dump({
+            "aes_permissions": "1.2",
+            "data": {
+                "classification": "internal",
+                "retention_days": 90,
+                "pii_handling": "prohibit",
+            },
+        }))
+        result = validate_file(f, "permissions")
+        assert result.valid, result.errors
+
+    def test_data_invalid_classification_rejected(self, tmp_path):
+        f = tmp_path / "permissions.yaml"
+        f.write_text(yaml.dump({
+            "aes_permissions": "1.2",
+            "data": {"classification": "top-secret"},
+        }))
+        result = validate_file(f, "permissions")
+        assert not result.valid
+
+    def test_data_invalid_pii_handling_rejected(self, tmp_path):
+        f = tmp_path / "permissions.yaml"
+        f.write_text(yaml.dump({
+            "aes_permissions": "1.2",
+            "data": {"pii_handling": "ignore"},
+        }))
+        result = validate_file(f, "permissions")
+        assert not result.valid
+
+
+class TestBomSchema:
+    """Test bom.schema.json validation."""
+
+    def test_valid_bom(self, tmp_path):
+        f = tmp_path / "bom.yaml"
+        f.write_text(yaml.dump({
+            "aes_bom": "1.2",
+            "models": [{"name": "claude", "provider": "anthropic"}],
+            "frameworks": [{"name": "catboost", "version": "1.2"}],
+            "tools": [{"name": "fetch", "type": "mcp-server"}],
+            "data_sources": [{"name": "openml", "type": "api"}],
+        }))
+        result = validate_file(f, "bom")
+        assert result.valid, result.errors
+
+    def test_bom_missing_version_rejected(self, tmp_path):
+        f = tmp_path / "bom.yaml"
+        f.write_text(yaml.dump({"models": []}))
+        result = validate_file(f, "bom")
+        assert not result.valid
+
+    def test_bom_invalid_tool_type_rejected(self, tmp_path):
+        f = tmp_path / "bom.yaml"
+        f.write_text(yaml.dump({
+            "aes_bom": "1.2",
+            "tools": [{"name": "bad", "type": "invalid"}],
+        }))
+        result = validate_file(f, "bom")
+        assert not result.valid
+
+    def test_bom_invalid_data_source_type_rejected(self, tmp_path):
+        f = tmp_path / "bom.yaml"
+        f.write_text(yaml.dump({
+            "aes_bom": "1.2",
+            "data_sources": [{"name": "bad", "type": "invalid"}],
+        }))
+        result = validate_file(f, "bom")
+        assert not result.valid
+
+    def test_bom_empty_valid(self, tmp_path):
+        f = tmp_path / "bom.yaml"
+        f.write_text(yaml.dump({"aes_bom": "1.2"}))
+        result = validate_file(f, "bom")
+        assert result.valid, result.errors
+
+
+class TestDecisionRecordSchema:
+    """Test decision-record.schema.json validation."""
+
+    def test_valid_decision_record(self, tmp_path):
+        f = tmp_path / "dr-001.yaml"
+        f.write_text(yaml.dump({
+            "aes_decision": "1.2",
+            "id": "dr-001",
+            "timestamp": "2026-03-17T14:30:00Z",
+            "summary": "Chose regression over multiclass",
+            "context": "Wine quality dataset",
+            "alternatives": [
+                {"option": "multiclass", "reason_rejected": "Low F1"},
+            ],
+            "rationale": "Better for ordinal targets",
+            "outcome": "CatBoost R2=0.511",
+            "approval": {"status": "auto", "approved_by": None},
+            "tags": ["ml"],
+        }))
+        result = validate_file(f, "decision-record")
+        assert result.valid, result.errors
+
+    def test_decision_record_missing_required(self, tmp_path):
+        f = tmp_path / "dr-bad.yaml"
+        f.write_text(yaml.dump({
+            "aes_decision": "1.2",
+            "id": "dr-001",
+        }))
+        result = validate_file(f, "decision-record")
+        assert not result.valid
+
+    def test_decision_record_invalid_approval_status(self, tmp_path):
+        f = tmp_path / "dr-bad-status.yaml"
+        f.write_text(yaml.dump({
+            "aes_decision": "1.2",
+            "id": "dr-001",
+            "timestamp": "2026-03-17T14:30:00Z",
+            "summary": "Test",
+            "approval": {"status": "invalid"},
+        }))
+        result = validate_file(f, "decision-record")
+        assert not result.valid
+
+    def test_decision_record_bad_id_pattern(self, tmp_path):
+        f = tmp_path / "dr-bad-id.yaml"
+        f.write_text(yaml.dump({
+            "aes_decision": "1.2",
+            "id": "bad-id",
+            "timestamp": "2026-03-17T14:30:00Z",
+            "summary": "Test",
+        }))
+        result = validate_file(f, "decision-record")
+        assert not result.valid
+
+    def test_decision_record_minimal(self, tmp_path):
+        f = tmp_path / "dr-minimal.yaml"
+        f.write_text(yaml.dump({
+            "aes_decision": "1.2",
+            "id": "dr-001",
+            "timestamp": "2026-03-17T14:30:00Z",
+            "summary": "A minimal decision",
+        }))
+        result = validate_file(f, "decision-record")
+        assert result.valid, result.errors
+
+    def test_decision_records_validated_in_agent_dir(self, tmp_path):
+        """Decision records in memory/decisions/ are validated by validate_agent_dir."""
+        agent_dir = tmp_path / ".agent"
+        decisions_dir = agent_dir / "memory" / "decisions"
+        decisions_dir.mkdir(parents=True)
+        (agent_dir / "agent.yaml").write_text(yaml.dump({
+            "aes": "1.2",
+            "name": "dr-test",
+            "version": "1.0.0",
+            "description": "Test",
+        }))
+        (decisions_dir / "dr-001-test.yaml").write_text(yaml.dump({
+            "aes_decision": "1.2",
+            "id": "dr-001",
+            "timestamp": "2026-03-17T14:30:00Z",
+            "summary": "Test decision",
+        }))
+        results = validate_agent_dir(agent_dir)
+        dr_results = [r for r in results if r.schema_type == "decision-record"]
+        assert len(dr_results) == 1
+        assert dr_results[0].valid
+
 
 class TestTemplatesValidate:
     """Ensure templates/ directories pass aes validate."""

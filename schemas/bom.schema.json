@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aes.dev/schemas/bom/v1",
+  "title": "AES Agent Bill of Materials",
+  "description": "Validates .agent/bom.yaml — tracks all components used by an agent",
+  "type": "object",
+  "required": ["aes_bom"],
+  "properties": {
+    "aes_bom": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$",
+      "description": "AES spec version for the BOM format"
+    },
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "provider"],
+        "properties": {
+          "name": { "type": "string" },
+          "provider": { "type": "string" },
+          "license": { "type": "string" },
+          "purpose": {
+            "type": "string",
+            "enum": ["primary", "fallback", "embedding", "evaluation"]
+          },
+          "hash": { "type": "string" }
+        }
+      }
+    },
+    "frameworks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "license": { "type": "string" }
+        }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["mcp-server", "cli", "api"]
+          },
+          "version": { "type": "string" },
+          "source": { "type": "string" }
+        }
+      }
+    },
+    "data_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["api", "file", "database"]
+          },
+          "uri": { "type": "string" },
+          "license": { "type": "string" }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

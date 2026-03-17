@@ -10,7 +10,7 @@ from typing import List, Optional
 import yaml
 from jsonschema import Draft202012Validator, ValidationError
 
-from aes.config import SCHEMAS_DIR, SCHEMA_MAP
+from aes.config import SCHEMAS_DIR, SCHEMA_MAP, BOM_FILE, DECISIONS_DIR
 
 
 @dataclass
@@ -188,6 +188,17 @@ def validate_agent_dir(agent_dir: Path) -> List[ValidationResult]:
                 valid=False,
                 errors=[f"Instructions file not found: {instructions_rel}"],
             ))
+
+    # Validate bom.yaml (optional)
+    bom_path = agent_dir / BOM_FILE
+    if bom_path.exists():
+        results.append(validate_file(bom_path, "bom"))
+
+    # Validate decision records (optional)
+    decisions_dir = agent_dir / DECISIONS_DIR
+    if decisions_dir.exists() and decisions_dir.is_dir():
+        for dr_file in sorted(decisions_dir.glob("*.yaml")):
+            results.append(validate_file(dr_file, "decision-record"))
 
     # Validate skill dependency graph
     results.extend(_validate_skill_graph(agent_dir, manifest))

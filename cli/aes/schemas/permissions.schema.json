@@ -53,6 +53,57 @@
         }
       }
     },
+    "network": {
+      "type": "object",
+      "description": "Network access controls",
+      "properties": {
+        "allow": { "type": "array", "items": { "type": "string" } },
+        "deny": { "type": "array", "items": { "type": "string" } },
+        "confirm": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "process": {
+      "type": "object",
+      "description": "Process execution restrictions",
+      "properties": {
+        "allow": { "type": "array", "items": { "type": "string" } },
+        "deny": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "inference": {
+      "type": "object",
+      "description": "Model routing and rate constraints",
+      "properties": {
+        "routing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task", "models"],
+            "properties": {
+              "task": { "type": "string" },
+              "models": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "max_tokens_per_request": { "type": "integer", "minimum": 1 },
+        "max_requests_per_minute": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "data": {
+      "type": "object",
+      "description": "Data handling policies",
+      "properties": {
+        "classification": {
+          "type": "string",
+          "enum": ["public", "internal", "confidential", "restricted"]
+        },
+        "retention_days": { "type": "integer", "minimum": 1 },
+        "pii_handling": {
+          "type": "string",
+          "enum": ["redact", "mask", "prohibit", "allow"]
+        }
+      }
+    },
     "overrides": {
       "type": "object",
       "additionalProperties": true

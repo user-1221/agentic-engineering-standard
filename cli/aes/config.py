@@ -29,9 +29,11 @@ REGISTRY_DIR = "registry"
 WORKFLOWS_DIR = "workflows"
 COMMANDS_DIR = "commands"
 MEMORY_DIR = "memory"
+DECISIONS_DIR = "memory/decisions"
 OVERRIDES_DIR = "overrides"
 LOCAL_FILE = "local.yaml"
 LOCAL_EXAMPLE_FILE = "local.example.yaml"
+BOM_FILE = "bom.yaml"
 
 # Schema file mapping
 SCHEMA_MAP = {
@@ -40,4 +42,6 @@ SCHEMA_MAP = {
     "workflow": "workflow.schema.json",
     "registry": "registry.schema.json",
     "permissions": "permissions.schema.json",
+    "bom": "bom.schema.json",
+    "decision-record": "decision-record.schema.json",
 }

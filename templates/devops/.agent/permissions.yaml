@@ -1,4 +1,4 @@
-aes_permissions: "1.0"
+aes_permissions: "1.2"
 
 allow:
   shell:

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aes.dev/schemas/permissions/v1\",
+  "$id": "https://aes.dev/schemas/permissions/v1",
   "title": "AES Permissions Model",
   "description": "Validates .agent/permissions.yaml",
   "type": "object",
@@ -50,6 +50,57 @@
         "on_exceeded": {
           "type": "string",
           "enum": ["warn_and_skip", "wait_and_retry", "abort"]
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "description": "Network access controls",
+      "properties": {
+        "allow": { "type": "array", "items": { "type": "string" } },
+        "deny": { "type": "array", "items": { "type": "string" } },
+        "confirm": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "process": {
+      "type": "object",
+      "description": "Process execution restrictions",
+      "properties": {
+        "allow": { "type": "array", "items": { "type": "string" } },
+        "deny": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "inference": {
+      "type": "object",
+      "description": "Model routing and rate constraints",
+      "properties": {
+        "routing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task", "models"],
+            "properties": {
+              "task": { "type": "string" },
+              "models": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "max_tokens_per_request": { "type": "integer", "minimum": 1 },
+        "max_requests_per_minute": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "data": {
+      "type": "object",
+      "description": "Data handling policies",
+      "properties": {
+        "classification": {
+          "type": "string",
+          "enum": ["public", "internal", "confidential", "restricted"]
+        },
+        "retention_days": { "type": "integer", "minimum": 1 },
+        "pii_handling": {
+          "type": "string",
+          "enum": ["redact", "mask", "prohibit", "allow"]
         }
       }
     },

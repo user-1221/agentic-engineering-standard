@@ -1,6 +1,6 @@
 {% if domain_config %}
 # .agent/agent.yaml — AES Manifest
-aes: "1.1"
+aes: "1.2"
 
 name: "{{ name }}"
 version: "0.1.0"
@@ -54,6 +54,11 @@ commands:
 {% endfor %}
 {% endif %}
 
+# models:
+#   - name: "claude-sonnet-4-20250514"
+#     provider: "anthropic"
+#     purpose: "primary"
+
 environment:
 {% if domain_config.env_required %}
   required:
@@ -76,7 +81,7 @@ environment:
 {% endif %}
 {% else %}
 # .agent/agent.yaml — AES Manifest
-aes: "1.1"
+aes: "1.2"
 
 name: "{{ name }}"
 version: "0.1.0"
@@ -128,6 +133,11 @@ commands:
   #   path: "commands/run.md"
   #   trigger: "/run"
   #   description: "Run the main workflow"
+
+# models:
+#   - name: "claude-sonnet-4-20250514"
+#     provider: "anthropic"
+#     purpose: "primary"
 
 environment:
   # <!-- AGENT: List required and optional environment variables.

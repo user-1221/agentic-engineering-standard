@@ -186,6 +186,24 @@ Each command stores the last entry number it has read. When starting a new sessi
 |------|-----------|--------|
 | `operations.md` | Tracked | Shared operational state benefits all developers |
 
+## Decision Records
+
+Structured YAML files for significant agent decisions. See [12 — Decision Records](12-decision-records.md) for the full specification.
+
+```
+.agent/memory/decisions/
+  dr-001-regression-reframe.yaml
+  dr-002-catboost-selection.yaml
+```
+
+Decision records provide machine-readable audit trails for choices like problem reframing, model selection, and quality gate overrides. They complement the unstructured `project.md` and `learnings.yaml` by offering a fixed schema that compliance and audit tools can consume.
+
+### Git Strategy
+
+| File | Git Status | Reason |
+|------|-----------|--------|
+| `memory/decisions/*.yaml` | Tracked | Decision history benefits all developers and auditors |
+
 ## What to Remember
 
 Save:

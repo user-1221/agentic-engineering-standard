@@ -20,6 +20,8 @@ from rich.tree import Tree
 from aes.config import (
     AGENT_DIR,
     AGENTIGNORE_FILE,
+    BOM_FILE,
+    DECISIONS_DIR,
     LOCAL_EXAMPLE_FILE,
     LOCAL_FILE,
     SCAFFOLD_DIR,
@@ -620,6 +622,7 @@ def init_cmd(
     agent_dir.mkdir(exist_ok=True)
     (agent_dir / MEMORY_DIR).mkdir(exist_ok=True)
     (agent_dir / MEMORY_DIR / "sessions").mkdir(exist_ok=True)
+    (agent_dir / DECISIONS_DIR).mkdir(parents=True, exist_ok=True)
     (agent_dir / OVERRIDES_DIR).mkdir(exist_ok=True)
 
     if skills:
@@ -663,6 +666,10 @@ def init_cmd(
     # permissions.yaml
     content = _render_template(env, "permissions.yaml.jinja", context)
     (agent_dir / "permissions.yaml").write_text(content)
+
+    # bom.yaml
+    content = _render_template(env, "bom.yaml.jinja", context)
+    (agent_dir / BOM_FILE).write_text(content)
 
     # .agentignore
     agentignore_path = project_root / AGENTIGNORE_FILE

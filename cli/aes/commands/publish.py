@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import fnmatch
+import hashlib
+import json
 import shutil
 import sys
 import tarfile
@@ -14,7 +16,7 @@ import click
 import yaml
 from rich.console import Console
 
-from aes.config import AGENT_DIR, MANIFEST_FILE
+from aes.config import AGENT_DIR, BOM_FILE, MANIFEST_FILE
 from aes.i18n import t
 
 console = Console()
@@ -171,6 +173,53 @@ def _validate_before_publish(project_root: Path) -> bool:
     return True
 
 
+def _media_type_for_path(path: str) -> str:
+    """Return a media type string for a file path."""
+    if path.endswith(".yaml") or path.endswith(".yml"):
+        return "application/vnd.aes.agent-config.v1+yaml"
+    if path.endswith(".md"):
+        return "text/markdown"
+    if path.endswith(".json"):
+        return "application/json"
+    return "application/octet-stream"
+
+
+def _build_package_manifest(
+    name: str,
+    version: str,
+    aes_version: str,
+    pkg_type: str,
+    files: List[tuple],
+) -> dict:
+    """Build an aes-manifest.json dict.
+
+    *files* is a list of ``(arcname, file_path)`` tuples.
+    """
+    layers = []
+    for arcname, file_path in files:
+        data = file_path.read_bytes()
+        digest = hashlib.sha256(data).hexdigest()
+        layers.append({
+            "mediaType": _media_type_for_path(arcname),
+            "digest": f"sha256:{digest}",
+            "size": len(data),
+            "path": arcname,
+        })
+
+    return {
+        "schemaVersion": 1,
+        "mediaType": "application/vnd.aes.package.v1+tar+gzip",
+        "config": {
+            "name": name,
+            "version": version,
+            "type": pkg_type,
+            "aes": aes_version,
+        },
+        "layers": layers,
+        "signature": None,
+    }
+
+
 def _publish_template_dir(
     project_root: Path,
     output_dir: Path,
@@ -194,6 +243,7 @@ def _publish_template_dir(
 
     name = manifest.get("name", "unknown")
     version = manifest.get("version", "0.0.0")
+    aes_version = manifest.get("aes", "1.0")
 
     # Build exclusion list
     if include_all:
@@ -208,16 +258,34 @@ def _publish_template_dir(
     tarball_name = f"{name}-{version}.tar.gz"
     tarball_path = output_dir / tarball_name
 
+    # Collect files and build package manifest
+    included_files: List[tuple] = []  # (rel_path_in_agent, absolute_path)
+
+    for file_path in sorted(agent_dir.rglob("*")):
+        if not file_path.is_file():
+            continue
+        rel = file_path.relative_to(agent_dir)
+        rel_str = str(rel)
+        if _is_excluded(rel_str, excludes):
+            continue
+        included_files.append((f"{AGENT_DIR}/{rel_str}", file_path))
+
+    # Generate aes-manifest.json
+    pkg_manifest = _build_package_manifest(
+        name, version, aes_version, "template", included_files,
+    )
+
     with tarfile.open(tarball_path, "w:gz") as tar:
-        for file_path in sorted(agent_dir.rglob("*")):
-            if not file_path.is_file():
-                continue
-            rel = file_path.relative_to(agent_dir)
-            rel_str = str(rel)
-            if _is_excluded(rel_str, excludes):
-                continue
-            arcname = f"{name}/{AGENT_DIR}/{rel_str}"
+        for rel_path, file_path in included_files:
+            arcname = f"{name}/{rel_path}"
             tar.add(file_path, arcname=arcname)
+
+        # Add aes-manifest.json at the package root
+        manifest_json = json.dumps(pkg_manifest, indent=2).encode()
+        import io
+        info = tarfile.TarInfo(name=f"{name}/aes-manifest.json")
+        info.size = len(manifest_json)
+        tar.addfile(info, io.BytesIO(manifest_json))
 
     return tarball_path
 

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aes.dev/schemas/agent/v1\",
+  "$id": "https://aes.dev/schemas/agent/v1",
   "title": "AES Agent Manifest",
   "description": "Validates .agent/agent.yaml — the central manifest for an AES project",
   "type": "object",
@@ -127,6 +127,32 @@
         "max_disk_usage_mb": { "type": "integer", "minimum": 1 },
         "coexistence_note": { "type": "string" }
       }
+    },
+    "models": {
+      "type": "array",
+      "description": "AI models this agent uses",
+      "items": { "$ref": "#/$defs/model_ref" }
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Where this agent came from",
+      "properties": {
+        "created_by": { "type": "string" },
+        "created_at": { "type": "string", "format": "date" },
+        "source": { "type": "string" },
+        "signed_by": { "type": "string" }
+      }
+    },
+    "interop": {
+      "type": "object",
+      "description": "Cross-protocol references for agent discovery",
+      "properties": {
+        "a2a_card": { "type": "string", "format": "uri" },
+        "mcp_servers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/mcp_server_ref" }
+        }
+      }
     }
   },
   "additionalProperties": false,
@@ -182,6 +208,36 @@
         "name": { "type": "string" },
         "default": { "type": "string" },
         "description": { "type": "string" }
+      }
+    },
+    "model_ref": {
+      "type": "object",
+      "required": ["name", "provider"],
+      "properties": {
+        "name": { "type": "string" },
+        "provider": { "type": "string" },
+        "version": { "type": "string" },
+        "purpose": {
+          "type": "string",
+          "enum": ["primary", "fallback", "embedding", "evaluation"]
+        }
+      }
+    },
+    "mcp_server_ref": {
+      "type": "object",
+      "required": ["name", "transport"],
+      "properties": {
+        "name": { "type": "string" },
+        "transport": {
+          "type": "string",
+          "enum": ["stdio", "sse", "streamable-http"]
+        },
+        "command": { "type": "string" },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "url": { "type": "string", "format": "uri" }
       }
     }
   }

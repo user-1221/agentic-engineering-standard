@@ -165,6 +165,69 @@ Options for `on_exceeded`:
 - `wait_and_retry` — wait 60s, check again, retry up to 3 times
 - `abort` — stop the entire pipeline
 
+## Network Access
+
+Controls which URLs and endpoints the agent can reach.
+
+```yaml
+network:
+  allow:
+    - "https://api.anthropic.com/*"
+    - "https://www.openml.org/*"
+  deny:
+    - "*.internal.corp/*"
+  confirm:
+    - "https://*.amazonaws.com/*"
+```
+
+Uses the same `allow/deny/confirm` pattern as shell and file permissions. Patterns use glob syntax.
+
+## Process Restrictions
+
+Controls which processes the agent can spawn.
+
+```yaml
+process:
+  allow: ["python", "node", "git"]
+  deny: ["curl", "wget"]
+```
+
+This is a coarser control than `shell` permissions. Where `shell` controls full command strings, `process` controls which executables can be invoked at all.
+
+## Inference Routing
+
+Constraints on how the agent uses AI models.
+
+```yaml
+inference:
+  routing:
+    - task: "code-generation"
+      models: ["claude-sonnet-4-20250514"]
+    - task: "summarization"
+      models: ["claude-haiku-4-5-20251001"]
+  max_tokens_per_request: 4096
+  max_requests_per_minute: 60
+```
+
+- **routing**: Maps task types to allowed models. If a task type is not listed, any model may be used.
+- **max_tokens_per_request**: Upper bound on tokens per inference call.
+- **max_requests_per_minute**: Rate limit for inference calls.
+
+## Data Classification
+
+Policies for how the agent handles data.
+
+```yaml
+data:
+  classification: "internal"       # public | internal | confidential | restricted
+  retention_days: 90
+  pii_handling: "prohibit"         # redact | mask | prohibit | allow
+```
+
+- **classification**: Data sensitivity level. Agents should not send `confidential` or `restricted` data to external APIs without explicit approval.
+- **retention_days**: How long agent-generated data should be retained.
+- **pii_handling**: How personally identifiable information should be handled.
+
 ## Overrides
 
 The `overrides` section is for tool-specific permission formats that can't be expressed generically. Each tool reads its own section and ignores others.

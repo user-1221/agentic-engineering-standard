@@ -16,6 +16,8 @@ from aes.commands.install import install_cmd
 from aes.commands.search import search_cmd
 from aes.commands.status import status_cmd
 from aes.commands.sync import sync_cmd
+from aes.commands.upgrade import upgrade_cmd
+from aes.commands.bom import bom_cmd
 
 
 def _prompt_language() -> None:
@@ -77,6 +79,8 @@ cli.add_command(install_cmd, "install")
 cli.add_command(sync_cmd, "sync")
 cli.add_command(status_cmd, "status")
 cli.add_command(search_cmd, "search")
+cli.add_command(upgrade_cmd, "upgrade")
+cli.add_command(bom_cmd, "bom")
 
 
 if __name__ == "__main__":

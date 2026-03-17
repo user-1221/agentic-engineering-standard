@@ -1,5 +1,5 @@
 # DevOps — AES Template
-aes: "1.1"
+aes: "1.2"
 
 name: "infra-autopilot"
 version: "1.0.0"

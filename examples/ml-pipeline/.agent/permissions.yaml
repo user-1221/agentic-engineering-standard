@@ -58,3 +58,20 @@ resource_limits:
     - "train"
     - "evaluate"
   on_exceeded: "warn_and_skip"
+
+network:
+  allow:
+    - "https://api.anthropic.com/*"
+    - "https://www.openml.org/*"
+    - "https://huggingface.co/*"
+  deny:
+    - "*.internal.corp/*"
+
+process:
+  allow: ["python", "git", "pip"]
+  deny: ["curl", "wget"]
+
+data:
+  classification: "internal"
+  retention_days: 90
+  pii_handling: "prohibit"
