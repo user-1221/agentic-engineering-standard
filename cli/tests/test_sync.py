@@ -161,6 +161,40 @@ class TestSyncCommand:
         assert manifest["synced_at"] is not None
 
 
+class TestMemorySection:
+    """Test that the Memory Management section is conditional on /memory command."""
+
+    def test_memory_section_present_when_command_exists(self, tmp_path: Path) -> None:
+        """Projects with /memory command should get the Memory Management section."""
+        project = _copy_example("ml-pipeline", tmp_path)
+        runner = CliRunner()
+        runner.invoke(cli, ["sync", str(project), "-t", "claude"])
+
+        content = (project / "CLAUDE.md").read_text()
+        assert "Memory Management" in content
+        assert "run `/memory`" in content
+
+    def test_memory_section_absent_when_command_missing(self, tmp_path: Path) -> None:
+        """Projects without /memory command should NOT get the Memory Management section."""
+        project = _copy_example("ml-pipeline", tmp_path)
+
+        # Remove the /memory command from agent.yaml
+        manifest_path = project / ".agent" / "agent.yaml"
+        with open(manifest_path) as f:
+            manifest = yaml.safe_load(f)
+        manifest["commands"] = [
+            c for c in manifest.get("commands", []) if c.get("id") != "memory"
+        ]
+        with open(manifest_path, "w") as f:
+            yaml.safe_dump(manifest, f, default_flow_style=False, sort_keys=False)
+
+        runner = CliRunner()
+        runner.invoke(cli, ["sync", str(project), "-t", "claude"])
+
+        content = (project / "CLAUDE.md").read_text()
+        assert "Memory Management" not in content
+
+
 class TestPermissionsTranslation:
     """Test the permission translation logic."""
 

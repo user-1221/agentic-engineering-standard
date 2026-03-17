@@ -282,12 +282,15 @@ Commands you defined in `.agent/commands/` are available as slash commands. Skil
 
 ```
 /setup              — Auto-populate .agent/ config (run this first on a new project)
+/memory             — Save learnings and decisions to agent memory
 /train              — Run the full ML pipeline (domain-specific workflow command)
 /build              — Build a feature end-to-end (domain-specific workflow command)
 /process            — Run the content pipeline (domain-specific workflow command)
 /skills/discover    — Run the discover skill
 /skills/train       — Run the train skill
 ```
+
+The `/memory` command persists architectural decisions and lessons learned across sessions. Run it after significant work to capture what the agent discovered. It can also be auto-triggered at the end of a session.
 
 ---
 
@@ -448,6 +451,7 @@ Published versions are **permanent** — you can't overwrite `1.0.0` once it's p
 5. aes validate                (check everything is valid)
 6. aes sync                    (regenerate tool configs with your tweaks)
 7. /train (or /build, /process, /provision)  (run your domain's workflow)
+8. /memory                     (save what the agent learned to persistent memory)
 ```
 
 ### Day-to-day
@@ -458,7 +462,7 @@ Published versions are **permanent** — you can't overwrite `1.0.0` once it's p
 3. aes sync                    (regenerate CLAUDE.md, .cursorrules, etc.)
 4. Start your AI tool          (it reads the generated config)
 5. Work with the agent         (it follows your skills and instructions)
-6. Agent updates memory        (what it learned goes into .agent/memory/)
+6. /memory                     (save learnings — or agent auto-triggers at session end)
 7. Repeat
 ```
 

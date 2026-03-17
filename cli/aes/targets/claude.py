@@ -51,14 +51,18 @@ class ClaudeTarget(SyncTarget):
             if confirm_section:
                 content += "\n" + confirm_section
 
-        # Memory management instruction (auto-trigger /memory)
-        content += (
-            "\n## Memory Management\n\n"
-            "At the end of significant work sessions \u2014 especially after "
-            "completing commands, making architectural decisions, or solving "
-            "difficult bugs \u2014 run `/memory` to persist learnings to "
-            "`.agent/memory/`.\n"
+        # Memory management instruction — only if /memory command exists
+        has_memory_cmd = any(
+            cmd.get("id") == "memory" for cmd in ctx.commands
         )
+        if has_memory_cmd:
+            content += (
+                "\n## Memory Management\n\n"
+                "At the end of significant work sessions \u2014 especially after "
+                "completing commands, making architectural decisions, or solving "
+                "difficult bugs \u2014 run `/memory` to persist learnings to "
+                "`.agent/memory/`.\n"
+            )
 
         action = self._check_conflict(ctx.project_root, "CLAUDE.md", force)
         plan.files.append(GeneratedFile(
