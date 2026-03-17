@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aes.dev/schemas/permissions/v1",
+  "$id": "https://aes.dev/schemas/permissions/v1\",
   "title": "AES Permissions Model",
   "description": "Validates .agent/permissions.yaml",
   "type": "object",

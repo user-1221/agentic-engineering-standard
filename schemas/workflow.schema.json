@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aes.dev/schemas/workflow/v1",
+  "$id": "https://aes.dev/schemas/workflow/v1\",
   "title": "AES Workflow Definition",
   "description": "Validates .agent/workflows/*.yaml state machine definitions",
   "type": "object",

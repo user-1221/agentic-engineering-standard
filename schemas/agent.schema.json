@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aes.dev/schemas/agent/v1",
+  "$id": "https://aes.dev/schemas/agent/v1\",
   "title": "AES Agent Manifest",
   "description": "Validates .agent/agent.yaml — the central manifest for an AES project",
   "type": "object",

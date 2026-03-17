@@ -1,5 +1,5 @@
 # Web Application — AES Template
-aes: "1.0"
+aes: "1.1"
 
 name: "web-app"
 version: "1.0.0"
@@ -36,6 +36,12 @@ skills:
 workflows:
   - id: "feature-lifecycle"
     path: "workflows/feature.yaml"
+
+commands:
+  - id: "memory"
+    path: "commands/memory.md"
+    trigger: "/memory"
+    description: "Review conversation and save learnings to agent memory"
 
 environment:
   required:

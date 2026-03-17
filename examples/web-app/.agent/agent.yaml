@@ -1,4 +1,4 @@
-aes: "1.0"
+aes: "1.1"
 
 name: "saas-dashboard"
 version: "1.0.0"
@@ -36,6 +36,10 @@ commands:
     path: "commands/feature.md"
     trigger: "/feature"
     description: "End-to-end feature development with testing"
+  - id: "memory"
+    path: "commands/memory.md"
+    trigger: "/memory"
+    description: "Review conversation and save learnings to agent memory"
 
 environment:
   required:

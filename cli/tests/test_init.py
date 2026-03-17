@@ -61,7 +61,7 @@ class TestInit:
         agent_yaml = tmp_path / ".agent" / "agent.yaml"
         with open(agent_yaml) as f:
             data = yaml.safe_load(f)
-        assert data["aes"] == "1.0"
+        assert data["aes"] == "1.1"
         assert data["name"] == "test-project"
         assert data["domain"] == "ml"
 
@@ -321,11 +321,20 @@ class TestWorkflowCommands:
         with open(tmp_path / ".agent" / "agent.yaml") as f:
             data = yaml.safe_load(f)
         commands = data.get("commands", [])
-        # Filter to workflow commands (exclude setup)
-        wf_cmds = [c for c in commands if c.get("id") != "setup"]
+        # Filter to workflow commands (exclude setup and memory)
+        wf_cmds = [c for c in commands if c.get("id") not in ("setup", "memory")]
         assert len(wf_cmds) >= 2
         assert wf_cmds[0]["id"] == "build"
         assert wf_cmds[0]["trigger"] == "/build"
+
+    def test_ml_memory_command(self, tmp_path):
+        """All domains get the /memory command."""
+        _init(tmp_path, name="test-ml", domain="ml")
+        cmd_path = tmp_path / ".agent" / "commands" / "memory.md"
+        assert cmd_path.exists()
+        content = cmd_path.read_text()
+        assert "/memory" in content
+        assert "Review" in content
 
     def test_web_build_command(self, tmp_path):
         _init(tmp_path, name="test-web", domain="web", language="typescript")
@@ -363,7 +372,7 @@ class TestWorkflowCommands:
         with open(tmp_path / ".agent" / "agent.yaml") as f:
             data = yaml.safe_load(f)
         commands = data.get("commands", [])
-        wf_cmds = [c for c in commands if c.get("id") != "setup"]
+        wf_cmds = [c for c in commands if c.get("id") not in ("setup", "memory")]
         assert len(wf_cmds) >= 2
         assert wf_cmds[0]["id"] == "build"
         assert wf_cmds[0]["trigger"] == "/build"
@@ -380,9 +389,9 @@ class TestWorkflowCommands:
     def test_other_domain_gets_build_command(self, tmp_path):
         _init(tmp_path, name="test-other", domain="other")
         commands_dir = tmp_path / ".agent" / "commands"
-        # Should get setup.md + build.md from DEV_ASSIST_BASE_CONFIG
+        # Should get setup.md + memory.md + build.md from DEV_ASSIST_BASE_CONFIG
         cmd_files = sorted(f.name for f in commands_dir.glob("*.md"))
-        assert cmd_files == ["build.md", "setup.md"]
+        assert cmd_files == ["build.md", "memory.md", "setup.md"]
 
     def test_explicit_domain_other_gets_build(self, tmp_path):
         """--domain other (explicit CLI, non-interactive) gets /build."""

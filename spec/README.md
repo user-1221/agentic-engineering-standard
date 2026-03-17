@@ -1,4 +1,4 @@
-# Agentic Engineering Standard (AES) v1.0
+# Agentic Engineering Standard (AES) v1.1
 
 ## What Is AES?
 

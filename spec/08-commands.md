@@ -162,6 +162,20 @@ Include concrete examples of failures and recoveries:
 
 Commands orchestrate skills. A `/train` command might invoke the `examine`, `classify`, `train`, `evaluate`, and `package` skills, with analysis and iteration between them.
 
+## Cross-Domain Commands
+
+Some commands are universal — they apply to all projects regardless of domain. These are scaffolded by `aes init` for every project type.
+
+### `/memory` — Persist Agent Learnings
+
+The `/memory` command reviews conversation context and saves memory-worthy items to `.agent/memory/`. Unlike workflow commands, it has no Worker Identity or operations.md coordination — it operates on the memory files directly.
+
+- **Activation**: hybrid (explicit slash command + agent self-trigger at end of significant sessions)
+- **Target files**: `project.md`, `learnings.yaml`, `sessions/`
+- **When**: end of significant sessions, after completing commands, after architectural decisions, after solving difficult bugs
+
+See [07-memory.md](07-memory.md) for the full command specification.
+
 ## Worker Identity
 
 Each command acts as a specialized worker with a defined area of expertise. The runbook includes a Worker Identity section that tells the agent its specialty, and a Memory section that points to its indexed section in `operations.md`:

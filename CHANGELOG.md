@@ -8,6 +8,18 @@ This project maintains two version tracks:
 
 ## [Unreleased]
 
+## [spec-v1.1] / [cli-v0.5.0] — 2026-03-17
+
+### Added
+- Add `/memory` command — cross-domain command that reviews conversation context and saves learnings to `.agent/memory/`. Scaffolded for all project types by `aes init`
+- Add "Cross-Domain Commands" section to spec 08 (commands)
+- Add `/memory` command documentation to spec 07 (memory), including lifecycle step 5
+- Add "Memory Management" auto-trigger instruction to Claude sync target (CLAUDE.md)
+- Add Japanese localization for `/memory` command runbook
+
+### Changed
+- Bump spec version to 1.1 (additive: new cross-domain command pattern)
+
 ## [cli-v0.4.3] — 2026-03-14
 
 ### Added

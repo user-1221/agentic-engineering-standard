@@ -1,4 +1,4 @@
-aes: "1.0"
+aes: "1.1"
 
 name: "infra-autopilot"
 version: "1.0.0"
@@ -30,6 +30,12 @@ skills:
 workflows:
   - id: "service-lifecycle"
     path: "workflows/service.yaml"
+
+commands:
+  - id: "memory"
+    path: "commands/memory.md"
+    trigger: "/memory"
+    description: "Review conversation and save learnings to agent memory"
 
 environment:
   required:

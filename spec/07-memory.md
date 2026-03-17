@@ -200,9 +200,36 @@ Don't save:
 - Information that duplicates `instructions.md`
 - Session-specific details (file paths, IDs) in project memory
 
+## The `/memory` Command
+
+A cross-domain command available in all AES projects. It reviews the current conversation and persists memory-worthy items to the appropriate files. Unlike workflow commands (`/train`, `/build`), it has no Worker Identity or operations.md coordination — it operates on memory files directly.
+
+### Activation
+
+- **Explicit**: Run `/memory` manually at any point
+- **Auto-trigger**: Agent self-triggers at the end of significant work sessions
+
+### Target Files
+
+| File | When to Write |
+|------|--------------|
+| `project.md` | Architecture decisions, status changes, key patterns, environment notes |
+| `learnings.yaml` | Hard-won lessons confirmed across observations or requiring significant effort to discover |
+| `sessions/` | Session snapshots for substantial work sessions |
+
+### Phases
+
+1. **Review Context** — scan conversation for memory-worthy items
+2. **Check Existing Memory** — read current files to avoid duplicates; update, replace, or skip as appropriate
+3. **Save to Project Memory** — append to `project.md` sections, keeping under 200 lines
+4. **Save Structured Learnings** — append to `learnings.yaml` for confirmed, hard-won insights
+5. **Session Snapshot** — optionally create `sessions/YYYY-MM-DD.md`
+6. **Report** — summarize what was saved, updated, or skipped
+
 ## Memory Lifecycle
 
 1. **During work**: Agent records observations in session memory
 2. **After work**: Agent promotes stable patterns to `project.md`
 3. **After repeated confirmation**: Agent records structured learnings in `learnings.yaml`
 4. **Periodically**: Agent reviews and prunes outdated entries
+5. **On demand or auto-trigger**: The `/memory` command reviews conversation context and saves to appropriate memory files

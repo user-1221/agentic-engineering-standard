@@ -1,5 +1,5 @@
 # Research Pipeline — AES Template
-aes: "1.0"
+aes: "1.1"
 
 name: "research-pipeline"
 version: "1.0.0"
@@ -36,6 +36,12 @@ skills:
 workflows:
   - id: "content-pipeline"
     path: "workflows/pipeline.yaml"
+
+commands:
+  - id: "memory"
+    path: "commands/memory.md"
+    trigger: "/memory"
+    description: "Review conversation and save learnings to agent memory"
 
 environment:
   optional:

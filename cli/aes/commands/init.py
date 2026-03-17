@@ -427,6 +427,7 @@ def _print_post_init_summary(
 
     cmd_branch = tree.add("commands/")
     cmd_branch.add("setup.md")
+    cmd_branch.add("memory.md [dim]/memory[/]")
     if isinstance(domain_config, DomainConfig) and domain_config.workflow_commands:
         for cmd_def in domain_config.workflow_commands:
             cmd_branch.add(f"{cmd_def.id}.md [dim]{cmd_def.trigger}[/]")
@@ -702,10 +703,12 @@ def init_cmd(
     memory_content = f"# {name} — Agent Memory\n\n## Project Overview\n\n## Architecture\n\n## Status\n\n## Key Patterns\n"
     (agent_dir / MEMORY_DIR / "project.md").write_text(memory_content)
 
-    # Commands directory + /setup runbook
+    # Commands directory + /setup and /memory runbooks
     (agent_dir / COMMANDS_DIR).mkdir(exist_ok=True)
     content = _render_template(env, "setup.md.jinja", context)
     (agent_dir / COMMANDS_DIR / "setup.md").write_text(content)
+    content = _render_template(env, "memory_command.md.jinja", context)
+    (agent_dir / COMMANDS_DIR / "memory.md").write_text(content)
 
     # Workflow command runbooks
     if domain_config and domain_config.workflow_commands:

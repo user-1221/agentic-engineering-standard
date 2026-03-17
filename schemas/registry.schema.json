@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aes.dev/schemas/registry/v1",
+  "$id": "https://aes.dev/schemas/registry/v1\",
   "title": "AES Registry Definition",
   "description": "Validates .agent/registry/*.yaml component registries",
   "type": "object",

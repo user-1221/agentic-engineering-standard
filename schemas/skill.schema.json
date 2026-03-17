@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aes.dev/schemas/skill/v1",
+  "$id": "https://aes.dev/schemas/skill/v1\",
   "title": "AES Skill Manifest",
   "description": "Validates .agent/skills/*.skill.yaml",
   "type": "object",

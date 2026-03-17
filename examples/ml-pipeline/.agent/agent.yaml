@@ -1,5 +1,5 @@
 # ML Model Factory — AES Manifest
-aes: "1.0"
+aes: "1.1"
 
 name: "ml-model-factory"
 version: "2.1.0"
@@ -49,6 +49,10 @@ commands:
     path: "commands/train.md"
     trigger: "/train"
     description: "End-to-end model training with analysis and iteration"
+  - id: "memory"
+    path: "commands/memory.md"
+    trigger: "/memory"
+    description: "Review conversation and save learnings to agent memory"
 
 environment:
   required:
