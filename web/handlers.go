@@ -3,12 +3,15 @@ package main
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 )
@@ -55,6 +58,7 @@ func (a *App) Router() http.Handler {
 	mux.HandleFunc("/login", a.handleLogin)
 	mux.HandleFunc("/auth/github/callback", rateLimitHandler(sensitiveRL, a.handleGitHubCallback))
 	mux.HandleFunc("/docs", a.handleDocs)
+	mux.HandleFunc("/registry", a.handleRegistry)
 
 	// Authenticated routes
 	mux.HandleFunc("/dashboard", requireAuth(a.handleDashboard))
@@ -85,6 +89,12 @@ func (a *App) handleIndex(w http.ResponseWriter, r *http.Request) {
 	a.render(w, "index.html", data)
 }
 
+// allowedRedirects lists paths that /login?redirect= may target.
+var allowedRedirects = map[string]bool{
+	"/registry":  true,
+	"/dashboard": true,
+}
+
 func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// Generate state parameter
 	raw := make([]byte, 32)
@@ -100,6 +110,19 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   600, // 10 minutes
 	})
+
+	// Store redirect destination in a cookie so callback can use it
+	if dest := r.URL.Query().Get("redirect"); allowedRedirects[dest] {
+		http.SetCookie(w, &http.Cookie{
+			Name:     "login_redirect",
+			Value:    dest,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   a.isSecure(),
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   600,
+		})
+	}
 
 	http.Redirect(w, r, a.OAuth.AuthURL(state), http.StatusFound)
 }
@@ -171,7 +194,19 @@ func (a *App) handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   7 * 24 * 3600, // 7 days
 	})
 
-	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	// Redirect to the page they came from, or default to /dashboard
+	dest := "/dashboard"
+	if rc, err := r.Cookie("login_redirect"); err == nil && allowedRedirects[rc.Value] {
+		dest = rc.Value
+		http.SetCookie(w, &http.Cookie{
+			Name:   "login_redirect",
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+	}
+
+	http.Redirect(w, r, dest, http.StatusSeeOther)
 }
 
 func (a *App) handleDashboard(w http.ResponseWriter, r *http.Request) {
@@ -296,6 +331,121 @@ func (a *App) handleLogout(w http.ResponseWriter, r *http.Request) {
 	})
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// RegistryPackage holds display data for a single registry package.
+type RegistryPackage struct {
+	Name        string
+	Description string
+	Type        string // "skill" or "template"
+	Tags        []string
+	Versions    []string
+	Latest      string
+}
+
+// featuredPackageLimit is the number of packages shown without login.
+const featuredPackageLimit = 6
+
+func (a *App) handleRegistry(w http.ResponseWriter, r *http.Request) {
+	user := userFromCtx(r)
+	loggedIn := user != nil
+
+	packages, err := a.fetchRegistryPackages()
+	if err != nil {
+		log.Printf("fetch registry packages error: %v", err)
+		// Show page with empty list rather than error
+		packages = nil
+	}
+
+	// Sort by name for consistent display
+	sort.Slice(packages, func(i, j int) bool {
+		return packages[i].Name < packages[j].Name
+	})
+
+	// Split into featured (public preview) and remaining (login required)
+	var featured, remaining []RegistryPackage
+	if len(packages) <= featuredPackageLimit {
+		featured = packages
+	} else {
+		featured = packages[:featuredPackageLimit]
+		remaining = packages[featuredPackageLimit:]
+	}
+
+	data := a.templateData(r)
+	data["User"] = user
+	data["LoggedIn"] = loggedIn
+	data["Featured"] = featured
+	data["Remaining"] = remaining
+	data["HasMore"] = len(remaining) > 0
+	data["TotalCount"] = len(packages)
+	a.render(w, "registry.html", data)
+}
+
+// fetchRegistryPackages fetches the public package index from the registry API.
+func (a *App) fetchRegistryPackages() ([]RegistryPackage, error) {
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(a.Config.RegistryURL + "/index.json")
+	if err != nil {
+		return nil, fmt.Errorf("GET index.json: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("registry returned status %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 2<<20)) // 2MB limit
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+
+	var index struct {
+		Packages map[string]json.RawMessage `json:"packages"`
+	}
+	if err := json.Unmarshal(body, &index); err != nil {
+		return nil, fmt.Errorf("parse index: %w", err)
+	}
+
+	var result []RegistryPackage
+	for name, raw := range index.Packages {
+		var entry struct {
+			Description string                     `json:"description"`
+			Type        string                     `json:"type"`
+			Tags        []string                   `json:"tags"`
+			Visibility  string                     `json:"visibility"`
+			Versions    map[string]json.RawMessage `json:"versions"`
+		}
+		if err := json.Unmarshal(raw, &entry); err != nil {
+			continue
+		}
+		// Skip private packages (shouldn't be in unauthenticated response, but be safe)
+		if entry.Visibility == "private" {
+			continue
+		}
+		if entry.Type == "" {
+			entry.Type = "skill"
+		}
+
+		var versions []string
+		for v := range entry.Versions {
+			versions = append(versions, v)
+		}
+		sort.Strings(versions)
+		latest := ""
+		if len(versions) > 0 {
+			latest = versions[len(versions)-1]
+		}
+
+		result = append(result, RegistryPackage{
+			Name:        name,
+			Description: entry.Description,
+			Type:        entry.Type,
+			Tags:        entry.Tags,
+			Versions:    versions,
+			Latest:      latest,
+		})
+	}
+	return result, nil
 }
 
 func (a *App) handleDocs(w http.ResponseWriter, r *http.Request) {

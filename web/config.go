@@ -13,6 +13,7 @@ type Config struct {
 	GitHubClientSecret string
 	BaseURL            string
 	DocsURL            string
+	RegistryURL        string
 	MaxTokensPerUser   int
 }
 
@@ -27,6 +28,7 @@ func LoadConfig() Config {
 		GitHubClientSecret: envOr("AES_WEB_GITHUB_CLIENT_SECRET", ""),
 		BaseURL:            envOr("AES_WEB_BASE_URL", "http://localhost:8081"),
 		DocsURL:            envOr("AES_WEB_DOCS_URL", "https://github.com/user-1221/agentic-engineering-standard"),
+		RegistryURL:        envOr("AES_WEB_REGISTRY_URL", "https://registry.aes-official.com"),
 		MaxTokensPerUser:   10,
 	}
 }

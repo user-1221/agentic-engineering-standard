@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="{{.Lang}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{index .T "reg_title"}}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=14">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-left">
+                <a href="/" class="logo">AES</a>
+                <span class="nav-version">v1.0</span>
+            </div>
+            <div class="nav-links">
+                <a href="/docs">{{index .T "nav_docs"}}</a>
+                <a href="https://github.com/user-1221/agentic-engineering-standard" class="nav-icon" aria-label="GitHub">
+                    <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                </a>
+                {{if .User}}
+                    <a href="/dashboard" class="btn btn-primary btn-small">{{index .T "nav_dashboard"}}</a>
+                {{else}}
+                    <a href="/login" class="btn btn-primary btn-small">{{index .T "nav_signin"}}</a>
+                {{end}}
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="registry-hero">
+            <span class="section-label">{{index .T "reg_label"}}</span>
+            <h1>{{index .T "reg_h1"}}</h1>
+            <p class="registry-desc">{{index .T "reg_desc"}}</p>
+        </div>
+
+        {{if .Featured}}
+        <div class="registry-grid">
+            {{range .Featured}}
+            <div class="registry-card">
+                <div class="registry-card-header">
+                    <span class="registry-type registry-type-{{.Type}}">{{.Type}}</span>
+                    {{if .Latest}}<span class="registry-version">v{{.Latest}}</span>{{end}}
+                </div>
+                <h3 class="registry-name">{{.Name}}</h3>
+                {{if .Description}}<p class="registry-card-desc">{{.Description}}</p>{{end}}
+                {{if .Tags}}
+                <div class="registry-tags">
+                    {{range .Tags}}<span class="registry-tag">{{.}}</span>{{end}}
+                </div>
+                {{end}}
+                <div class="registry-install">
+                    <code>aes install {{.Name}}{{if .Latest}}@{{.Latest}}{{end}}</code>
+                </div>
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <p class="empty">{{index .T "reg_empty"}}</p>
+        {{end}}
+
+        {{if .HasMore}}
+        <div class="registry-more">
+            {{if .LoggedIn}}
+            <div class="registry-grid">
+                {{range .Remaining}}
+                <div class="registry-card">
+                    <div class="registry-card-header">
+                        <span class="registry-type registry-type-{{.Type}}">{{.Type}}</span>
+                        {{if .Latest}}<span class="registry-version">v{{.Latest}}</span>{{end}}
+                    </div>
+                    <h3 class="registry-name">{{.Name}}</h3>
+                    {{if .Description}}<p class="registry-card-desc">{{.Description}}</p>{{end}}
+                    {{if .Tags}}
+                    <div class="registry-tags">
+                        {{range .Tags}}<span class="registry-tag">{{.}}</span>{{end}}
+                    </div>
+                    {{end}}
+                    <div class="registry-install">
+                        <code>aes install {{.Name}}{{if .Latest}}@{{.Latest}}{{end}}</code>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+            {{else}}
+            <div class="registry-login-wall">
+                <p>{{index .T "reg_more_count_pre"}}{{.TotalCount}}{{index .T "reg_more_count_post"}}</p>
+                <a href="/login?redirect=/registry" class="btn btn-primary btn-large">
+                    <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: middle; margin-right: 0.5rem;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                    {{index .T "reg_see_more"}}
+                </a>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+
+        <div class="registry-cli-hint">
+            <h2>{{index .T "reg_cli_title"}}</h2>
+            <pre><code><span class="t-comment">{{index .T "reg_cli_search"}}</span>
+<span class="t-prompt">$ </span>aes search deploy
+
+<span class="t-comment">{{index .T "reg_cli_install"}}</span>
+<span class="t-prompt">$ </span>aes install aes-hub/deploy@^1.0</code></pre>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-badges">
+                <span class="footer-badge">{{index .T "footer_open_source"}}</span>
+                <span class="footer-badge">{{index .T "footer_apache"}}</span>
+                <span class="footer-badge">{{index .T "footer_tool_agnostic"}}</span>
+            </div>
+            <p class="footer-tagline">{{index .T "footer_tagline"}}</p>
+        </div>
+    </footer>
+</body>
+</html>

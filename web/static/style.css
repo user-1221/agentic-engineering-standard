@@ -435,6 +435,143 @@ main {
     padding: var(--space-4) 0;
 }
 
+/* ============================================================
+   REGISTRY PAGE
+   ============================================================ */
+
+.registry-hero {
+    text-align: center;
+    padding: var(--space-5) 0 var(--space-4);
+}
+.registry-hero h1 {
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.75rem;
+}
+.registry-desc {
+    color: var(--text-muted);
+    font-size: 1.0625rem;
+    max-width: 540px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+.registry-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+.registry-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: border-color 0.15s;
+}
+.registry-card:hover {
+    border-color: #666;
+}
+.registry-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+.registry-type {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+.registry-type-skill {
+    color: var(--accent);
+    background: var(--accent-subtle);
+}
+.registry-type-template {
+    color: var(--violet);
+    background: rgba(121, 40, 202, 0.08);
+}
+.registry-version {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+.registry-name {
+    font-family: var(--mono);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+}
+.registry-card-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+.registry-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+.registry-tag {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 0.1rem 0.5rem;
+}
+.registry-install {
+    margin-top: auto;
+    padding-top: 0.5rem;
+}
+.registry-install code {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+.registry-login-wall {
+    text-align: center;
+    padding: var(--space-5) var(--space-4);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    margin: var(--space-3) 0;
+}
+.registry-login-wall p {
+    color: var(--text-muted);
+    margin-bottom: var(--space-3);
+    font-size: 1rem;
+}
+.registry-cli-hint {
+    margin: var(--space-5) 0 var(--space-3);
+    text-align: center;
+}
+.registry-cli-hint h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+}
+.registry-cli-hint pre {
+    max-width: 480px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    .registry-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 480px) {
+    .registry-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Error page */
 .error-page {
     text-align: center;

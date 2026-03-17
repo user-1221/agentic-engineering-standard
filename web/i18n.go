@@ -177,6 +177,19 @@ var translationsEN = Translations{
 	"footer_tool_agnostic": "Tool Agnostic",
 	"footer_tagline":       "Your agents should know your project as well as your senior engineers do.",
 
+	// -- Registry page --
+	"reg_title":           "Registry &mdash; AES",
+	"reg_label":           "Registry",
+	"reg_h1":              "Skills &amp; Templates",
+	"reg_desc":            "Discover proven skills and templates built by the community. Install with a single command.",
+	"reg_empty":           "No packages published yet. Be the first to publish!",
+	"reg_more_count_pre":  "There are ",
+	"reg_more_count_post": " packages in total. Sign in to see all of them.",
+	"reg_see_more":        "Sign in with GitHub to see more",
+	"reg_cli_title":       "Use the CLI",
+	"reg_cli_search":      "# Search for skills",
+	"reg_cli_install":     "# Install a skill",
+
 	// -- Dashboard --
 	"dash_title":          "Dashboard &mdash; AES",
 	"dash_h1":             "Registry Tokens",
@@ -355,6 +368,19 @@ var translationsJA = Translations{
 	"footer_apache":        "Apache 2.0",
 	"footer_tool_agnostic": "ツール非依存",
 	"footer_tagline":       "エージェントは、シニアエンジニアと同じくらいプロジェクトを理解すべきです。",
+
+	// -- Registry page --
+	"reg_title":           "レジストリ &mdash; AES",
+	"reg_label":           "レジストリ",
+	"reg_h1":              "スキル &amp; テンプレート",
+	"reg_desc":            "コミュニティが作った実証済みのスキルとテンプレートを発見。コマンド1つでインストール。",
+	"reg_empty":           "まだパッケージが公開されていません。最初の公開者になりましょう！",
+	"reg_more_count_pre":  "全",
+	"reg_more_count_post": "パッケージ。すべてを見るにはサインインしてください。",
+	"reg_see_more":        "GitHubでサインインしてもっと見る",
+	"reg_cli_title":       "CLIで使う",
+	"reg_cli_search":      "# スキルを検索",
+	"reg_cli_install":     "# スキルをインストール",
 
 	// -- Dashboard --
 	"dash_title":          "ダッシュボード &mdash; AES",
