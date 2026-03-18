@@ -8,6 +8,24 @@ This project maintains two version tracks:
 
 ## [Unreleased]
 
+## [spec-v1.2] / [cli-v0.6.0] — 2026-03-18
+
+### Added
+- **AI Bill of Materials** (`bom.yaml`) — new spec doc (11-bom.md) and schema for tracking models, frameworks, tools, and data sources used by agents
+- **Decision records** — structured decision records in `.agent/memory/decisions/*.yaml` with new spec doc (12-decision-records.md) and schema
+- **Extended manifest** — `agent.yaml` gains `models`, `provenance`, and `interop` sections
+- **Policy extensions** — `permissions.yaml` gains `network`, `process`, `inference`, and `data` policy sections
+- **Package manifests** — `aes publish` generates `aes-manifest.json` with SHA256 digests
+- `aes bom` command for generating and inspecting AI Bills of Materials
+- `aes upgrade` command with 1.1→1.2 migration support
+- `aes inspect` now displays extended manifest fields (models, provenance, interop)
+
+### Changed
+- `aes sync` (Claude target) only includes "Memory Management" section when the project declares a `/memory` command
+- Bump spec version to 1.2, CLI version to 0.6.0
+- Update website to v1.2: mobile hamburger nav, visual polish (card hover effects, gradient accents), improved Japanese translations
+- Update GETTING-STARTED.md and README.md with BOM and decision record documentation
+
 ## [spec-v1.1] / [cli-v0.5.0] — 2026-03-17
 
 ### Added
