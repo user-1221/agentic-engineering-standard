@@ -2028,25 +2028,20 @@ a:focus-visible {
 .sync-tool:hover .sync-tool-logo {
     transform: translateY(-2px);
 }
-.sync-tool:nth-child(1):hover .sync-tool-icon,
-.sync-tool:nth-child(1):hover .sync-tool-logo { box-shadow: 0 0 20px rgba(217, 119, 87, 0.5); }
-.sync-tool:nth-child(2):hover .sync-tool-icon,
-.sync-tool:nth-child(2):hover .sync-tool-logo { box-shadow: 0 0 20px rgba(0, 212, 170, 0.5); }
-.sync-tool:nth-child(3):hover .sync-tool-icon,
-.sync-tool:nth-child(3):hover .sync-tool-logo { box-shadow: 0 0 20px rgba(110, 64, 201, 0.5); }
-.sync-tool:nth-child(4):hover .sync-tool-icon,
-.sync-tool:nth-child(4):hover .sync-tool-logo { box-shadow: 0 0 20px rgba(14, 165, 233, 0.5); }
-.sync-tool:nth-child(5):hover .sync-tool-icon,
-.sync-tool:nth-child(5):hover .sync-tool-logo { box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+.sync-tool:nth-child(1):hover .sync-tool-icon { box-shadow: 0 0 20px rgba(217, 119, 87, 0.5); }
+.sync-tool:nth-child(2):hover .sync-tool-icon { box-shadow: 0 0 20px rgba(0, 212, 170, 0.5); }
+.sync-tool:nth-child(3):hover .sync-tool-icon { box-shadow: 0 0 20px rgba(110, 64, 201, 0.5); }
+.sync-tool:nth-child(4):hover .sync-tool-icon { box-shadow: 0 0 20px rgba(14, 165, 233, 0.5); }
+.sync-tool:nth-child(5):hover .sync-tool-icon { box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
 .sync-tool-logo {
-    width: 56px;
-    height: 56px;
-    border-radius: 14px;
+    width: 44px;
+    height: 44px;
+    border-radius: 0;
     object-fit: contain;
     transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 .sync-tool-icon-img {
-    padding: 10px;
+    padding: 12px;
 }
 .sync-tool-icon-img img {
     width: 100%;
@@ -2178,6 +2173,11 @@ a:focus-visible {
 .hiw-target-card .sync-tool-icon,
 .hiw-target-card .sync-tool-logo {
     margin: 0 auto var(--space-2);
+    display: block;
+}
+.hiw-target-card .sync-tool-logo {
+    width: 40px;
+    height: 40px;
 }
 .hiw-target-card h3 {
     font-size: 1rem;
@@ -2480,6 +2480,10 @@ a:focus-visible {
         height: 48px;
         border-radius: 12px;
         font-size: 0.95rem;
+    }
+    .sync-tool-logo {
+        width: 36px;
+        height: 36px;
     }
     .sync-tools {
         gap: var(--space-2);
