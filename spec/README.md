@@ -1,4 +1,4 @@
-# Agentic Engineering Standard (AES) v1.2
+# Agentic Engineering Standard (AES) v1.3
 
 ## What Is AES?
 
@@ -36,7 +36,7 @@ pipx install aes-cli
 cd my-project
 aes init                    # scaffold .agent/ directory
 aes validate                # check files against schemas + dependency graph
-aes sync                    # generate tool configs (Claude, Cursor, Copilot, Windsurf)
+aes sync                    # generate tool configs (Claude, Cursor, Copilot, Windsurf, OpenClaw)
 aes status                  # show what changed since last sync
 aes inspect                 # show project structure and stats
 aes inspect deploy          # inspect a remote registry package

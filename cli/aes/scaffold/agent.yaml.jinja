@@ -54,6 +54,46 @@ commands:
 {% endfor %}
 {% endif %}
 
+{% if domain_config.identity_name %}
+
+identity:
+  persona: |
+    {{ domain_config.identity_persona | indent(4) }}
+  name: "{{ domain_config.identity_name }}"
+  emoji: "{{ domain_config.identity_emoji }}"
+  user_profile: ""
+{% endif %}
+{% if domain_config.model_provider %}
+
+model:
+  provider: "{{ domain_config.model_provider }}"
+  model: "{{ domain_config.model_model }}"
+  api_key_env: "{{ domain_config.env_required[0].name if domain_config.env_required else 'ANTHROPIC_API_KEY' }}"
+{% endif %}
+{% if domain_config.sandbox_runtime %}
+
+sandbox:
+  enabled: {{ 'true' if domain_config.sandbox_enabled else 'false' }}
+  runtime: "{{ domain_config.sandbox_runtime }}"
+  workspace_root: "/sandbox"
+{% endif %}
+{% if domain_config.heartbeat_checklist %}
+
+heartbeat:
+  interval_minutes: {{ domain_config.heartbeat_interval }}
+  checklist: |
+    {{ domain_config.heartbeat_checklist | indent(4) }}
+{% endif %}
+{% if domain_config.channels %}
+
+channels:
+{% for platform, cfg in domain_config.channels.items() %}
+  {{ platform }}:
+    enabled: {{ cfg.enabled }}
+    bot_token_env: "{{ cfg.bot_token_env }}"
+{% endfor %}
+{% endif %}
+
 # models:
 #   - name: "claude-sonnet-4-20250514"
 #     provider: "anthropic"

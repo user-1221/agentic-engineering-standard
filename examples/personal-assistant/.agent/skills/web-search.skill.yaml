@@ -1,0 +1,50 @@
+# .agent/skills/web-search.skill.yaml
+aes_skill: "1.3"
+
+id: "web-search"
+name: "Web Search"
+version: "1.0.0"
+description: "Search the web using the Brave Search API when the user needs current information, news, or facts that may be beyond training data."
+negative_triggers:
+  - "Do NOT use for questions answerable from memory or context"
+activation: "explicit"
+emoji: "\U0001F50D"
+requires:
+  env:
+    - "BRAVE_API_KEY"
+primary_env: "BRAVE_API_KEY"
+
+stage: 1
+phase: "research"
+
+inputs:
+  required:
+    - name: "query"
+      type: "string"
+      description: "Search query"
+  optional: []
+  environment:
+    - "BRAVE_API_KEY"
+
+outputs:
+  - name: "results"
+    type: "list[dict]"
+    description: "Search results with title, URL, and snippet"
+
+prerequisites: []
+
+triggers:
+  - type: "manual"
+    command: ""
+
+error_handling:
+  strategy: "retry-with-backoff"
+  retries: 2
+
+allowed_tools:
+  network: true
+
+tags:
+  - "search"
+  - "web"
+  - "research"

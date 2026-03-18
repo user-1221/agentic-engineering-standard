@@ -39,6 +39,14 @@ class SkillDef:
     negative_triggers: List[str] = field(default_factory=list)
     activation: str = "explicit"  # "auto", "explicit", or "hybrid"
     allowed_tools: Optional[Dict[str, object]] = None
+    # OpenClaw-specific fields
+    emoji: str = ""
+    requires_bins: List[str] = field(default_factory=list)
+    requires_env: List[str] = field(default_factory=list)
+    primary_env: str = ""
+    user_invocable: bool = True
+    license_id: str = "MIT"
+    mcp_server: Optional[Dict[str, object]] = None
     # Runbook content sections
     runbook_purpose: str = ""
     runbook_when: str = ""
@@ -133,6 +141,18 @@ class DomainConfig:
     # Environment
     env_required: List[Dict[str, str]] = field(default_factory=list)
     env_optional: List[Dict[str, str]] = field(default_factory=list)
+
+    # OpenClaw / daemon-agent fields
+    identity_persona: str = ""
+    identity_name: str = ""
+    identity_emoji: str = ""
+    model_provider: str = ""
+    model_model: str = ""
+    sandbox_enabled: bool = False
+    sandbox_runtime: str = "docker"
+    heartbeat_interval: int = 30
+    heartbeat_checklist: str = ""
+    channels: Dict[str, Dict[str, str]] = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -1374,11 +1394,192 @@ AGENT_INTEGRATED_BASE_CONFIG = DomainConfig(
 # Public mapping
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Assistant domain config — personal AI assistant (OpenClaw target)
+# ---------------------------------------------------------------------------
+
+_ASSISTANT_SKILLS = [
+    SkillDef(
+        id="greeting",
+        name="Greeting",
+        version="1.0.0",
+        description="Greet users warmly and contextually when they start a conversation or say hello. References time of day and user profile when available.",
+        stage=1,
+        phase="interaction",
+        activation="auto",
+        emoji="\U0001f44b",
+        user_invocable=True,
+        tags=["conversation", "onboarding"],
+        negative_triggers=["Do NOT use mid-conversation or when the user is giving a command"],
+        runbook_purpose="Greet the user warmly when they initiate a conversation or say hello.",
+        runbook_when="- User sends a greeting (hello, hi, hey, good morning, etc.)\n- First message in a new session",
+        runbook_how="1. Check time of day for contextual greeting\n2. Reference the user's name from USER.md if available\n3. Mention any pending heartbeat items if relevant\n4. Keep it brief — one or two sentences max",
+    ),
+    SkillDef(
+        id="web-search",
+        name="Web Search",
+        version="1.0.0",
+        description="Search the web using the Brave Search API when the user needs current information, news, or facts that may be beyond training data.",
+        stage=1,
+        phase="research",
+        activation="explicit",
+        emoji="\U0001f50d",
+        user_invocable=True,
+        requires_env=["BRAVE_API_KEY"],
+        primary_env="BRAVE_API_KEY",
+        mcp_server={
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+            "env": {"BRAVE_API_KEY": "${BRAVE_API_KEY}"},
+        },
+        tags=["search", "web", "research"],
+        negative_triggers=["Do NOT use for questions answerable from memory or context"],
+        allowed_tools={"network": True},
+        runbook_purpose="Search the web using the Brave Search API when the user needs current information.",
+        runbook_when="- User asks about current events or recent information\n- User explicitly asks to search the web\n- Question requires facts beyond training data",
+        runbook_how="1. Call the `brave_search` tool with a concise query\n2. Format results as a bulleted list with title, URL, and snippet\n3. Summarize the key findings in 2-3 sentences\n4. Cite sources with URLs",
+        runbook_error_handling="- **API timeout**: Retry once, then inform user\n- **No results**: Suggest alternative search terms\n- **Rate limit**: Wait and retry (max 5 searches per turn)",
+    ),
+    SkillDef(
+        id="calendar",
+        name="Calendar Manager",
+        version="1.0.0",
+        description="Manage calendar events — create, list, update, and cancel meetings and reminders. Integrates with Google Calendar or similar providers.",
+        stage=1,
+        phase="productivity",
+        activation="explicit",
+        emoji="\U0001f4c5",
+        user_invocable=True,
+        tags=["calendar", "scheduling", "productivity"],
+        negative_triggers=["Do NOT use for general time questions or timezone conversions"],
+        runbook_purpose="Manage the user's calendar events and reminders.",
+        runbook_when="- User asks to schedule, reschedule, or cancel a meeting\n- User asks about upcoming events\n- User wants to set a reminder",
+        runbook_how="1. Parse the user's request for event details (title, time, duration, attendees)\n2. Confirm details with the user before creating/modifying\n3. Execute the calendar operation\n4. Confirm the result with event details",
+    ),
+    SkillDef(
+        id="code-review",
+        name="Code Review",
+        version="1.0.0",
+        description="Review code changes from GitHub pull requests or local diffs. Analyze for bugs, style issues, security concerns, and suggest improvements.",
+        stage=1,
+        phase="development",
+        activation="explicit",
+        emoji="\U0001f50d",
+        user_invocable=True,
+        requires_bins=["git"],
+        tags=["code-review", "github", "development"],
+        negative_triggers=["Do NOT use for writing new code from scratch"],
+        allowed_tools={"shell": True, "files": {"read": True}, "network": True},
+        runbook_purpose="Review code changes and provide constructive feedback.",
+        runbook_when="- User shares a PR link or asks for a code review\n- User pastes code and asks for feedback\n- Heartbeat detects open PRs assigned to the user",
+        runbook_how="1. Fetch the diff (from GitHub PR or local git diff)\n2. Analyze for bugs, security issues, and style violations\n3. Provide specific, actionable feedback with line references\n4. Summarize overall assessment (approve / request changes)",
+    ),
+]
+
+_ASSISTANT_CONVERSE_COMMAND = CommandDef(
+    id="converse",
+    trigger="/converse",
+    description="Start or resume a conversation session with the assistant",
+    runbook_purpose="Run the assistant's main conversational loop. The agent listens across configured channels, responds to messages, executes skills on demand, and proactively checks heartbeat tasks.",
+    worker_specialty="Multi-platform conversational AI assistant",
+    runbook_phases=[
+        {"title": "Session Setup", "content": "Load user profile from USER.md. Check HEARTBEAT.md for pending tasks. Review recent conversation history for context continuity."},
+        {"title": "Message Processing", "content": "Receive messages from connected channels. Determine intent — is this a greeting, a question, a skill invocation, or a general conversation? Route accordingly."},
+        {"title": "Skill Execution", "content": "When a skill is triggered (explicitly via command or automatically via context match), execute it and return results to the user."},
+        {"title": "Memory & Wrap-up", "content": "Persist important learnings to MEMORY.md. Update AGENTS.md if the user's preferences or context changed."},
+    ],
+)
+
+ASSISTANT_CONFIG = DomainConfig(
+    mode="agent-integrated",
+    workflow_commands=[_ASSISTANT_CONVERSE_COMMAND],
+
+    # Identity defaults for scaffold
+    identity_persona=(
+        "You are a helpful, security-conscious personal assistant. "
+        "You are concise, accurate, and proactive. You ask for clarification "
+        "when instructions are ambiguous. You never share credentials or "
+        "sensitive information across channels."
+    ),
+    identity_name="Assistant",
+    identity_emoji="\U0001f99e",
+    model_provider="anthropic",
+    model_model="claude-sonnet-4-20250514",
+    sandbox_enabled=False,
+    sandbox_runtime="docker",
+    heartbeat_interval=30,
+    heartbeat_checklist=(
+        "- Check for unread messages across channels\n"
+        "- Review calendar for upcoming meetings (next 2 hours)\n"
+        "- Check GitHub for open PRs assigned to user\n"
+    ),
+    channels={
+        "telegram": {"enabled": "true", "bot_token_env": "TELEGRAM_BOT_TOKEN"},
+        "discord": {"enabled": "true", "bot_token_env": "DISCORD_BOT_TOKEN"},
+    },
+
+    instructions_description="Personal AI assistant connected to messaging platforms via OpenClaw. Runs 24/7, responds across channels, and executes skills on demand.",
+    instructions_quick_ref=(
+        "```bash\n"
+        "aes sync -t openclaw           # generate .openclaw/ config\n"
+        "openclaw gateway               # start the agent daemon\n"
+        "openclaw nemoclaw launch       # start with sandbox (if configured)\n"
+        "```"
+    ),
+    instructions_rules=[
+        "Never share API keys, tokens, or credentials in any channel",
+        "Always confirm destructive actions (deleting events, sending bulk messages) before executing",
+        "Keep responses concise — messaging platforms have character limits",
+        "Respect user's quiet hours (check HEARTBEAT.md schedule)",
+        "Use the heartbeat to proactively surface important updates, not to spam",
+        "When uncertain, ask for clarification rather than guessing",
+    ],
+    instructions_key_principle=(
+        "This assistant treats every conversation as a service interaction — "
+        "be helpful, be brief, be safe. Security comes first: never leak "
+        "credentials, never execute unconfirmed destructive operations, "
+        "and always respect the user's privacy across platforms."
+    ),
+    instructions_gotchas=[
+        "Channel tokens are in environment variables, never in config files",
+        "Heartbeat tasks run even when the user isn't actively chatting",
+        "SKILL.md files in workspace/skills/ take precedence over managed skills",
+        "OpenShell sandbox blocks all outbound traffic by default — add network policies for APIs you need",
+    ],
+
+    skills=_ASSISTANT_SKILLS,
+
+    orchestrator_pipeline="greeting → (user message) → route to skill or general response",
+    orchestrator_status_flow="idle → processing → responding → idle",
+    orchestrator_decision_tree=(
+        "On each message:\n"
+        "  |- Is greeting? → greeting skill\n"
+        "  |- Is skill command (e.g. /search)? → execute named skill\n"
+        "  |- Matches auto-skill context? → execute auto skill\n"
+        "  \\- General message → conversational response"
+    ),
+    orchestrator_when_to_stop="When the user explicitly ends the conversation or goes idle for >10 minutes",
+
+    permissions_confirm_shell=["rm *", "git push --force"],
+    permissions_confirm_actions=["Send message to external channel", "Delete calendar event"],
+
+    env_required=[
+        {"name": "ANTHROPIC_API_KEY", "description": "API key for the primary LLM provider"},
+    ],
+    env_optional=[
+        {"name": "BRAVE_API_KEY", "description": "API key for web search (Brave Search)"},
+        {"name": "TELEGRAM_BOT_TOKEN", "description": "Bot token for Telegram integration"},
+        {"name": "DISCORD_BOT_TOKEN", "description": "Bot token for Discord integration"},
+    ],
+)
+
+
 DOMAIN_CONFIGS: Dict[str, DomainConfig] = {
     "ml": ML_CONFIG,
     "web": WEB_CONFIG,
     "devops": DEVOPS_CONFIG,
     "research": RESEARCH_CONFIG,
+    "assistant": ASSISTANT_CONFIG,
 }
 
 

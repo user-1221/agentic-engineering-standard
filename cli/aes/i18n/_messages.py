@@ -178,6 +178,7 @@ MESSAGES: dict = {
     "init.type_skip": "Skip",
     "init.type_ml": "ML pipeline",
     "init.type_research": "Research / Content pipeline",
+    "init.type_assistant": "Assistant (24/7 AI on messaging platforms)",
     "init.type_custom": "Custom",
     "init.overwrite_warning": "{agent_dir}/ already exists at {path}",
     "init.overwrite_confirm": "Overwrite existing files?",

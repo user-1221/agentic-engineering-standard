@@ -1,0 +1,55 @@
+# .agent/permissions.yaml
+aes_permissions: "1.3"
+
+allow:
+  shell:
+    read:
+      - "git status*"
+      - "git log*"
+      - "git diff*"
+    execute:
+      - "npm run*"
+      - "python*"
+  files:
+    read: "*"
+    write:
+      - "src/**"
+      - "docs/**"
+
+deny:
+  shell:
+    - "rm -rf*"
+    - "sudo*"
+  files:
+    delete:
+      - ".env*"
+      - "*.key"
+
+confirm:
+  shell:
+    - "git push*"
+    - "npm publish*"
+  actions:
+    - "Send message to external channel"
+    - "Delete calendar event"
+
+resource_limits:
+  max_cpu_percent: 50
+  max_memory_percent: 50
+
+filesystem:
+  enforcement: "best_effort"
+  read_only:
+    - "/usr"
+    - "/lib"
+    - "/etc"
+  read_write:
+    - "/sandbox"
+    - "/tmp"
+
+tools:
+  approval_mode: "a2h"
+  assurance_levels:
+    "rm *": "HIGH"
+    "git push": "MEDIUM"
+    default: "LOW"

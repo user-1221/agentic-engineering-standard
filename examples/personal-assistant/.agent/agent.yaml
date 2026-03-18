@@ -1,0 +1,89 @@
+# .agent/agent.yaml — AES Manifest
+aes: "1.3"
+
+name: "personal-assistant"
+version: "1.0.0"
+description: "Personal AI assistant connected to messaging platforms via OpenClaw"
+domain: "assistant"
+license: "MIT"
+
+agent:
+  instructions: "instructions.md"
+  permissions: "permissions.yaml"
+  orchestrator: "skills/ORCHESTRATOR.md"
+
+skills:
+  - id: "greeting"
+    manifest: "skills/greeting.skill.yaml"
+    runbook: "skills/greeting.md"
+  - id: "web-search"
+    manifest: "skills/web-search.skill.yaml"
+    runbook: "skills/web-search.md"
+
+commands:
+  - id: "setup"
+    path: "commands/setup.md"
+    trigger: "/setup"
+    description: "Review and customize .agent/ files for your project"
+  - id: "memory"
+    path: "commands/memory.md"
+    trigger: "/memory"
+    description: "Review conversation and save learnings to agent memory"
+  - id: "converse"
+    path: "commands/converse.md"
+    trigger: "/converse"
+    description: "Start or resume a conversation session with the assistant"
+
+identity:
+  persona: |
+    You are a helpful, security-conscious personal assistant. You are concise,
+    accurate, and proactive. You ask for clarification when instructions are
+    ambiguous. You never share credentials or sensitive information across
+    channels.
+  name: "Lobster"
+  emoji: "\U0001F99E"
+  user_profile: ""
+
+model:
+  provider: "anthropic"
+  model: "claude-sonnet-4-20250514"
+  api_key_env: "ANTHROPIC_API_KEY"
+
+sandbox:
+  enabled: false
+  runtime: "docker"
+  workspace_root: "/sandbox"
+
+heartbeat:
+  interval_minutes: 30
+  checklist: |
+    - Check for unread messages across channels
+    - Review calendar for upcoming meetings (next 2 hours)
+    - Check GitHub for open PRs assigned to user
+
+channels:
+  telegram:
+    enabled: true
+    bot_token_env: "TELEGRAM_BOT_TOKEN"
+  discord:
+    enabled: true
+    bot_token_env: "DISCORD_BOT_TOKEN"
+
+mcp_servers:
+  search:
+    command: "npx"
+    args: ["-y", "@modelcontextprotocol/server-brave-search"]
+    env:
+      BRAVE_API_KEY: "${BRAVE_API_KEY}"
+
+environment:
+  required:
+    - name: "ANTHROPIC_API_KEY"
+      description: "API key for the primary LLM provider"
+  optional:
+    - name: "BRAVE_API_KEY"
+      description: "API key for web search (Brave Search)"
+    - name: "TELEGRAM_BOT_TOKEN"
+      description: "Bot token for Telegram integration"
+    - name: "DISCORD_BOT_TOKEN"
+      description: "Bot token for Discord integration"

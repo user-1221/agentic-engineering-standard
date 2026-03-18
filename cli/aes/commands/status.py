@@ -70,7 +70,12 @@ def status_cmd(path: str) -> None:
 
     for name in TARGET_NAMES:
         adapter = TARGETS[name]()
-        plan = adapter.plan(ctx, force=True)
+        try:
+            plan = adapter.plan(ctx, force=True)
+        except Exception:
+            # Target-specific validation failure (e.g. openclaw requires
+            # identity/model) — skip incompatible targets silently in status.
+            continue
         for gf in plan.files:
             would_generate[gf.relative_path] = gf.content
 

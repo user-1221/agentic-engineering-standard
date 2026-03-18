@@ -7,17 +7,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=15">
+    <link rel="stylesheet" href="/static/style.css?v=16">
 </head>
 <body>
     <header>
         <nav>
-            <a href="/" class="logo">AES</a>
+            <div class="nav-left">
+                <a href="/" class="logo">AES</a>
+                <span class="nav-version">v1.3</span>
+            </div>
             <input type="checkbox" id="nav-toggle" class="nav-toggle-input" aria-hidden="true">
             <label for="nav-toggle" class="nav-toggle-label" aria-label="Toggle navigation">
                 <span></span><span></span><span></span>
             </label>
             <div class="nav-links">
+                <a href="/how-it-works">{{index .T "nav_how"}}</a>
+                <a href="/examples">{{index .T "nav_examples"}}</a>
+                <a href="/registry">{{index .T "nav_registry"}}</a>
                 <a href="/docs">{{index .T "nav_docs"}}</a>
                 <a href="/">{{index .T "nav_home"}}</a>
             </div>

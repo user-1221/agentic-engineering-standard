@@ -254,6 +254,7 @@ def _get_agent_integrated_types() -> list:
     return [
         (t("init.type_ml"), "ml"),
         (t("init.type_research"), "research"),
+        (t("init.type_assistant"), "assistant"),
         (t("init.type_custom"), "other"),
     ]
 

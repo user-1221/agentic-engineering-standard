@@ -107,6 +107,41 @@
     "overrides": {
       "type": "object",
       "additionalProperties": true
+    },
+    "filesystem": {
+      "type": "object",
+      "description": "Filesystem access policy (maps to OpenShell filesystem_policy)",
+      "properties": {
+        "enforcement": {
+          "type": "string",
+          "enum": ["best_effort", "enforce"]
+        },
+        "read_only": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Paths agent can read but not write"
+        },
+        "read_write": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Paths agent can read and write"
+        }
+      }
+    },
+    "tools": {
+      "type": "object",
+      "description": "Tool execution approval policies",
+      "properties": {
+        "approval_mode": {
+          "type": "string",
+          "description": "Tool approval mode (ask, a2h, record, ignore)"
+        },
+        "assurance_levels": {
+          "type": "object",
+          "description": "Per-command assurance levels (HIGH, MEDIUM, LOW)",
+          "additionalProperties": { "type": "string" }
+        }
+      }
     }
   },
   "additionalProperties": false,

@@ -59,6 +59,8 @@ func (a *App) Router() http.Handler {
 	mux.HandleFunc("/auth/github/callback", rateLimitHandler(sensitiveRL, a.handleGitHubCallback))
 	mux.HandleFunc("/docs", a.handleDocs)
 	mux.HandleFunc("/registry", a.handleRegistry)
+	mux.HandleFunc("/how-it-works", a.handleHowItWorks)
+	mux.HandleFunc("/examples", a.handleExamples)
 
 	// Authenticated routes
 	mux.HandleFunc("/dashboard", requireAuth(a.handleDashboard))
@@ -74,8 +76,9 @@ func (a *App) Router() http.Handler {
 func (a *App) templateData(r *http.Request) map[string]interface{} {
 	lang := detectLang(r)
 	return map[string]interface{}{
-		"Lang": lang,
-		"T":    getTranslations(lang),
+		"Lang":      lang,
+		"T":         getTranslations(lang),
+		"ActiveNav": "",
 	}
 }
 
@@ -91,8 +94,10 @@ func (a *App) handleIndex(w http.ResponseWriter, r *http.Request) {
 
 // allowedRedirects lists paths that /login?redirect= may target.
 var allowedRedirects = map[string]bool{
-	"/registry":  true,
-	"/dashboard": true,
+	"/registry":     true,
+	"/dashboard":    true,
+	"/how-it-works": true,
+	"/examples":     true,
 }
 
 func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -372,6 +377,7 @@ func (a *App) handleRegistry(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := a.templateData(r)
+	data["ActiveNav"] = "registry"
 	data["User"] = user
 	data["LoggedIn"] = loggedIn
 	data["Featured"] = featured
@@ -446,6 +452,20 @@ func (a *App) fetchRegistryPackages() ([]RegistryPackage, error) {
 		})
 	}
 	return result, nil
+}
+
+func (a *App) handleHowItWorks(w http.ResponseWriter, r *http.Request) {
+	data := a.templateData(r)
+	data["User"] = userFromCtx(r)
+	data["ActiveNav"] = "how-it-works"
+	a.render(w, "how-it-works.html", data)
+}
+
+func (a *App) handleExamples(w http.ResponseWriter, r *http.Request) {
+	data := a.templateData(r)
+	data["User"] = userFromCtx(r)
+	data["ActiveNav"] = "examples"
+	a.render(w, "examples.html", data)
 }
 
 func (a *App) handleDocs(w http.ResponseWriter, r *http.Request) {

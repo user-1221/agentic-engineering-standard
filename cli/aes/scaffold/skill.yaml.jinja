@@ -13,6 +13,33 @@ negative_triggers:
 {% if skill.activation != "explicit" %}
 activation: "{{ skill.activation }}"
 {% endif %}
+{% if skill.emoji %}
+emoji: "{{ skill.emoji }}"
+{% endif %}
+{% if skill.license_id and skill.license_id != "MIT" %}
+license: "{{ skill.license_id }}"
+{% endif %}
+{% if not skill.user_invocable %}
+user_invocable: false
+{% endif %}
+{% if skill.requires_bins or skill.requires_env %}
+requires:
+{% if skill.requires_bins %}
+  bins:
+{% for b in skill.requires_bins %}
+    - "{{ b }}"
+{% endfor %}
+{% endif %}
+{% if skill.requires_env %}
+  env:
+{% for e in skill.requires_env %}
+    - "{{ e }}"
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if skill.primary_env %}
+primary_env: "{{ skill.primary_env }}"
+{% endif %}
 
 stage: {{ skill.stage }}
 phase: "{{ skill.phase }}"

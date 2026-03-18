@@ -64,7 +64,15 @@ def run_sync(
     all_plans: List[SyncPlan] = []
     for name in selected:
         adapter = TARGETS[name]()
-        all_plans.append(adapter.plan(ctx, force))
+        try:
+            all_plans.append(adapter.plan(ctx, force))
+        except click.ClickException:
+            # Target-specific validation failure — skip when syncing
+            # multiple targets (e.g. openclaw requires identity/model
+            # which non-assistant projects won't have).
+            if len(selected) == 1:
+                raise
+            continue
 
     sync_manifest = _load_sync_manifest(project_root)
     written = 0
@@ -158,6 +166,14 @@ def _load_agent_context(project_root: Path) -> AgentContext:
                     "negative_triggers": skill_data.get("negative_triggers", []),
                     "activation": skill_data.get("activation", "explicit"),
                     "allowed_tools": skill_data.get("allowed_tools"),
+                    "version": skill_data.get("version", "0.1.0"),
+                    "emoji": skill_data.get("emoji", ""),
+                    "license": skill_data.get("license", "MIT"),
+                    "user_invocable": skill_data.get("user_invocable", True),
+                    "primary_env": skill_data.get("primary_env", ""),
+                    "requires_bins": (skill_data.get("requires") or {}).get("bins", []),
+                    "requires_env": (skill_data.get("requires") or {}).get("env", []),
+                    "mcp_server": skill_data.get("mcp_server"),
                 }
         if skill_id not in skill_metadata:
             skill_metadata[skill_id] = {
@@ -305,7 +321,19 @@ def sync_cmd(
     all_plans: List[SyncPlan] = []
     for target_name in selected:
         adapter = TARGETS[target_name]()
-        sync_plan = adapter.plan(ctx, force)
+        try:
+            sync_plan = adapter.plan(ctx, force)
+        except click.ClickException as exc:
+            # Target-specific validation failure (e.g. openclaw requires
+            # identity/model). When syncing a single explicit target, re-raise
+            # so the user sees the error. When syncing all targets, skip and
+            # warn — not every project is compatible with every target.
+            if len(selected) == 1:
+                raise
+            console.print(
+                f"  [yellow]⚠ {target_name}:[/] {exc.format_message()}"
+            )
+            continue
         all_plans.append(sync_plan)
 
     # Execute plans

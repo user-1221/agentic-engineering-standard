@@ -808,8 +808,8 @@ class TestInteractivePicker:
 
     def test_picker_agent_integrated_custom(self, tmp_path):
         """Pick Agent-Integrated -> Custom produces TODO scaffolding with /build + /run."""
-        # 2=Agent-Integrated, 3=Custom
-        result = self._run_interactive(tmp_path, "2\n3\n")
+        # 2=Agent-Integrated, 4=Custom (3=Assistant was inserted before Custom)
+        result = self._run_interactive(tmp_path, "2\n4\n")
         assert result.exit_code == 0
         content = (tmp_path / ".agent" / "instructions.md").read_text()
         assert "TODO" in content

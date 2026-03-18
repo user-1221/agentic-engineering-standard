@@ -152,6 +152,64 @@
     "tags": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "requires": {
+      "type": "object",
+      "description": "Runtime requirements for skill activation",
+      "properties": {
+        "bins": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Binaries that must be on PATH"
+        },
+        "env": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Environment variables that must be set"
+        },
+        "config": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Config paths that must be truthy"
+        },
+        "os": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Supported operating systems (platform filter)"
+        }
+      }
+    },
+    "primary_env": {
+      "type": "string",
+      "description": "Primary environment variable for skill configuration"
+    },
+    "emoji": {
+      "type": "string",
+      "description": "Emoji identifier for the skill"
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX license identifier"
+    },
+    "user_invocable": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the skill can be invoked directly by users"
+    },
+    "mcp_server": {
+      "type": "object",
+      "description": "MCP server bundled with this skill",
+      "properties": {
+        "command": { "type": "string" },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
     }
   },
   "additionalProperties": false,

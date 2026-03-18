@@ -48,3 +48,5 @@ web/deploy/
 # Compiled Go binaries
 server/aes-registry
 web/aes-web
+
+/AES_OpenClaw_integration: complete_technical_reference.md

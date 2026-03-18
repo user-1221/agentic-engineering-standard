@@ -336,3 +336,289 @@ def _normalize_patterns(value: object) -> List[str]:
     if isinstance(value, list):
         return value
     return []
+
+
+# ---------------------------------------------------------------------------
+# OpenClaw-specific composition helpers
+# ---------------------------------------------------------------------------
+
+
+def merge_skill_to_skillmd(
+    skill_id: str,
+    metadata: Dict[str, Any],
+    runbook: str,
+) -> str:
+    """Merge AES skill metadata + runbook into a single SKILL.md.
+
+    Output format follows the Agent Skills standard:
+    YAML frontmatter (between --- delimiters) + Markdown body.
+    AES-specific fields (requires, emoji, primary_env) are nested
+    under ``metadata.openclaw`` as inline JSON.
+    """
+    import json as _json
+
+    name = metadata.get("name", skill_id)
+    description = metadata.get("description", "")
+    version = metadata.get("version", "0.1.0")
+    license_id = metadata.get("license", "MIT")
+    user_invocable = metadata.get("user_invocable", True)
+
+    # Build openclaw metadata JSON (requires, primaryEnv, emoji)
+    oc_meta: Dict[str, Any] = {}
+    requires: Dict[str, List[str]] = {}
+    if metadata.get("requires_bins"):
+        requires["bins"] = metadata["requires_bins"]
+    if metadata.get("requires_env"):
+        requires["env"] = metadata["requires_env"]
+    if requires:
+        oc_meta["requires"] = requires
+    if metadata.get("primary_env"):
+        oc_meta["primaryEnv"] = metadata["primary_env"]
+    if metadata.get("emoji"):
+        oc_meta["emoji"] = metadata["emoji"]
+
+    # Assemble YAML frontmatter
+    lines: List[str] = ["---"]
+    lines.append(f"name: {name}")
+    lines.append(f"description: {description}")
+    lines.append(f"version: {version}")
+    lines.append(f"license: {license_id}")
+    lines.append(f"user-invocable: {'true' if user_invocable else 'false'}")
+    if oc_meta:
+        lines.append("metadata:")
+        lines.append(f"  {_json.dumps({'openclaw': oc_meta})}")
+    lines.append("---")
+    lines.append("")
+
+    # Append runbook body
+    body = runbook.strip() if runbook else ""
+    if body:
+        lines.append(body)
+
+    return "\n".join(lines) + "\n"
+
+
+def translate_permissions_to_openshell(permissions: dict) -> dict:
+    """Translate AES permissions.yaml into OpenShell's four-domain policy format.
+
+    Returns a dict suitable for YAML serialization as ``policy.yaml``.
+    Static domains: filesystem_policy, process_policy (locked at creation).
+    Dynamic domains: network_policies, inference_policy (hot-reloadable).
+    """
+    policy: Dict[str, Any] = {}
+
+    # --- filesystem_policy (static) ---
+    fs = permissions.get("filesystem", {})
+    if fs:
+        policy["filesystem_policy"] = {
+            "enforcement": fs.get("enforcement", "best_effort"),
+            "read_only": fs.get("read_only", ["/usr", "/lib", "/etc"]),
+            "read_write": fs.get("read_write", ["/sandbox", "/tmp"]),
+        }
+    else:
+        # Derive from allow/deny files if filesystem section absent
+        allow_files = permissions.get("allow", {}).get("files", {})
+        deny_files = permissions.get("deny", {}).get("files", {})
+        read_paths = _normalize_patterns(allow_files.get("read"))
+        write_paths = _normalize_patterns(allow_files.get("write"))
+        if read_paths or write_paths:
+            policy["filesystem_policy"] = {
+                "enforcement": "best_effort",
+                "read_only": read_paths,
+                "read_write": write_paths,
+            }
+
+    # --- process_policy (static) ---
+    proc = permissions.get("process", {})
+    policy["process_policy"] = {
+        "seccomp": "RuntimeDefault",
+        "allow_privilege_escalation": False,
+        "run_as_non_root": True,
+        "capabilities": {
+            "add": [],
+            "drop": ["ALL"],
+        },
+    }
+    if proc:
+        if "allow" in proc:
+            policy["process_policy"]["allow"] = proc["allow"]
+        if "deny" in proc:
+            policy["process_policy"]["deny"] = proc["deny"]
+
+    # --- network_policies (dynamic) ---
+    net = permissions.get("network", {})
+    net_policies: Dict[str, Any] = {}
+
+    # From structured network.policies (OpenShell-native format)
+    for p in permissions.get("network_policies", []):
+        name = p.get("name", "unnamed")
+        entry: Dict[str, Any] = {}
+        if p.get("endpoints"):
+            entry["endpoints"] = p["endpoints"]
+        if p.get("binaries"):
+            entry["binaries"] = p["binaries"]
+        net_policies[name] = entry
+
+    # From simpler network.allow URLs
+    allow_urls = _normalize_patterns(net.get("allow"))
+    if allow_urls and not net_policies:
+        for i, url in enumerate(allow_urls):
+            net_policies[f"allowed_{i}"] = {
+                "endpoints": [{"host": url, "port": 443}],
+            }
+
+    if net_policies:
+        policy["network_policies"] = net_policies
+
+    # --- inference_policy (dynamic) ---
+    inf = permissions.get("inference", {})
+    if inf:
+        inf_policy: Dict[str, Any] = {}
+        if inf.get("routing"):
+            inf_policy["routing"] = inf["routing"]
+        if inf.get("max_tokens_per_request"):
+            inf_policy["max_tokens_per_request"] = inf["max_tokens_per_request"]
+        if inf.get("max_requests_per_minute"):
+            inf_policy["max_requests_per_minute"] = inf["max_requests_per_minute"]
+        if inf_policy:
+            policy["inference_policy"] = inf_policy
+
+    return policy
+
+
+def translate_permissions_to_openclaw_tools(permissions: dict) -> dict:
+    """Extract tool approval config from permissions for openclaw.json.
+
+    Returns the ``tools.exec`` section of openclaw.json.
+    """
+    tools_section = permissions.get("tools", {})
+    if not tools_section:
+        return {}
+
+    result: Dict[str, Any] = {}
+    mode = tools_section.get("approval_mode", "ask")
+    result["ask"] = mode
+
+    assurance = tools_section.get("assurance_levels", {})
+    if assurance and mode == "a2h":
+        result["a2h"] = {"assurance": assurance}
+
+    return result
+
+
+def compose_openclaw_json(
+    manifest: dict,
+    permissions: Optional[dict],
+    skill_metadata: Dict[str, Dict[str, Any]],
+) -> dict:
+    """Assemble a complete openclaw.json dict from AES manifest sections.
+
+    Environment variable references use ``${VAR_NAME}`` syntax —
+    raw secrets are never embedded.
+    """
+    config: Dict[str, Any] = {}
+
+    # --- LLM ---
+    model = manifest.get("model", {})
+    if model:
+        llm: Dict[str, Any] = {}
+        if model.get("provider"):
+            llm["provider"] = model["provider"]
+        if model.get("model"):
+            llm["model"] = model["model"]
+        if model.get("api_key_env"):
+            llm["apiKey"] = f"${{{model['api_key_env']}}}"
+        if model.get("base_url"):
+            llm["baseUrl"] = model["base_url"]
+        if llm:
+            config["llm"] = llm
+
+    # --- Agents ---
+    agents_list = manifest.get("agents", [])
+    sandbox_cfg = manifest.get("sandbox", {})
+    agents_section: Dict[str, Any] = {
+        "defaults": {
+            "sandbox": {
+                "enabled": sandbox_cfg.get("enabled", False),
+                "workspaceRoot": sandbox_cfg.get("workspace_root", "/sandbox"),
+            },
+        },
+        "agents": {},
+    }
+    if agents_list:
+        for agent in agents_list:
+            agent_entry: Dict[str, Any] = {}
+            if agent.get("workspace"):
+                agent_entry["workspace"] = agent["workspace"]
+            if agent.get("model_override"):
+                agent_entry["llm"] = agent["model_override"]
+            if agent.get("mcp_servers"):
+                agent_entry["mcpServers"] = agent["mcp_servers"]
+            agents_section["agents"][agent["id"]] = agent_entry
+    else:
+        # Default single agent
+        agents_section["agents"]["main"] = {"workspace": "workspace"}
+
+    config["agents"] = agents_section
+
+    # --- Integrations (channels) ---
+    channels = manifest.get("channels", {})
+    if channels:
+        integrations: Dict[str, Any] = {}
+        for platform, cfg in channels.items():
+            entry: Dict[str, Any] = {}
+            if isinstance(cfg, dict):
+                entry["enabled"] = cfg.get("enabled", True)
+                if cfg.get("bot_token_env"):
+                    entry["botToken"] = f"${{{cfg['bot_token_env']}}}"
+            integrations[platform] = entry
+        config["integrations"] = integrations
+
+    # --- MCP servers ---
+    mcp_servers = dict(manifest.get("mcp_servers", {}))
+
+    # Also collect MCP servers declared inside skills
+    for _skill_id, meta in skill_metadata.items():
+        mcp = meta.get("mcp_server")
+        if mcp and isinstance(mcp, dict):
+            server_name = _skill_id.replace("_", "-")
+            mcp_servers.setdefault(server_name, mcp)
+
+    if mcp_servers:
+        servers: Dict[str, Any] = {}
+        for name, srv in mcp_servers.items():
+            if isinstance(srv, dict):
+                entry = {}
+                if srv.get("command"):
+                    entry["command"] = srv["command"]
+                if srv.get("args"):
+                    entry["args"] = srv["args"]
+                if srv.get("env"):
+                    # Convert _ENV references to ${} syntax
+                    env: Dict[str, str] = {}
+                    for k, v in srv["env"].items():
+                        if isinstance(v, str) and v.startswith("${"):
+                            env[k] = v
+                        elif isinstance(v, str) and k.endswith("_ENV"):
+                            env[k.removesuffix("_ENV")] = f"${{{v}}}"
+                        else:
+                            env[k] = v
+                    entry["env"] = env
+                if srv.get("disabled"):
+                    entry["disabled"] = True
+                servers[name] = entry
+        config["mcp"] = {"servers": servers}
+
+    # --- Skills config ---
+    if skill_metadata:
+        config["skills"] = {
+            "load": {"watch": True, "watchDebounceMs": 250},
+        }
+
+    # --- Tools (from permissions) ---
+    if permissions:
+        tools = translate_permissions_to_openclaw_tools(permissions)
+        if tools:
+            config["tools"] = {"exec": tools}
+
+    return config

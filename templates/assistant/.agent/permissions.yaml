@@ -1,0 +1,24 @@
+# .agent/permissions.yaml
+aes_permissions: "1.3"
+
+allow:
+  shell:
+    read:
+      - "git status*"
+      - "git log*"
+  files:
+    read: "*"
+
+deny:
+  shell:
+    - "rm -rf*"
+    - "sudo*"
+
+confirm:
+  shell:
+    - "git push*"
+
+tools:
+  approval_mode: "ask"
+  assurance_levels:
+    default: "MEDIUM"

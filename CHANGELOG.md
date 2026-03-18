@@ -8,6 +8,27 @@ This project maintains two version tracks:
 
 ## [Unreleased]
 
+## [spec-v1.3] / [cli-v0.7.0] — 2026-03-19
+
+### Added
+- **OpenClaw sync target** — `aes sync --target openclaw` generates a complete `.openclaw/` directory (openclaw.json, workspace Markdown files, SKILL.md, OpenShell policy.yaml) for the OpenClaw 24/7 agent framework (24+ messaging platforms)
+- **Assistant domain** — new "Assistant" project type under agent-integrated mode for personal AI assistants; `aes init` interactive picker gains this option
+- **Schema extensions** — `agent.yaml` gains 7 new optional top-level sections: `identity` (persona, name, emoji), `model` (provider, fallback chain), `agents` (multi-agent declarations), `sandbox` (container config), `heartbeat` (autonomous scheduler), `channels` (messaging platforms), `mcp_servers` (top-level MCP server declarations)
+- **Permissions extensions** — `permissions.yaml` gains `filesystem` (read_only/read_write paths, enforcement mode) and `tools` (approval_mode, assurance_levels) sections for OpenShell policy mapping
+- **Skill extensions** — `skill.yaml` gains `requires` (bins, env, config, os), `primary_env`, `emoji`, `license`, `user_invocable`, and `mcp_server` fields for the Agent Skills standard
+- **Sync-time enforcement** — OpenClaw target errors with clear messages when critical sections (identity, model) are missing, warns on missing channels; other targets gracefully skip incompatible projects
+- New reference example: `examples/personal-assistant/`
+- New template: `templates/assistant/`
+- New test file: `tests/test_openclaw_target.py` (12 tests)
+- **Website restructure** — dedicated `/how-it-works` and `/examples` pages; updated nav with tab-style navigation and active state; "Sync Everywhere" section showcasing all 5 targets with real logos; tool logo PNGs (Claude, Copilot, OpenClaw) and Windsurf SVG; stats updated to 5 tools / 5 templates / 24/7 agents; ~65 new i18n keys (EN + JA)
+
+### Changed
+- `_load_agent_context()` now extracts extended skill metadata (version, emoji, requires, primary_env, license, user_invocable, mcp_server) from skill manifests
+- `aes sync` (all-targets mode) gracefully skips targets that raise validation errors instead of crashing
+- `aes status` gracefully skips incompatible targets
+- Bump spec version to 1.3, CLI version to 0.7.0
+- Website version badge updated from v1.2 to v1.3; CSS cache bumped to v=16
+
 ## [spec-v1.2] / [cli-v0.6.0] — 2026-03-18
 
 ### Added

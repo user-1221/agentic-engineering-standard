@@ -178,6 +178,7 @@ MESSAGES: dict = {
     "init.type_skip": "スキップ",
     "init.type_ml": "ML パイプライン",
     "init.type_research": "研究 / コンテンツパイプライン",
+    "init.type_assistant": "アシスタント（24時間メッセージングAI）",
     "init.type_custom": "カスタム",
     "init.overwrite_warning": "{path} に {agent_dir}/ が既に存在します",
     "init.overwrite_confirm": "既存のファイルを上書きしますか？",

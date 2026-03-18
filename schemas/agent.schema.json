@@ -153,6 +153,67 @@
           "items": { "$ref": "#/$defs/mcp_server_ref" }
         }
       }
+    },
+    "identity": {
+      "type": "object",
+      "description": "Agent identity and persona for persistent/daemon agents",
+      "properties": {
+        "persona": { "type": "string", "description": "Agent persona, behavioral rules, tone" },
+        "name": { "type": "string", "description": "Agent display name" },
+        "emoji": { "type": "string", "description": "Agent emoji identifier" },
+        "user_profile": { "type": "string", "description": "User profile and preferred form of address" }
+      }
+    },
+    "model": {
+      "type": "object",
+      "description": "Primary LLM provider configuration",
+      "properties": {
+        "provider": { "type": "string", "description": "Provider ID (anthropic, openai, google, ollama, etc.)" },
+        "model": { "type": "string", "description": "Model identifier" },
+        "api_key_env": { "type": "string", "description": "Environment variable name for API key (never a raw key)" },
+        "base_url": { "type": ["string", "null"], "description": "Custom endpoint URL" },
+        "fallback": {
+          "type": "array",
+          "description": "Failover model chain",
+          "items": { "$ref": "#/$defs/model_fallback" }
+        }
+      }
+    },
+    "agents": {
+      "type": "array",
+      "description": "Multi-agent declarations",
+      "items": { "$ref": "#/$defs/agent_decl" }
+    },
+    "sandbox": {
+      "type": "object",
+      "description": "Sandbox/container configuration for agent execution",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "runtime": {
+          "type": "string",
+          "enum": ["docker", "openshell"],
+          "description": "Sandbox runtime (docker built-in or openshell for NemoClaw)"
+        },
+        "workspace_root": { "type": "string", "description": "Workspace root inside container" }
+      }
+    },
+    "heartbeat": {
+      "type": "object",
+      "description": "Autonomous heartbeat scheduler configuration",
+      "properties": {
+        "interval_minutes": { "type": "integer", "minimum": 1, "description": "Minutes between heartbeat runs" },
+        "checklist": { "type": "string", "description": "Markdown checklist of tasks to perform each heartbeat" }
+      }
+    },
+    "channels": {
+      "type": "object",
+      "description": "Messaging platform integrations",
+      "additionalProperties": { "$ref": "#/$defs/channel_config" }
+    },
+    "mcp_servers": {
+      "type": "object",
+      "description": "Top-level MCP server declarations (keyed by server name)",
+      "additionalProperties": { "$ref": "#/$defs/mcp_server_decl" }
     }
   },
   "additionalProperties": false,
@@ -238,6 +299,56 @@
           "items": { "type": "string" }
         },
         "url": { "type": "string", "format": "uri" }
+      }
+    },
+    "model_fallback": {
+      "type": "object",
+      "required": ["provider", "model"],
+      "properties": {
+        "provider": { "type": "string" },
+        "model": { "type": "string" }
+      }
+    },
+    "agent_decl": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+        "workspace": { "type": "string" },
+        "model_override": {
+          "type": "object",
+          "properties": {
+            "provider": { "type": "string" },
+            "model": { "type": "string" }
+          }
+        },
+        "mcp_servers": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "channel_config": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "bot_token_env": { "type": "string", "description": "Environment variable name for the bot token" }
+      },
+      "additionalProperties": true
+    },
+    "mcp_server_decl": {
+      "type": "object",
+      "properties": {
+        "command": { "type": "string" },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "disabled": { "type": "boolean" }
       }
     }
   }
