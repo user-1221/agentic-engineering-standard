@@ -14,6 +14,7 @@ my-project/
     agent.yaml                # Project identity — name, skills, dependencies
     instructions.md           # Master instructions for the agent
     permissions.yaml          # What the agent is allowed to do
+    bom.yaml                  # Agent Bill of Materials (AI-BOM)
     skills/                   # Step-by-step runbooks for specific tasks
       ORCHESTRATOR.md         # How skills connect together
       deploy.skill.yaml       # Skill metadata (for tooling)
@@ -25,6 +26,7 @@ my-project/
     memory/                   # What the agent remembers across sessions
       project.md              # General project knowledge
       operations.md           # Pipeline progress tracker (domain-specific)
+      decisions/              # Structured decision records (audit trail)
   .agentignore                # Files the agent should never touch
   CLAUDE.md                   # Auto-generated from .agent/ (for Claude)
   .claude/commands/skills/    # Skills as slash commands (for Claude)
@@ -260,8 +262,31 @@ This checks:
 - All referenced files exist (skill manifests, runbooks, workflows)
 - Skill dependencies are valid (no circular deps, no dangling references)
 - Permissions are well-formed
+- `bom.yaml` matches the AI-BOM schema (if present)
+- Decision records match the schema (if present)
 
 Fix any errors before continuing.
+
+### Upgrade between spec versions
+
+If your project was created with an older AES version, upgrade to the latest spec:
+
+```bash
+aes upgrade              # dry-run — shows what would change
+aes upgrade --apply      # apply changes and auto-sync
+```
+
+This adds missing files (like `bom.yaml`, `decisions/`) and manifest entries introduced in newer versions without touching your existing customizations.
+
+### View the AI Bill of Materials
+
+If your project declares models, frameworks, tools, or data sources in `bom.yaml`:
+
+```bash
+aes bom
+```
+
+This displays a summary of all AI components used by the agent.
 
 ---
 
@@ -496,6 +521,8 @@ aes status                     (check if you need to sync)
 | `aes init --from aes-hub/name@^1.0` | Initialize project from a shared template |
 | `aes publish --skill X --registry` | Publish a skill to the registry |
 | `aes publish --template --registry` | Publish entire `.agent/` as a template |
+| `aes bom` | Display the Agent Bill of Materials (models, frameworks, tools, data) |
+| `aes upgrade` | Upgrade `.agent/` to current spec version (dry-run; `--apply` to execute) |
 
 ---
 

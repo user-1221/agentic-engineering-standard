@@ -56,7 +56,7 @@ var translationsEN = Translations{
 	"nav_logout":    "Logout",
 
 	// -- Hero --
-	"hero_badge":   "Open Standard &middot; v1.0",
+	"hero_badge":   "Open Standard &middot; v1.2",
 	"hero_title":   `The open standard for<br><span class="hero-gradient">agent engineering</span>.`,
 	"hero_tagline": "Give your AI agents persistent memory, deep project knowledge, and real skills &mdash; structured once, useful forever, portable across every tool.",
 
@@ -248,7 +248,7 @@ var translationsJA = Translations{
 	"nav_logout":    "ログアウト",
 
 	// -- Hero --
-	"hero_badge":   "オープンスタンダード &middot; v1.0",
+	"hero_badge":   "オープンスタンダード &middot; v1.2",
 	"hero_title":   `<span class="hero-gradient">エージェントエンジニアリング</span>の<br>オープンスタンダード。`,
 	"hero_tagline": "AIエージェントに永続メモリ、深いプロジェクト知識、実用的なスキルを &mdash; 一度構造化すれば、すべてのツールで永続的に活用。",
 
@@ -258,7 +258,7 @@ var translationsJA = Translations{
 	"cta_try":         "60秒で試す",
 
 	// -- Hero tree labels --
-	"tree_identity":     "アイデンティティ",
+	"tree_identity":     "定義",
 	"tree_capabilities": "機能",
 	"tree_persistence":  "永続化",
 
@@ -266,12 +266,12 @@ var translationsJA = Translations{
 	"why_problem_label": "課題",
 	"why_problem_title": "毎回ゼロからのスタート",
 	"why_problem_desc":  "エージェントはアーキテクチャも規約もデプロイ方法も知りません。毎回説明し直す必要があります。",
-	"why_solution_label": "ソリューション",
+	"why_solution_label": "標準規格",
 	"why_solution_title": "毎回のセッションが前回の続きから",
 	"why_solution_desc":  "AESはエージェントに構造化されたメモリ、実用的なスキル、深いプロジェクトコンテキストを与えます。gitで管理、あらゆるツールで利用可能。",
 
 	// -- Anatomy section --
-	"anatomy_label": "構成要素",
+	"anatomy_label": "全体構造",
 	"anatomy_title": `プロジェクトの<code>.agent/</code>ブレイン`,
 	"anatomy_desc":  "アイデンティティ、スキル、メモリ、権限 &mdash; 1つのディレクトリで、gitに保存。",
 
@@ -331,7 +331,7 @@ var translationsJA = Translations{
 	"eco_deploy":   "CI/CD &amp; インフラ",
 	"eco_review":   "品質 &amp; ベストプラクティス",
 	"eco_security": "脆弱性スキャン",
-	"eco_db":       "スキーマ移行",
+	"eco_db":       "スキーママイグレーション",
 	"eco_ml":       "学習 &amp; 評価",
 	"eco_docs":     "APIドキュメント",
 	"eco_cta":      "レジストリを見る &rarr;",

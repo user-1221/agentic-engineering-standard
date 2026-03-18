@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=3">
+    <link rel="stylesheet" href="/static/style.css?v=15">
     <style>
         .token-loading {
             text-align: center;
@@ -46,6 +46,10 @@
     <header>
         <nav>
             <a href="/" class="logo">AES</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle-input" aria-hidden="true">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </label>
             <div class="nav-links">
                 <a href="/docs">{{index .T "nav_docs"}}</a>
                 <a href="/dashboard">{{index .T "nav_dashboard"}}</a>

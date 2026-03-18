@@ -19,6 +19,7 @@ my-project/
   .agent/
     agent.yaml              # Manifest — the "package.json" of agentic engineering
     instructions.md         # Master agent playbook
+    bom.yaml                # Agent Bill of Materials (AI-BOM)
     skills/                 # Modular, shareable runbooks
       ORCHESTRATOR.md
       train.skill.yaml      # Structured manifest
@@ -28,6 +29,8 @@ my-project/
     commands/               # Slash commands (/setup, /train, /build, /process)
     permissions.yaml        # Agent capability boundaries
     memory/                 # Persistent agent learning
+      decisions/            # Structured decision records
+    overrides/              # Tool-specific config (claude/, cursor/, etc.)
   .agentignore              # Files agents should never touch
 ```
 
@@ -90,6 +93,8 @@ The full spec is in [`spec/`](spec/):
 | 08 | [Commands](spec/08-commands.md) | Multi-phase workflow automation |
 | 09 | [Sharing](spec/09-sharing.md) | Publishing, versioning, dependencies |
 | 10 | [Agentignore](spec/10-agentignore.md) | `.agentignore` format |
+| 11 | [BOM](spec/11-bom.md) | Agent Bill of Materials (AI-BOM) |
+| 12 | [Decision Records](spec/12-decision-records.md) | Structured agent decision audit trail |
 
 ## CLI Tool
 
@@ -106,6 +111,8 @@ The `aes` CLI (`cli/`) provides:
 | `aes publish --template` | Package entire `.agent/` directory as a shareable template |
 | `aes install [source]` | Install skills from tarballs, local dirs, or the AES registry |
 | `aes search [query]` | Search the AES package registry (supports `--sort-by`, `--limit`, `-v`) |
+| `aes bom [path]` | Display the Agent Bill of Materials (models, frameworks, tools, data sources) |
+| `aes upgrade [path]` | Upgrade `.agent/` to the current spec version (dry-run by default, `--apply` to execute) |
 
 ## MCP Server
 
@@ -210,6 +217,8 @@ Validation schemas in [`schemas/`](schemas/) enable IDE autocompletion and CI va
 - `workflow.schema.json` — validates workflow definitions
 - `registry.schema.json` — validates component registries
 - `permissions.schema.json` — validates `permissions.yaml`
+- `bom.schema.json` — validates `bom.yaml` (AI-BOM)
+- `decision-record.schema.json` — validates decision records
 
 ## License
 
