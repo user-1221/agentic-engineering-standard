@@ -24,15 +24,15 @@ test:
 clean:
 	rm -f $(BINARY) $(BINARY)-darwin
 
-# Deploy static files only (templates, CSS) — no binary rebuild
+# Deploy static files only (templates, CSS, images, SVGs) — no binary rebuild
 deploy-static:
 	$(SCP_CMD) templates/*.html $(SSH_HOST):/tmp/
-	$(SCP_CMD) static/style.css $(SSH_HOST):/tmp/style.css
-	$(SSH_CMD) 'sudo cp /tmp/*.html /var/lib/aes-web/templates/ && sudo cp /tmp/style.css /var/lib/aes-web/static/ && sudo systemctl restart aes-web'
+	$(SCP_CMD) static/style.css static/*.png static/*.svg $(SSH_HOST):/tmp/
+	$(SSH_CMD) 'sudo cp /tmp/*.html /var/lib/aes-web/templates/ && sudo cp /tmp/style.css /tmp/*.png /tmp/*.svg /var/lib/aes-web/static/ && sudo systemctl restart aes-web'
 
 # Full deploy — rebuild binary + static files
 deploy: build-linux
 	$(SCP_CMD) $(BINARY) $(SSH_HOST):/tmp/
 	$(SCP_CMD) templates/*.html $(SSH_HOST):/tmp/
-	$(SCP_CMD) static/style.css $(SSH_HOST):/tmp/style.css
-	$(SSH_CMD) 'sudo systemctl stop aes-web && sudo cp /tmp/aes-web /usr/local/bin/ && sudo cp /tmp/*.html /var/lib/aes-web/templates/ && sudo cp /tmp/style.css /var/lib/aes-web/static/ && sudo systemctl start aes-web'
+	$(SCP_CMD) static/style.css static/*.png static/*.svg $(SSH_HOST):/tmp/
+	$(SSH_CMD) 'sudo systemctl stop aes-web && sudo cp /tmp/aes-web /usr/local/bin/ && sudo cp /tmp/*.html /var/lib/aes-web/templates/ && sudo cp /tmp/style.css /tmp/*.png /tmp/*.svg /var/lib/aes-web/static/ && sudo systemctl start aes-web'

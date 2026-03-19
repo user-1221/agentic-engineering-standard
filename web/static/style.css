@@ -2033,6 +2033,7 @@ a:focus-visible {
 .sync-tool:nth-child(3):hover .sync-tool-icon { box-shadow: 0 0 20px rgba(110, 64, 201, 0.5); }
 .sync-tool:nth-child(4):hover .sync-tool-icon { box-shadow: 0 0 20px rgba(14, 165, 233, 0.5); }
 .sync-tool:nth-child(5):hover .sync-tool-icon { box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+.sync-tool:nth-child(6):hover .sync-tool-icon { box-shadow: 0 0 20px rgba(16, 163, 127, 0.5); }
 .sync-tool-logo {
     width: 36px;
     height: 36px;
@@ -2155,7 +2156,7 @@ a:focus-visible {
 }
 .hiw-targets-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: var(--space-3);
 }
 .hiw-target-card {

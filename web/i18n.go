@@ -44,7 +44,7 @@ var translationsEN = Translations{
 	"site_title":   "AES &mdash; Agentic Engineering Standard",
 	"meta_desc":    "AES is the open standard for giving AI agents persistent memory, skills, and project context. Structured once, useful forever — across every AI tool.",
 	"og_title":     "AES &mdash; The Open Standard for Agent Engineering",
-	"og_desc":      "Give AI agents persistent memory, skills, and deep project context. Works across Claude, Cursor, Copilot, Windsurf, and OpenClaw.",
+	"og_desc":      "Give AI agents persistent memory, skills, and deep project context. Works across Claude, Cursor, Copilot, Windsurf, Codex, and OpenClaw.",
 	"twitter_desc": "Give AI agents persistent memory, skills, and deep project context.",
 
 	// -- Nav --
@@ -59,7 +59,7 @@ var translationsEN = Translations{
 	"nav_registry":  "Registry",
 
 	// -- Hero --
-	"hero_badge":   "Open Standard &middot; v1.3",
+	"hero_badge":   "Open Standard &middot; v1.4",
 	"hero_title":   `The open standard for<br><span class="hero-gradient">agent engineering</span>.`,
 	"hero_tagline": "Give your AI agents persistent memory, deep project knowledge, and real skills &mdash; structured once, useful forever, portable across every tool.",
 
@@ -121,7 +121,7 @@ var translationsEN = Translations{
 	"feat_dev_1":       "Templates give your agent domain expertise out of the box &mdash; ML, web, DevOps, research",
 	"feat_dev_2":       "Install proven skills from the registry. One command, zero learning curve",
 	"feat_dev_3":       "Memory persists across sessions. Every conversation makes your agent smarter",
-	"feat_dev_4":       "Works across Claude, Cursor, Copilot, Windsurf, OpenClaw &mdash; switch without starting over",
+	"feat_dev_4":       "Works across Claude, Cursor, Copilot, Windsurf, Codex, OpenClaw &mdash; switch without starting over",
 	"feat_team_title":   "For teams",
 	"feat_team_benefit": "Every AI works from the same architecture",
 	"feat_team_1":       "Every agent works from the same architecture, conventions, and design principles",
@@ -172,7 +172,7 @@ var translationsEN = Translations{
 
 	// -- Sync Everywhere (home) --
 	"sync_label": "Sync everywhere",
-	"sync_title": "One standard. Five tools.",
+	"sync_title": "One standard. Six tools.",
 	"sync_desc":  "Write once in <code>.agent/</code> &mdash; sync to any tool with a single command.",
 
 	// -- How It Works page --
@@ -188,7 +188,7 @@ var translationsEN = Translations{
 	"hiw_step2_desc":      "Configure your agent&rsquo;s identity in <code>agent.yaml</code>, define skills with runbooks, and set fine-grained permissions.",
 	"hiw_step3_label":     "Step 3",
 	"hiw_step3_title":     "Sync",
-	"hiw_step3_desc":      "<code>aes sync</code> translates your <code>.agent/</code> directory into the native format of each AI tool. One source, five outputs.",
+	"hiw_step3_desc":      "<code>aes sync</code> translates your <code>.agent/</code> directory into the native format of each AI tool. One source, six outputs.",
 	"hiw_step4_label":     "Step 4",
 	"hiw_step4_title":     "Share",
 	"hiw_step4_desc":      "Publish skills and templates to the registry. Install proven patterns from the community. Reuse across every project.",
@@ -198,6 +198,7 @@ var translationsEN = Translations{
 	"hiw_target_copilot":  "<code>.github/copilot-instructions.md</code>",
 	"hiw_target_windsurf": "<code>.windsurfrules</code>",
 	"hiw_target_openclaw": "<code>.openclaw/openclaw.json</code> + workspace Markdown + <code>SKILL.md</code> files",
+	"hiw_target_codex":    "<code>AGENTS.md</code> + <code>.agents/skills/&lt;id&gt;/SKILL.md</code>",
 	"hiw_cta":             "Ready to start?",
 
 	// -- Examples page --
@@ -300,7 +301,7 @@ var translationsJA = Translations{
 	"site_title":   "AES &mdash; エージェンティック・エンジニアリング・スタンダード",
 	"meta_desc":    "AESは、AIエージェントに永続的なメモリ、スキル、プロジェクトコンテキストを与えるオープンスタンダードです。一度構造化すれば、あらゆるAIツールでずっと活用できます。",
 	"og_title":     "AES &mdash; エージェントエンジニアリングのオープンスタンダード",
-	"og_desc":      "AIエージェントに永続的なメモリ、スキル、深いプロジェクトコンテキストを。Claude、Cursor、Copilot、Windsurf、OpenClawに対応。",
+	"og_desc":      "AIエージェントに永続的なメモリ、スキル、深いプロジェクトコンテキストを。Claude、Cursor、Copilot、Windsurf、Codex、OpenClawに対応。",
 	"twitter_desc": "AIエージェントに永続的なメモリ、スキル、深いプロジェクトコンテキストを。",
 
 	// -- Nav --
@@ -315,7 +316,7 @@ var translationsJA = Translations{
 	"nav_registry":  "レジストリ",
 
 	// -- Hero --
-	"hero_badge":   "オープンスタンダード &middot; v1.3",
+	"hero_badge":   "オープンスタンダード &middot; v1.4",
 	"hero_title":   `<span class="hero-gradient">エージェントエンジニアリング</span>の<br>オープンスタンダード。`,
 	"hero_tagline": "AIエージェントに永続メモリ、深いプロジェクト知識、実用的なスキルを &mdash; 一度構造化すれば、すべてのツールで永続的に活用。",
 
@@ -377,7 +378,7 @@ var translationsJA = Translations{
 	"feat_dev_1":       "テンプレートでML、Web、DevOps、リサーチなどの専門知識を即座に付与",
 	"feat_dev_2":       "レジストリから実証済みスキルをインストール。コマンド1つ、学習コストゼロ",
 	"feat_dev_3":       "メモリがセッション間で永続化。会話を重ねるほどエージェントが賢く",
-	"feat_dev_4":       "Claude、Cursor、Copilot、Windsurf、OpenClawに対応 &mdash; ツールを変えてもやり直し不要",
+	"feat_dev_4":       "Claude、Cursor、Copilot、Windsurf、Codex、OpenClawに対応 &mdash; ツールを変えてもやり直し不要",
 	"feat_team_title":   "チーム向け",
 	"feat_team_benefit": "すべてのAIが同じアーキテクチャで動作",
 	"feat_team_1":       "すべてのエージェントが同じアーキテクチャ、規約、設計原則で動作",
@@ -428,7 +429,7 @@ var translationsJA = Translations{
 
 	// -- Sync Everywhere (home) --
 	"sync_label": "どこでも同期",
-	"sync_title": "1つの標準。5つのツール。",
+	"sync_title": "1つの標準。6つのツール。",
 	"sync_desc":  "<code>.agent/</code>で一度書けば &mdash; コマンド1つであらゆるツールに同期。",
 
 	// -- How It Works page --
@@ -444,7 +445,7 @@ var translationsJA = Translations{
 	"hiw_step2_desc":      "<code>agent.yaml</code>でエージェントのアイデンティティを設定、ランブック付きスキルを定義、きめ細かい権限を設定。",
 	"hiw_step3_label":     "ステップ3",
 	"hiw_step3_title":     "同期",
-	"hiw_step3_desc":      "<code>aes sync</code>で<code>.agent/</code>ディレクトリを各AIツールのネイティブ形式に変換。1つのソース、5つの出力。",
+	"hiw_step3_desc":      "<code>aes sync</code>で<code>.agent/</code>ディレクトリを各AIツールのネイティブ形式に変換。1つのソース、6つの出力。",
 	"hiw_step4_label":     "ステップ4",
 	"hiw_step4_title":     "共有",
 	"hiw_step4_desc":      "スキルとテンプレートをレジストリに公開。コミュニティの実証済みパターンをインストール。すべてのプロジェクトで再利用。",
@@ -454,6 +455,7 @@ var translationsJA = Translations{
 	"hiw_target_copilot":  "<code>.github/copilot-instructions.md</code>",
 	"hiw_target_windsurf": "<code>.windsurfrules</code>",
 	"hiw_target_openclaw": "<code>.openclaw/openclaw.json</code> + ワークスペースMarkdown + <code>SKILL.md</code>ファイル",
+	"hiw_target_codex":    "<code>AGENTS.md</code> + <code>.agents/skills/&lt;id&gt;/SKILL.md</code>",
 	"hiw_cta":             "始める準備はできましたか？",
 
 	// -- Examples page --
