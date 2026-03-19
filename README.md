@@ -28,8 +28,12 @@ my-project/
     workflows/              # State machine definitions
     commands/               # Slash commands (/setup, /train, /build, /process)
     permissions.yaml        # Agent capability boundaries
+    lifecycle.yaml          # Lifecycle hooks (session, tool, heartbeat)
     memory/                 # Persistent agent learning
       decisions/            # Structured decision records
+    learning/               # Continuous learning (instincts, config)
+    rules/                  # Coding rules and conventions
+    scripts/                # Hook implementation scripts
     overrides/              # Tool-specific config (claude/, cursor/, etc.)
   .agentignore              # Files agents should never touch
 ```
@@ -95,6 +99,9 @@ The full spec is in [`spec/`](spec/):
 | 10 | [Agentignore](spec/10-agentignore.md) | `.agentignore` format |
 | 11 | [BOM](spec/11-bom.md) | Agent Bill of Materials (AI-BOM) |
 | 12 | [Decision Records](spec/12-decision-records.md) | Structured agent decision audit trail |
+| 13 | [Lifecycle](spec/13-lifecycle.md) | Platform-agnostic lifecycle hooks |
+| 14 | [Learning](spec/14-learning.md) | Continuous learning with instincts |
+| 15 | [Rules](spec/15-rules.md) | Coding rules and conventions |
 
 ## CLI Tool
 
@@ -137,22 +144,23 @@ A GitHub OAuth dashboard for managing registry API tokens lives in `web/`. It pr
 
 ## Examples & Templates
 
-Three reference implementations in [`examples/`](examples/) and installable domain templates in [`templates/`](templates/):
+Four reference implementations in [`examples/`](examples/) and installable domain templates in [`templates/`](templates/):
 
 | Example | Domain | Mode | Skills | Workflow Command |
 |---------|--------|------|--------|-----------------|
 | [ml-pipeline](examples/ml-pipeline/) | Machine Learning | Agent-Integrated | discover, examine, train, ... | `/train` |
 | [web-app](examples/web-app/) | Web Development | Dev-Assist | scaffold, test, deploy, ... | `/build` |
 | [devops](examples/devops/) | Infrastructure | Dev-Assist | provision, deploy, rollback, ... | `/provision` |
+| [personal-assistant](examples/personal-assistant/) | Assistant | Agent-Integrated | greeting, web-search | `/converse` |
 
-The `templates/` directory contains validated AES skill packages that can be used as starting points for new projects. Templates have expanded skill suites — ML has a full 7-stage pipeline, web has 5 skills, devops has 5 skills, and the **research** domain has 5 skills for content processing pipelines (ingest, parse, analyze, organize, display).
+The `templates/` directory contains validated AES skill packages that can be used as starting points for new projects. Templates have expanded skill suites — ML has a full 7-stage pipeline, web has 5 skills, devops has 5 skills, **research** has 5 skills for content processing pipelines, and **assistant** scaffolds identity/model/channels for 24/7 agents.
 
 ### Modes
 
 AES distinguishes two kinds of agentic projects:
 
 - **Dev-Assist** — The agent builds the project (scaffold, implement, test, deploy). Once shipped, its main job is done — though it can still help with maintenance and bug fixes. (Web, API, CLI, Library, DevOps)
-- **Agent-Integrated** — The agent is embedded in the running product. It operates continuously as part of the system — training models, processing content, ingesting data. The product doesn't work without it. (ML pipelines, Research pipelines)
+- **Agent-Integrated** — The agent is embedded in the running product. It operates continuously as part of the system — training models, processing content, ingesting data. The product doesn't work without it. (ML pipelines, Research pipelines, Personal Assistants)
 
 `aes init` presents a two-step picker: choose mode, then choose project type. Each domain scaffolds a workflow command (e.g. `/train`, `/build`, `/process`) and an operations memory file for pipeline tracking.
 
@@ -219,6 +227,23 @@ Validation schemas in [`schemas/`](schemas/) enable IDE autocompletion and CI va
 - `permissions.schema.json` — validates `permissions.yaml`
 - `bom.schema.json` — validates `bom.yaml` (AI-BOM)
 - `decision-record.schema.json` — validates decision records
+- `lifecycle.schema.json` — validates `lifecycle.yaml`
+- `instinct.schema.json` — validates `.instinct.yaml` files
+- `learning-config.schema.json` — validates learning `config.yaml`
+- `rules-config.schema.json` — validates rules `rules.yaml`
+
+## Sync Targets
+
+`aes sync` compiles `.agent/` into tool-specific configs for 6 platforms:
+
+| Target | Command | Output |
+|--------|---------|--------|
+| Claude Code | `aes sync -t claude` | `CLAUDE.md` + `.claude/settings.local.json` + hooks.json + rules/ |
+| Cursor | `aes sync -t cursor` | `.cursorrules` |
+| Copilot | `aes sync -t copilot` | `.github/copilot-instructions.md` |
+| Windsurf | `aes sync -t windsurf` | `.windsurfrules` |
+| Codex | `aes sync -t codex` | `AGENTS.md` + `.agents/skills/` |
+| OpenClaw | `aes sync -t openclaw` | `.openclaw/` (openclaw.json, workspace/, policy.yaml) |
 
 ## License
 
