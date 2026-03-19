@@ -2,17 +2,17 @@
 
 **The open standard for structuring, sharing, and discovering agentic engineering projects.**
 
-AES does for agent systems what `package.json` did for Node.js — it standardizes how agent instructions, skills, permissions, state machines, and memory are organized so they become portable, composable, and shareable.
+AES treats agent instructions, skills, permissions, and memory as **first-class engineering artifacts** — defined once in a `.agent/` directory, then compiled to Claude, Cursor, Copilot, Windsurf, Codex, and OpenClaw. One source of truth, six platforms, zero manual duplication.
 
 **New here?** Read the [Getting Started guide](GETTING-STARTED.md) — it walks through the full workflow from zero.
 
 ## The Problem
 
-Every agentic project reinvents the same patterns: how to instruct the agent, how to define skills, how to track state, how to set permissions. There's no standard format, no way to share agent configurations, no registry to discover them.
+Every agentic project reinvents the same structure: how to instruct the agent, define skills, track state, set permissions, enforce coding standards, and persist what the agent learns. Each tool has its own config format. Teams duplicate the same setup across platforms. There's no standard, no sharing, no registry.
 
 ## The Solution
 
-A `.agent/` directory in every project:
+A `.agent/` directory in every project — portable across tools, shareable across teams, discoverable via a public registry:
 
 ```
 my-project/
@@ -210,11 +210,13 @@ Templates exclude `memory/`, `local.yaml`, and `overrides/` by default to protec
 
 ## Design Principles
 
-1. **Tool-agnostic** — works with Claude, GPT, Cursor, Copilot, or any agent
-2. **Domain-agnostic** — ML, web, DevOps, research, data pipelines, anything
-3. **Composable** — skills and templates are shareable independently
-4. **Config over code** — agents modify configuration, not orchestration logic
-5. **Explicit over implicit** — state machines, permissions, decisions are declared
+1. **Define once, compile everywhere** — `.agent/` is the single source; `aes sync` compiles to 6 platforms
+2. **Tool-agnostic** — works with Claude, Cursor, Copilot, Windsurf, Codex, OpenClaw, or any future agent tool
+3. **Domain-agnostic** — ML, web, DevOps, research, assistants, data pipelines, anything
+4. **Composable** — skills, templates, instincts, and rule packs are independently shareable via the registry
+5. **Agents that learn** — lifecycle hooks extract patterns from sessions into confidence-scored instincts that evolve over time
+6. **Config over code** — agents modify configuration, not orchestration logic
+7. **Explicit over implicit** — state machines, permissions, conventions, and decisions are declared, not hidden
 
 ## JSON Schemas
 
