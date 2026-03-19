@@ -53,7 +53,7 @@ def cli(lang: Optional[str] = None) -> None:
     """
     from aes.i18n import init_locale
 
-    # Priority: --lang flag > AES_LANG env > ~/.aes/config.yaml > first-run prompt
+    # Priority: --lang flag > AES_LANG env > .agent/local.yaml > ~/.aes/config.yaml > first-run prompt
     if lang:
         init_locale(lang)
         return
@@ -63,7 +63,14 @@ def cli(lang: Optional[str] = None) -> None:
         init_locale(env_lang)
         return
 
-    from aes.global_config import get_locale
+    from pathlib import Path
+    from aes.global_config import get_locale, get_project_locale
+
+    project_locale = get_project_locale(Path.cwd())
+    if project_locale:
+        init_locale(project_locale)
+        return
+
     saved = get_locale()
     if saved is None and sys.stdin.isatty():
         _prompt_language()

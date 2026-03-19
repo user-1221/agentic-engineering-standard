@@ -27,6 +27,23 @@ def save_global_config(config: dict) -> None:
         yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
 
 
+def get_project_locale(project_path: Path) -> Optional[str]:
+    """Return locale from .agent/local.yaml in project, or None."""
+    local_yaml = project_path / ".agent" / "local.yaml"
+    if not local_yaml.exists():
+        return None
+    try:
+        with open(local_yaml) as f:
+            data = yaml.safe_load(f)
+        if isinstance(data, dict):
+            locale = data.get("locale")
+            if isinstance(locale, str) and locale:
+                return locale
+    except (OSError, yaml.YAMLError):
+        pass
+    return None
+
+
 def get_locale() -> Optional[str]:
     """Return configured locale or None."""
     return load_global_config().get("locale")

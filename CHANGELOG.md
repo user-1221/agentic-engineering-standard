@@ -8,6 +8,14 @@ This project maintains two version tracks:
 
 ## [Unreleased]
 
+## [cli-v0.9.0] — 2026-03-19
+
+### Added
+- **Per-project locale** — `.agent/local.yaml` gains optional `locale` field. Resolution chain is now: `--lang` flag > `AES_LANG` env > `.agent/local.yaml` locale > `~/.aes/config.yaml` > first-run prompt
+- `get_project_locale()` in `global_config.py` reads project-level locale
+- `aes init` scaffolds commented-out `locale` field in `local.yaml` and `local.example.yaml`
+- 8 new tests for project locale resolution
+
 ## [spec-v1.4] / [cli-v0.8.0] — 2026-03-19
 
 ### Added
