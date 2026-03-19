@@ -12,7 +12,11 @@ import yaml
 from rich.console import Console
 from rich.table import Table
 
-from aes.config import AGENT_DIR, BOM_FILE, DECISIONS_DIR
+from aes.config import (
+    AGENT_DIR, BOM_FILE, DECISIONS_DIR,
+    INSTINCTS_DIR, LEARNING_CONFIG_FILE, LIFECYCLE_FILE,
+    RULES_CONFIG_FILE, RULES_DIR,
+)
 from aes.i18n import t
 from aes.registry import (
     fetch_index,
@@ -245,6 +249,45 @@ def _inspect_local(path: str) -> None:
             console.print(f"[bold]{t('inspect.decisions_section')}[/]")
             console.print(f"  {t('inspect.decisions_count', count=dr_count)}")
             console.print()
+
+    # Lifecycle hooks
+    lifecycle_path = agent_dir / LIFECYCLE_FILE
+    if lifecycle_path.exists():
+        lc = _load_yaml(lifecycle_path)
+        hooks = lc.get("hooks", {}) or {}
+        hook_count = sum(
+            len(v) if isinstance(v, list) else (1 if isinstance(v, dict) else 0)
+            for v in hooks.values()
+        )
+        profile = lc.get("profile", "standard")
+        console.print(f"[bold]Lifecycle[/]")
+        console.print(f"  Profile: {profile} | Hooks: {hook_count}")
+        console.print()
+
+    # Learning / instincts
+    learning_config_path = agent_dir / LEARNING_CONFIG_FILE
+    if learning_config_path.exists():
+        lconf = _load_yaml(learning_config_path)
+        extraction = lconf.get("extraction", {}).get("enabled", True)
+        instincts_base = agent_dir / INSTINCTS_DIR
+        active = len(list((instincts_base / "active").glob("*.instinct.yaml"))) if (instincts_base / "active").exists() else 0
+        candidates = len(list((instincts_base / "candidates").glob("*.instinct.yaml"))) if (instincts_base / "candidates").exists() else 0
+        archived = len(list((instincts_base / "archived").glob("*.instinct.yaml"))) if (instincts_base / "archived").exists() else 0
+        console.print(f"[bold]Learning[/]")
+        console.print(f"  Extraction: {'enabled' if extraction else 'disabled'} | Active: {active} | Candidates: {candidates} | Archived: {archived}")
+        console.print()
+
+    # Rules
+    rules_config_path = agent_dir / RULES_CONFIG_FILE
+    if rules_config_path.exists():
+        rconf = _load_yaml(rules_config_path)
+        languages = rconf.get("languages", [])
+        rules_base = agent_dir / RULES_DIR
+        rule_count = len(list(rules_base.glob("**/*.md"))) if rules_base.exists() else 0
+        lang_str = ", ".join(languages) if languages else "auto-detect"
+        console.print(f"[bold]Rules[/]")
+        console.print(f"  Languages: {lang_str} | Rule files: {rule_count}")
+        console.print()
 
     # Summary
     console.print(f"[bold]{t('inspect.summary')}[/]")

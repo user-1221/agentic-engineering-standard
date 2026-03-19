@@ -14,6 +14,8 @@ from aes.targets._base import (
     SyncTarget,
 )
 from aes.targets._composer import (
+    compile_lifecycle_to_hooks_json,
+    compose_instincts_section,
     compose_instructions_with_skill_index,
     format_skill_permissions,
     translate_permissions_to_claude,
@@ -50,6 +52,18 @@ class ClaudeTarget(SyncTarget):
             confirm_section = _build_confirm_section(ctx.permissions)
             if confirm_section:
                 content += "\n" + confirm_section
+
+        # Learned patterns from active instincts
+        if ctx.active_instincts:
+            fmt = "compact"
+            if ctx.learning_config:
+                fmt = (
+                    ctx.learning_config.get("context_loading", {})
+                    .get("format", "compact")
+                )
+            instincts_md = compose_instincts_section(ctx.active_instincts, fmt)
+            if instincts_md:
+                content += "\n" + instincts_md
 
         # Memory management instruction — only if /memory command exists
         has_memory_cmd = any(
@@ -101,7 +115,38 @@ class ClaudeTarget(SyncTarget):
                 action=action,
             ))
 
-        # 4. .claude/commands/skills/<id>.md (skill runbooks as slash commands)
+        # 4. .claude/hooks.json — lifecycle hooks
+        if ctx.lifecycle:
+            hooks_data = compile_lifecycle_to_hooks_json(ctx.lifecycle)
+            if hooks_data.get("hooks"):
+                hooks_data[AES_SENTINEL_JSON_KEY] = True
+                hooks_json = json.dumps(hooks_data, indent=2) + "\n"
+                action = self._check_conflict(
+                    ctx.project_root, ".claude/hooks.json", force
+                )
+                plan.files.append(GeneratedFile(
+                    relative_path=".claude/hooks.json",
+                    content=hooks_json,
+                    description="Claude Code lifecycle hooks",
+                    action=action,
+                ))
+
+        # 5. .claude/rules/{category}/{file}.md — coding conventions
+        if ctx.rules_files:
+            for key, rule_content in ctx.rules_files.items():
+                rel_path = f".claude/rules/{key}"
+                full_content = AES_SENTINEL_MD + "\n" + rule_content
+                action = self._check_conflict(
+                    ctx.project_root, rel_path, force
+                )
+                plan.files.append(GeneratedFile(
+                    relative_path=rel_path,
+                    content=full_content,
+                    description=f"Rule: {key}",
+                    action=action,
+                ))
+
+        # 6. .claude/commands/skills/<id>.md (skill runbooks as slash commands)
         for skill_id, runbook in ctx.skill_runbooks.items():
             safe_id = skill_id.replace("/", "-").replace("\\", "-")
             rel_path = f".claude/commands/skills/{safe_id}.md"

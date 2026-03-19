@@ -73,7 +73,7 @@ def bump_spec(version: str, *, dry_run: bool = False) -> list[str]:
         text = schema_file.read_text()
         new_text = re.sub(
             r'("https://aes\.dev/schemas/[^/]+/)v\d+"',
-            rf"\1v{major}\"",
+            r"\g<1>v" + major + '"',
             text,
         )
         if text != new_text:

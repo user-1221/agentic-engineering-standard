@@ -22,13 +22,13 @@ ls templates/                         # domain templates (ml, web, devops, resea
 ## Project Structure
 
 ```
-spec/                    # The specification (10 documents + README)
+spec/                    # The specification (15 documents + README)
 schemas/                 # JSON Schemas for validating .agent/ files
 cli/                     # The `aes` CLI tool (Python 3.10+)
   aes/
     commands/            # CLI commands: init, validate, inspect, publish, install, sync, status, search
     scaffold/            # Jinja2 templates for `aes init`
-    targets/             # Sync adapters (claude, cursor, copilot, windsurf, openclaw)
+    targets/             # Sync adapters (claude, cursor, copilot, windsurf, codex, openclaw)
     validator.py         # Schema validation engine + dependency graph checks
     registry.py          # Registry client (fetch, resolve, download, upload, search)
     domains.py           # Domain-specific configs for init templates (ml, web, devops, research)
@@ -82,8 +82,9 @@ The script updates version strings across all files (pyproject.toml, __init__.py
 - Registry YAML is for agent understanding; runtime code (Python dicts, etc.) is for execution. They stay in sync by convention.
 - `depends_on` and `blocks` in skill manifests are validated as warnings (not errors) — vendored skills may reference skills not present in the current project.
 - The AES registry uses `urllib.request` (stdlib) — no `requests` or `httpx` dependency. Set `AES_REGISTRY_URL` to override the default registry, `AES_REGISTRY_KEY` for publish auth.
-- `aes sync` prompts for target selection interactively; use `-t claude` (or cursor/copilot/windsurf/openclaw) to skip the prompt. In non-interactive mode (CI), defaults to all targets. Targets that fail validation (e.g. openclaw on a project without `identity`/`model`) are silently skipped when syncing all targets.
+- `aes sync` prompts for target selection interactively; use `-t claude` (or cursor/copilot/windsurf/codex/openclaw) to skip the prompt. In non-interactive mode (CI), defaults to all targets. Targets that fail validation (e.g. openclaw on a project without `identity`/`model`) are silently skipped when syncing all targets.
 - For Claude, skills are synced as separate files under `.claude/commands/skills/<id>.md` (slash commands), not inlined into CLAUDE.md. CLAUDE.md only has a skill index. Other targets (cursor, copilot, windsurf) still inline skill runbooks since they don't support separate command files.
+- **Codex target**: `aes sync -t codex` generates `AGENTS.md` (main instructions with skill index) and `.agents/skills/<id>/SKILL.md` (per-skill files with YAML frontmatter). Codex discovers skills natively from `.agents/skills/`, so skills are not inlined into AGENTS.md. Permissions are rendered as markdown in AGENTS.md since Codex uses CLI flags (`--sandbox`, `--ask-for-approval`) rather than config files.
 - `aes init` uses a two-step interactive picker: first choose mode (Dev-Assist vs Agent-Integrated), then choose project type. Dev-Assist (agent builds the project, then steps back): API, Web, CLI, Library, DevOps. Agent-Integrated (agent is embedded in the running product): ML, Research, Assistant, Custom.
 - Domain configs have `mode` ("dev-assist" or "agent-integrated") and `workflow_commands` (list of `CommandDef`). ML and Research are agent-integrated; Web and DevOps are dev-assist.
 - Each domain scaffolds a workflow command runbook (e.g. `/train`, `/build`, `/process`, `/provision`) under `.agent/commands/`. These reference `.agent/memory/operations.md` for pipeline state tracking.
@@ -97,3 +98,7 @@ The script updates version strings across all files (pyproject.toml, __init__.py
 - The `assistant` domain config adds `identity`, `model`, `heartbeat`, and `channels` sections to `agent.yaml` scaffolds. These are standard AES fields consumed by the openclaw target but ignored by other targets.
 - `SkillDef` dataclass has OpenClaw-specific optional fields: `emoji`, `requires_bins`, `requires_env`, `primary_env`, `user_invocable`, `license_id`, `mcp_server`. These have defaults so existing ML/Web/DevOps/Research configs are unaffected.
 - JSON schemas in `schemas/` must be kept in sync with `cli/aes/schemas/`. When updating schemas, copy from `schemas/` to `cli/aes/schemas/`.
+- **Lifecycle hooks** (spec/13): `.agent/lifecycle.yaml` declares hooks (on_session_start, on_session_end, pre_tool_use, post_tool_use, heartbeat, on_error). Profile system (minimal|standard|strict) controls which hooks are active. Claude target compiles to `.claude/hooks.json`; Codex/Copilot/Windsurf compile as behavioral instructions (lossy). Lifecycle heartbeat supersedes `agent.yaml` heartbeat when present.
+- **Continuous learning** (spec/14): `.agent/learning/` with `config.yaml` and `instincts/{active,candidates,archived}/*.instinct.yaml`. Instincts have confidence scoring (0-1) and status lifecycle (candidate→active→archived). Active instincts are injected into target context during sync (e.g. `## Learned Patterns` section in CLAUDE.md). Agent-integrated domains scaffold learning by default.
+- **Rules & conventions** (spec/15): `.agent/rules/rules.yaml` + `common/*.md` + language-specific subdirs. `${variable}` placeholders in rule files are resolved from `overrides` at sync time. Auto-detection from file patterns when `languages` is not explicit. Claude target generates `.claude/rules/{category}/*.md`; inline targets embed as `## Conventions` section.
+- New schemas: `lifecycle.schema.json`, `instinct.schema.json`, `learning-config.schema.json`, `rules-config.schema.json`. All use JSON Schema Draft 2020-12 with `apiVersion: aes/v1` and `kind` field pattern.

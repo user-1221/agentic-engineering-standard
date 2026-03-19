@@ -1,5 +1,5 @@
 # ML Model Factory — AES Manifest
-aes: "1.2"
+aes: "1.4"
 
 name: "ml-model-factory"
 version: "2.1.0"

@@ -52,6 +52,7 @@ def compose_instructions_with_skill_index(
     memory_project: Optional[str],
     header: str,
     skill_runbooks: Optional[Dict[str, str]] = None,
+    skill_path_prefix: str = "/skills",
 ) -> str:
     """Compose instructions with a skill index instead of inlined runbooks.
 
@@ -93,7 +94,7 @@ def compose_instructions_with_skill_index(
                 name = meta.get("name", skill_id)
                 desc = meta.get("description", "")
                 neg = meta.get("negative_triggers", [])
-                auto_lines.append(f"### {name} (`/skills/{skill_id}`)\n")
+                auto_lines.append(f"### {name} (`{skill_path_prefix}/{skill_id}`)\n")
                 if desc:
                     auto_lines.append(desc)
                 if neg:
@@ -118,7 +119,7 @@ def compose_instructions_with_skill_index(
                 name = meta.get("name", skill_id)
                 desc = meta.get("description", "")
                 neg = meta.get("negative_triggers", [])
-                line = f"- **/skills/{skill_id}** — {name}"
+                line = f"- **{skill_path_prefix}/{skill_id}** — {name}"
                 if desc:
                     line += f": {desc}"
                 if neg:
@@ -394,6 +395,209 @@ def merge_skill_to_skillmd(
     body = runbook.strip() if runbook else ""
     if body:
         lines.append(body)
+
+    return "\n".join(lines) + "\n"
+
+
+def compose_instincts_section(
+    instincts: List[Dict[str, Any]],
+    fmt: str = "compact",
+) -> str:
+    """Render active instincts as a Markdown section.
+
+    ``fmt`` can be "compact" (description + action only) or "full"
+    (includes evidence + examples).
+    """
+    if not instincts:
+        return ""
+
+    lines: List[str] = ["## Learned Patterns\n"]
+    lines.append("The following patterns were learned from previous sessions:\n")
+
+    for inst in instincts:
+        meta = inst.get("metadata", {})
+        pattern = inst.get("pattern", {})
+        confidence = inst.get("confidence", {})
+
+        inst_id = meta.get("id", "unknown")
+        score = confidence.get("score", 0)
+
+        lines.append(f"### {inst_id} (confidence: {score:.0%})\n")
+        if pattern.get("description"):
+            lines.append(pattern["description"].strip())
+            lines.append("")
+
+        if pattern.get("trigger"):
+            lines.append(f"**When:** {pattern['trigger'].strip()}\n")
+
+        if pattern.get("action"):
+            lines.append(f"**Action:**\n{pattern['action'].strip()}\n")
+
+        if fmt == "full":
+            evidence = pattern.get("evidence", [])
+            if evidence:
+                lines.append("**Evidence:**")
+                for ev in evidence:
+                    lines.append(f"- {ev.get('session', '?')}: {ev.get('outcome', '')}")
+                lines.append("")
+
+            examples = pattern.get("examples", [])
+            if examples:
+                lines.append("**Examples:**")
+                for ex in examples:
+                    lines.append(f"- *{ex.get('context', '')}*: {ex.get('application', '')}")
+                lines.append("")
+
+    return "\n".join(lines) + "\n"
+
+
+# Profile hierarchy — a hook is active if its profile level is <= the active level
+_PROFILE_LEVELS = {"minimal": 0, "standard": 1, "strict": 2}
+
+
+def compile_lifecycle_to_hooks_json(
+    lifecycle: Dict[str, Any],
+    profile: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Compile AES lifecycle.yaml into Claude Code hooks.json format.
+
+    Filters hooks by active profile and maps AES event types to
+    Claude Code event names.
+    """
+    active_profile = profile or lifecycle.get("profile", "standard")
+    active_level = _PROFILE_LEVELS.get(active_profile, 1)
+    disabled = set(lifecycle.get("disabled_hooks", []))
+
+    event_map = {
+        "on_session_start": "SessionStart",
+        "on_session_end": "Stop",
+        "pre_tool_use": "PreToolUse",
+        "post_tool_use": "PostToolUse",
+    }
+
+    hooks_list: List[Dict[str, Any]] = []
+    hooks_section = lifecycle.get("hooks", {}) or {}
+
+    for aes_event, claude_event in event_map.items():
+        for hook in hooks_section.get(aes_event, []):
+            hook_profile = hook.get("profile", "standard")
+            hook_level = _PROFILE_LEVELS.get(hook_profile, 1)
+            if hook_level > active_level:
+                continue
+            if hook.get("name") in disabled:
+                continue
+            if hook.get("action") != "script":
+                continue
+
+            entry: Dict[str, Any] = {
+                "type": "command",
+                "event": claude_event,
+                "command": hook.get("command", ""),
+            }
+            if hook.get("timeout_seconds"):
+                entry["timeout"] = hook["timeout_seconds"]
+            if hook.get("async"):
+                entry["async"] = True
+
+            # Tool filter (pre/post only)
+            filt = hook.get("filter", {})
+            if filt.get("tools"):
+                entry["toolNames"] = filt["tools"]
+
+            hooks_list.append(entry)
+
+    return {"hooks": hooks_list}
+
+
+def compose_lifecycle_to_markdown(
+    lifecycle: Dict[str, Any],
+    profile: Optional[str] = None,
+) -> str:
+    """Compile lifecycle hooks into a Markdown instruction section.
+
+    Used by targets that don't have native hook support (Codex, Copilot,
+    Windsurf).  This is a lossy compilation — enforcement depends on
+    model compliance rather than runtime enforcement.
+    """
+    active_profile = profile or lifecycle.get("profile", "standard")
+    active_level = _PROFILE_LEVELS.get(active_profile, 1)
+    disabled = set(lifecycle.get("disabled_hooks", []))
+
+    hooks_section = lifecycle.get("hooks", {}) or {}
+    lines: List[str] = ["## Lifecycle Hooks\n"]
+    lines.append("Execute the following scripts at the appropriate lifecycle moments:\n")
+
+    event_labels = {
+        "on_session_start": "At Session Start",
+        "on_session_end": "At Session End",
+        "pre_tool_use": "Before Tool Use",
+        "post_tool_use": "After Tool Use",
+    }
+
+    any_hooks = False
+    for aes_event, label in event_labels.items():
+        event_hooks = []
+        for hook in hooks_section.get(aes_event, []):
+            hook_profile = hook.get("profile", "standard")
+            hook_level = _PROFILE_LEVELS.get(hook_profile, 1)
+            if hook_level > active_level:
+                continue
+            if hook.get("name") in disabled:
+                continue
+            event_hooks.append(hook)
+
+        if event_hooks:
+            any_hooks = True
+            lines.append(f"### {label}\n")
+            for hook in event_hooks:
+                name = hook.get("name", "unnamed")
+                desc = hook.get("description", "").strip()
+                cmd = hook.get("command", "")
+                lines.append(f"- **{name}**: {desc}")
+                if cmd:
+                    lines.append(f"  Run: `{cmd}`")
+            lines.append("")
+
+    # Heartbeat
+    heartbeat = hooks_section.get("heartbeat")
+    if heartbeat:
+        any_hooks = True
+        interval = heartbeat.get("interval_minutes", 30)
+        lines.append(f"### Periodic (every {interval} minutes)\n")
+        for action in heartbeat.get("actions", []):
+            name = action.get("name", "unnamed")
+            desc = action.get("description", "").strip()
+            lines.append(f"- **{name}**: {desc}")
+        lines.append("")
+
+    if not any_hooks:
+        return ""
+
+    return "\n".join(lines) + "\n"
+
+
+def compose_rules_section(rules_files: Dict[str, str]) -> str:
+    """Render rule files as a single Markdown block for inline targets.
+
+    ``rules_files`` is keyed by ``category/filename.md`` with content
+    as the value (variables already resolved).
+    """
+    if not rules_files:
+        return ""
+
+    lines: List[str] = ["## Conventions\n"]
+
+    # Group by category
+    categories: Dict[str, List[str]] = {}
+    for key, content in rules_files.items():
+        category = key.split("/")[0] if "/" in key else "common"
+        categories.setdefault(category, []).append(content)
+
+    for category, contents in categories.items():
+        lines.append(f"### {category.title()} Rules\n")
+        for content in contents:
+            lines.append(content.strip())
+            lines.append("")
 
     return "\n".join(lines) + "\n"
 

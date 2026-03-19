@@ -1,4 +1,4 @@
-# Agentic Engineering Standard (AES) v1.3
+# Agentic Engineering Standard (AES) v1.4
 
 ## What Is AES?
 
@@ -23,7 +23,11 @@ my-project/
     workflows/              # State machine definitions
     commands/               # Multi-phase workflow automation
     permissions.yaml        # Agent capability boundaries
+    lifecycle.yaml          # Lifecycle hooks (session, tool, heartbeat)
     memory/                 # Persistent agent learning
+    learning/               # Continuous learning (instincts, config)
+    rules/                  # Coding rules and conventions
+    scripts/                # Hook implementation scripts
     overrides/              # Tool-specific config (claude/, cursor/, etc.)
   AGENT.md                  # Public-facing agent description
   .agentignore              # Files agents should never touch
@@ -65,6 +69,9 @@ aes publish --template --registry  # publish .agent/ as a template
 | 10 | [Agentignore](10-agentignore.md) | `.agentignore` format |
 | 11 | [BOM](11-bom.md) | Agent Bill of Materials (AI-BOM) |
 | 12 | [Decision Records](12-decision-records.md) | Structured agent decision audit trail |
+| 13 | [Lifecycle](13-lifecycle.md) | Platform-agnostic lifecycle hooks |
+| 14 | [Learning](14-learning.md) | Continuous learning with instincts |
+| 15 | [Rules](15-rules.md) | Coding rules and conventions |
 
 ## Design Principles
 

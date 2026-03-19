@@ -8,6 +8,28 @@ This project maintains two version tracks:
 
 ## [Unreleased]
 
+## [spec-v1.4] / [cli-v0.8.0] — 2026-03-19
+
+### Added
+- **Lifecycle hooks** (spec/13-lifecycle.md) — platform-agnostic `.agent/lifecycle.yaml` with profile system (minimal|standard|strict), 6 event types (session start/end, pre/post tool use, heartbeat, error recovery), and compilation to all 6 sync targets. Claude compiles to `.claude/hooks.json`; Codex/Copilot/Windsurf emit behavioral instructions
+- **Continuous learning** (spec/14-learning.md) — `.agent/learning/` with structured instincts (YAML with confidence scoring, 4-stage pipeline: extraction → validation → evolution → publishing). Active instincts injected into target context during sync as `## Learned Patterns`
+- **Rules & conventions** (spec/15-rules.md) — `.agent/rules/` with `rules.yaml` manifest, language auto-detection, `${variable}` placeholder resolution from overrides, and per-platform compilation. Claude generates `.claude/rules/`; OpenClaw merges into SOUL.md/AGENTS.md; inline targets embed as `## Conventions`
+- **Codex sync target** — `aes sync --target codex` generates `AGENTS.md` + `.agents/skills/<id>/SKILL.md` per-skill files with YAML frontmatter
+- 4 new JSON schemas: `lifecycle.schema.json`, `instinct.schema.json`, `learning-config.schema.json`, `rules-config.schema.json`
+- `agent.yaml` gains 3 optional properties: `lifecycle`, `learning`, `rules`
+- `aes validate` checks lifecycle.yaml, learning config, instinct files, and rules config; warns on missing scripts, low-confidence active instincts, missing language dirs
+- `aes inspect` displays Lifecycle (profile + hook count), Learning (extraction + instinct counts), Rules (languages + file count)
+- `aes init` scaffolds lifecycle.yaml + scripts/ (all domains), learning/ (agent-integrated), rules/ with starter testing rule (all domains)
+- Updated example: `examples/personal-assistant/` with lifecycle, learning (1 active instinct), and rules
+- 29 new tests across 3 test files (lifecycle, learning, rules validation)
+
+### Changed
+- `AgentContext` gains 5 new fields: `lifecycle`, `learning_config`, `active_instincts`, `rules_config`, `rules_files`
+- `_load_agent_context()` loads lifecycle, learning config, active instincts (sorted by confidence, capped by config), and rules with variable resolution
+- All 6 sync targets (Claude, Cursor, Copilot, Windsurf, Codex, OpenClaw) updated to compile instincts and rules into output
+- `DomainConfig` gains `scaffold_lifecycle`, `scaffold_learning`, `scaffold_rules`, `lifecycle_profile` fields
+- Bump spec version to 1.4, CLI version to 0.8.0
+
 ## [spec-v1.3] / [cli-v0.7.0] — 2026-03-19
 
 ### Added

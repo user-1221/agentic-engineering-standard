@@ -154,6 +154,12 @@ class DomainConfig:
     heartbeat_checklist: str = ""
     channels: Dict[str, Dict[str, str]] = field(default_factory=dict)
 
+    # Lifecycle / Learning / Rules scaffolding
+    scaffold_lifecycle: bool = True
+    scaffold_learning: bool = False   # True for agent-integrated domains
+    scaffold_rules: bool = True
+    lifecycle_profile: str = "standard"
+
 
 # ---------------------------------------------------------------------------
 # ML domain config — drawn from examples/ml-pipeline
@@ -529,6 +535,7 @@ ML_CONFIG = DomainConfig(
         {"name": "OPTUNA_TIMEOUT", "default": "300", "description": "Seconds per model for HPO"},
         {"name": "OPTUNA_N_TRIALS", "default": "50", "description": "Max trials per model"},
     ],
+    scaffold_learning=True,
 )
 
 
@@ -1338,6 +1345,7 @@ RESEARCH_CONFIG = DomainConfig(
         {"name": "SEMANTIC_SCHOLAR_API_KEY", "default": "", "description": "Semantic Scholar API key (optional, increases rate limits)"},
         {"name": "MAX_ITEMS_PER_RUN", "default": "50", "description": "Maximum items to process per pipeline run"},
     ],
+    scaffold_learning=True,
 )
 
 
@@ -1387,6 +1395,7 @@ AGENT_INTEGRATED_BASE_CONFIG = DomainConfig(
         ),
     ],
     instructions_description="",   # empty -> falls through to TODO scaffolding in template
+    scaffold_learning=True,
 )
 
 
@@ -1571,6 +1580,7 @@ ASSISTANT_CONFIG = DomainConfig(
         {"name": "TELEGRAM_BOT_TOKEN", "description": "Bot token for Telegram integration"},
         {"name": "DISCORD_BOT_TOKEN", "description": "Bot token for Discord integration"},
     ],
+    scaffold_learning=True,
 )
 
 

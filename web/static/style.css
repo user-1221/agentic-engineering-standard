@@ -2034,8 +2034,8 @@ a:focus-visible {
 .sync-tool:nth-child(4):hover .sync-tool-icon { box-shadow: 0 0 20px rgba(14, 165, 233, 0.5); }
 .sync-tool:nth-child(5):hover .sync-tool-icon { box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
 .sync-tool-logo {
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
     border-radius: 0;
     object-fit: contain;
     transition: box-shadow 0.2s ease, transform 0.2s ease;
@@ -2176,8 +2176,8 @@ a:focus-visible {
     display: block;
 }
 .hiw-target-card .sync-tool-logo {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
 }
 .hiw-target-card h3 {
     font-size: 1rem;
@@ -2274,8 +2274,8 @@ a:focus-visible {
     width: fit-content;
 }
 .example-powered-logo {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border-radius: 6px;
     object-fit: contain;
 }
@@ -2482,8 +2482,8 @@ a:focus-visible {
         font-size: 0.95rem;
     }
     .sync-tool-logo {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
     }
     .sync-tools {
         gap: var(--space-2);

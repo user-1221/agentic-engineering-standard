@@ -1,0 +1,10 @@
+# .agent/rules/rules.yaml — Rules Configuration
+apiVersion: aes/v1
+kind: RulesConfig
+
+loading:
+  always: [common]
+
+overrides:
+  security:
+    credential_handling: "never share across channels"

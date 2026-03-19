@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aes.dev/schemas/instinct/v1",
+  "title": "AES Instinct",
+  "description": "Validates .agent/learning/instincts/**/*.instinct.yaml — learned patterns with confidence scoring",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "pattern", "confidence"],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "const": "aes/v1",
+      "description": "AES instinct schema version"
+    },
+    "kind": {
+      "type": "string",
+      "const": "Instinct",
+      "description": "Resource kind"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["id", "created_at", "last_validated", "source_session"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]*$",
+          "description": "Unique instinct identifier (kebab-case)"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the instinct was first extracted"
+        },
+        "last_validated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the instinct was last confirmed"
+        },
+        "source_session": {
+          "type": "string",
+          "description": "Session ID that generated this instinct"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Searchable tags for categorization"
+        }
+      }
+    },
+    "pattern": {
+      "type": "object",
+      "required": ["description", "trigger", "action"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What the pattern is (the core learning)"
+        },
+        "trigger": {
+          "type": "string",
+          "minLength": 1,
+          "description": "When this instinct should activate"
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Step-by-step instructions to follow"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["session"],
+            "properties": {
+              "session": { "type": "string" },
+              "outcome": { "type": "string" }
+            }
+          },
+          "description": "Session outcomes that validate this instinct"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["context", "application"],
+            "properties": {
+              "context": { "type": "string" },
+              "application": { "type": "string" }
+            }
+          },
+          "description": "Concrete applications with context"
+        }
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "required": ["score", "validations", "contradictions", "status"],
+      "properties": {
+        "score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Confidence level (0.0 to 1.0)"
+        },
+        "validations": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of positive confirmations"
+        },
+        "contradictions": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of times overridden"
+        },
+        "decay_rate": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.01,
+          "description": "Score decrease per week without validation"
+        },
+        "min_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.3,
+          "description": "Below this score, instinct is archived"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["candidate", "active", "archived"],
+          "description": "Instinct lifecycle status"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

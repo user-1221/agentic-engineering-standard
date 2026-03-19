@@ -34,6 +34,14 @@ OVERRIDES_DIR = "overrides"
 LOCAL_FILE = "local.yaml"
 LOCAL_EXAMPLE_FILE = "local.example.yaml"
 BOM_FILE = "bom.yaml"
+LIFECYCLE_FILE = "lifecycle.yaml"
+LEARNING_DIR = "learning"
+LEARNING_CONFIG_FILE = "learning/config.yaml"
+INSTINCTS_DIR = "learning/instincts"
+RULES_DIR = "rules"
+RULES_CONFIG_FILE = "rules/rules.yaml"
+SCRIPTS_DIR = "scripts"
+LOGS_DIR = "logs"
 
 # Schema file mapping
 SCHEMA_MAP = {
@@ -44,4 +52,8 @@ SCHEMA_MAP = {
     "permissions": "permissions.schema.json",
     "bom": "bom.schema.json",
     "decision-record": "decision-record.schema.json",
+    "lifecycle": "lifecycle.schema.json",
+    "instinct": "instinct.schema.json",
+    "learning-config": "learning-config.schema.json",
+    "rules-config": "rules-config.schema.json",
 }

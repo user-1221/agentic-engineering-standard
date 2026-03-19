@@ -1,0 +1,94 @@
+aes_workflow: "1.0"
+
+id: "dev-pipeline"
+entity: "feature"
+description: "Feature lifecycle from planning through deployment"
+
+states:
+  planned:
+    description: "Feature decomposed into tasks with acceptance criteria"
+    initial: true
+  designing:
+    description: "Technical architecture being defined"
+  implementing:
+    description: "Production code being written"
+    active: true
+  testing:
+    description: "Tests being written and validated"
+    active: true
+  reviewing:
+    description: "Code and security reviews in progress"
+    active: true
+  deployed:
+    description: "Feature passed all reviews and is live"
+    terminal: true
+  blocked:
+    description: "Feature blocked by unresolved issues"
+
+transitions:
+  - from: "planned"
+    to: "designing"
+    skill: "architect"
+    conditions:
+      - "Plan has at least one task with acceptance criteria"
+
+  - from: "designing"
+    to: "implementing"
+    skill: "implementer"
+    conditions:
+      - "Architecture document defines all interfaces"
+      - "Technology choices documented with rationale"
+
+  - from: "implementing"
+    to: "testing"
+    skill: "tdd-guide"
+    conditions:
+      - "All planned tasks have corresponding code changes"
+      - "Code compiles and passes existing tests"
+
+  - from: "testing"
+    to: "reviewing"
+    skill: "code-reviewer"
+    conditions:
+      - "All acceptance criteria have corresponding tests"
+      - "Test suite passes with required coverage"
+
+  - from: "reviewing"
+    to: "deployed"
+    conditions:
+      - "Code review passed with no blockers"
+      - "Security review passed with no critical or high findings"
+
+  - from: "reviewing"
+    to: "implementing"
+    skill: "implementer"
+    conditions:
+      - "Review returned blocker-level findings"
+    description: "Send back to implementation to address review findings"
+
+  - from: "reviewing"
+    to: "designing"
+    skill: "architect"
+    conditions:
+      - "Review identified architectural issues"
+    description: "Send back to architecture for design changes"
+
+  - from: "implementing"
+    to: "designing"
+    skill: "architect"
+    conditions:
+      - "Implementation revealed design gaps"
+    description: "Return to architecture when implementation finds missing design"
+
+  - from: "planned"
+    to: "blocked"
+    conditions:
+      - "External dependency unavailable"
+      - "Scope requires clarification"
+
+  - from: "blocked"
+    to: "planned"
+    skill: "planner"
+    conditions:
+      - "Blocking issue resolved"
+    description: "Re-plan after blocker is resolved"

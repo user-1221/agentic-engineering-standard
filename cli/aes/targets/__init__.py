@@ -6,6 +6,7 @@ from typing import Dict, Type
 
 from aes.targets._base import AgentContext, GeneratedFile, SyncPlan, SyncTarget
 from aes.targets.claude import ClaudeTarget
+from aes.targets.codex import CodexTarget
 from aes.targets.copilot import CopilotTarget
 from aes.targets.cursor import CursorTarget
 from aes.targets.openclaw import OpenClawTarget
@@ -16,6 +17,7 @@ TARGETS: Dict[str, Type[SyncTarget]] = {
     "cursor": CursorTarget,
     "copilot": CopilotTarget,
     "windsurf": WindsurfTarget,
+    "codex": CodexTarget,
     "openclaw": OpenClawTarget,
 }
 

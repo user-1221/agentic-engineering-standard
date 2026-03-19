@@ -1,5 +1,5 @@
 # .agent/agent.yaml — AES Manifest
-aes: "1.3"
+aes: "1.4"
 
 name: "personal-assistant"
 version: "1.0.0"
@@ -33,6 +33,16 @@ commands:
     path: "commands/converse.md"
     trigger: "/converse"
     description: "Start or resume a conversation session with the assistant"
+
+lifecycle: "lifecycle.yaml"
+
+learning:
+  config: "learning/config.yaml"
+  enabled: true
+
+rules:
+  config: "rules/rules.yaml"
+  enabled: true
 
 identity:
   persona: |

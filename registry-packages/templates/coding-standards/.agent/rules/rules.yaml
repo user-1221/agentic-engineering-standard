@@ -1,0 +1,24 @@
+# .agent/rules/rules.yaml — Rules Configuration
+apiVersion: aes/v1
+kind: RulesConfig
+
+detection:
+  typescript:
+    patterns: ["*.ts", "*.tsx", "tsconfig.json", "package.json"]
+  python:
+    patterns: ["*.py", "pyproject.toml", "setup.py", "requirements.txt"]
+  golang:
+    patterns: ["*.go", "go.mod", "go.sum"]
+  swift:
+    patterns: ["*.swift", "Package.swift", "*.xcodeproj"]
+  php:
+    patterns: ["*.php", "composer.json", "artisan"]
+
+loading:
+  always: [common]
+
+overrides:
+  testing:
+    min_coverage: 80
+  coding-style:
+    max_line_length: 100

@@ -1,0 +1,9 @@
+aes_skill: "1.4"
+id: "planner"
+name: "Feature Planner"
+version: "1.0.0"
+description: "Decomposes feature requests into actionable implementation tasks"
+activation: explicit
+stage: 1
+phase: "planning"
+tags: ["planning", "requirements", "decomposition"]

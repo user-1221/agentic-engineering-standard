@@ -1,0 +1,10 @@
+aes_skill: "1.4"
+
+id: "autonomous-loops"
+name: "Autonomous Loops"
+version: "1.0.0"
+description: "Long-running agent session management — loop detection, progress tracking, graceful termination, and checkpoint recovery for 24/7 operation"
+
+activation: explicit
+
+tags: ["autonomy", "long-running", "resilience", "checkpoints", "loop-detection"]

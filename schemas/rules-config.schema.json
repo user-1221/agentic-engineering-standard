@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aes.dev/schemas/rules-config/v1",
+  "title": "AES Rules Configuration",
+  "description": "Validates .agent/rules/rules.yaml — coding rules and conventions manifest",
+  "type": "object",
+  "required": ["apiVersion", "kind"],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "const": "aes/v1",
+      "description": "AES rules config schema version"
+    },
+    "kind": {
+      "type": "string",
+      "const": "RulesConfig",
+      "description": "Resource kind"
+    },
+    "languages": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Explicit language selection (overrides auto-detection)"
+    },
+    "detection": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Glob patterns that indicate this language is present"
+      },
+      "description": "Auto-detection patterns per language"
+    },
+    "loading": {
+      "type": "object",
+      "properties": {
+        "always": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["common"],
+          "description": "Rule set directories to always load"
+        }
+      }
+    },
+    "overrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Field-level overrides for a rule"
+      },
+      "description": "Per-rule value overrides (rule-name -> field-name -> value)"
+    }
+  },
+  "additionalProperties": false
+}

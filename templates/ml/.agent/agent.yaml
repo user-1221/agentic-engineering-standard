@@ -1,5 +1,5 @@
 # ML Pipeline — AES Template
-aes: "1.2"
+aes: "1.4"
 
 name: "ml-pipeline"
 version: "1.0.0"

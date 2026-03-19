@@ -1,0 +1,9 @@
+aes_skill: "1.4"
+id: "code-reviewer"
+name: "Code Reviewer"
+version: "1.0.0"
+description: "Reviews code for quality, maintainability, and correctness"
+activation: explicit
+stage: 5
+phase: "review"
+tags: ["review", "quality", "maintainability"]

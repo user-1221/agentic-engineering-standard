@@ -1,0 +1,63 @@
+# .agent/lifecycle.yaml — Lifecycle Hooks
+apiVersion: aes/v1
+kind: Lifecycle
+
+profile: standard
+
+hooks:
+  on_session_start:
+    - name: restore-context
+      description: >
+        Load previous session summary and active instincts
+        into agent context for session continuity.
+      profile: minimal
+      action: script
+      command: node .agent/scripts/restore-context.js
+      timeout_seconds: 10
+      async: false
+      fail_strategy: warn
+
+  on_session_end:
+    - name: persist-summary
+      description: >
+        Save a compressed summary of this session for the
+        next session's restore-context hook.
+      profile: minimal
+      action: script
+      command: node .agent/scripts/persist-summary.js
+      timeout_seconds: 15
+      async: true
+      fail_strategy: warn
+
+    - name: extract-instincts
+      description: >
+        Review session actions and extract candidate
+        instincts for the learning system.
+      profile: standard
+      action: script
+      command: node .agent/scripts/extract-instincts.js
+      timeout_seconds: 30
+      async: true
+      fail_strategy: skip
+
+  post_tool_use:
+    - name: audit-log
+      description: >
+        Log tool name, input summary, and result status
+        for audit trail.
+      profile: standard
+      action: script
+      command: node .agent/scripts/audit-log.js
+      async: true
+      fail_strategy: skip
+      output:
+        file: .agent/logs/audit.jsonl
+        format: jsonl
+
+  heartbeat:
+    interval_minutes: 30
+    actions:
+      - name: check-tasks
+        description: Review pending tasks and act proactively
+        action: checklist
+        checklist_file: heartbeat.md

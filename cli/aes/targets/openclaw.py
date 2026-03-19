@@ -17,8 +17,11 @@ from aes.targets._base import (
     SyncTarget,
 )
 from aes.targets._composer import (
+    compose_instincts_section,
     compose_instructions,
+    compose_lifecycle_to_markdown,
     compose_openclaw_json,
+    compose_rules_section,
     merge_skill_to_skillmd,
     translate_permissions_to_openshell,
 )
@@ -76,12 +79,23 @@ class OpenClawTarget(SyncTarget):
         # --- 2. Workspace Markdown files ---
         workspace = _primary_workspace(manifest)
 
-        # SOUL.md — persona
+        # SOUL.md — persona + common rules
         persona = identity.get("persona", "")
-        if persona:
+        soul_content = persona
+        # Append common rules to SOUL.md (behavioral conventions)
+        if ctx.rules_files:
+            common_rules = {
+                k: v for k, v in ctx.rules_files.items()
+                if k.startswith("common/")
+            }
+            if common_rules:
+                rules_md = compose_rules_section(common_rules)
+                if rules_md:
+                    soul_content = (soul_content + "\n\n" + rules_md).strip()
+        if soul_content:
             plan.files.append(_md_file(
                 ctx, force, f".openclaw/{workspace}/SOUL.md",
-                persona, "Agent persona (SOUL.md)",
+                soul_content, "Agent persona (SOUL.md)",
             ))
 
         # IDENTITY.md — name + emoji
@@ -121,6 +135,24 @@ class OpenClawTarget(SyncTarget):
             memory_project=ctx.memory_project,
             header=header,
         )
+        # Lifecycle hooks as instructions
+        if ctx.lifecycle:
+            lc_md = compose_lifecycle_to_markdown(ctx.lifecycle)
+            if lc_md:
+                agents_md += "\n" + lc_md
+
+        # Learned patterns from active instincts
+        if ctx.active_instincts:
+            fmt = "compact"
+            if ctx.learning_config:
+                fmt = (
+                    ctx.learning_config.get("context_loading", {})
+                    .get("format", "compact")
+                )
+            instincts_md = compose_instincts_section(ctx.active_instincts, fmt)
+            if instincts_md:
+                agents_md += "\n" + instincts_md
+
         plan.files.append(GeneratedFile(
             relative_path=f".openclaw/{workspace}/AGENTS.md",
             content=agents_md,
@@ -141,14 +173,28 @@ class OpenClawTarget(SyncTarget):
             "Persistent memory",
         ))
 
-        # HEARTBEAT.md — heartbeat checklist
+        # HEARTBEAT.md — heartbeat checklist (merge lifecycle heartbeat if present)
         heartbeat = manifest.get("heartbeat", {})
         hb_checklist = heartbeat.get("checklist", "")
         hb_interval = heartbeat.get("interval_minutes", 30)
+
+        # Lifecycle heartbeat supersedes agent.yaml heartbeat when present
+        lc_hb = (ctx.lifecycle or {}).get("hooks", {}).get("heartbeat")
+        if lc_hb:
+            hb_interval = lc_hb.get("interval_minutes", hb_interval)
+
         hb_content = f"# Heartbeat (every {hb_interval} minutes)\n\n"
         if hb_checklist:
             hb_content += hb_checklist.strip() + "\n"
-        else:
+
+        # Add lifecycle heartbeat actions
+        if lc_hb:
+            for action in lc_hb.get("actions", []):
+                name = action.get("name", "unnamed")
+                desc = action.get("description", "").strip()
+                hb_content += f"\n- **{name}**: {desc}\n"
+
+        if not hb_checklist and not lc_hb:
             hb_content += "<!-- Add tasks to run on each heartbeat cycle -->\n"
         plan.files.append(_md_file(
             ctx, force, f".openclaw/{workspace}/HEARTBEAT.md",

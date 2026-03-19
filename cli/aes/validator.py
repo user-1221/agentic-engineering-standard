@@ -10,7 +10,11 @@ from typing import List, Optional
 import yaml
 from jsonschema import Draft202012Validator, ValidationError
 
-from aes.config import SCHEMAS_DIR, SCHEMA_MAP, BOM_FILE, DECISIONS_DIR
+from aes.config import (
+    SCHEMAS_DIR, SCHEMA_MAP, BOM_FILE, DECISIONS_DIR,
+    LIFECYCLE_FILE, LEARNING_CONFIG_FILE, INSTINCTS_DIR,
+    RULES_CONFIG_FILE, RULES_DIR, SCRIPTS_DIR,
+)
 
 
 @dataclass
@@ -199,6 +203,84 @@ def validate_agent_dir(agent_dir: Path) -> List[ValidationResult]:
     if decisions_dir.exists() and decisions_dir.is_dir():
         for dr_file in sorted(decisions_dir.glob("*.yaml")):
             results.append(validate_file(dr_file, "decision-record"))
+
+    # Validate lifecycle.yaml (optional)
+    lifecycle_path = agent_dir / LIFECYCLE_FILE
+    if lifecycle_path.exists():
+        results.append(validate_file(lifecycle_path, "lifecycle"))
+        # Warn if referenced scripts don't exist
+        try:
+            lc_data = load_yaml(lifecycle_path)
+            scripts_dir = agent_dir / SCRIPTS_DIR
+            for event_key in ("on_session_start", "on_session_end",
+                              "pre_tool_use", "post_tool_use", "on_error"):
+                for hook in (lc_data.get("hooks", {}) or {}).get(event_key, []):
+                    cmd = hook.get("command", "")
+                    if cmd and ".agent/scripts/" in cmd:
+                        script_name = cmd.split(".agent/scripts/")[-1].split()[0]
+                        if not (scripts_dir / script_name).exists():
+                            results.append(ValidationResult(
+                                file_path=lifecycle_path,
+                                schema_type="lifecycle",
+                                valid=True,
+                                errors=[
+                                    f"Hook '{hook.get('name', '?')}' references "
+                                    f"script not found: scripts/{script_name} (warning)"
+                                ],
+                            ))
+        except Exception:
+            pass
+
+    # Validate learning config (optional)
+    learning_config_path = agent_dir / LEARNING_CONFIG_FILE
+    if learning_config_path.exists():
+        results.append(validate_file(learning_config_path, "learning-config"))
+
+    # Validate instinct files (optional)
+    instincts_base = agent_dir / INSTINCTS_DIR
+    if instincts_base.exists() and instincts_base.is_dir():
+        for instinct_file in sorted(instincts_base.glob("**/*.instinct.yaml")):
+            results.append(validate_file(instinct_file, "instinct"))
+            # Warn if active instinct has score below min_score
+            try:
+                inst_data = load_yaml(instinct_file)
+                conf = inst_data.get("confidence", {})
+                if (conf.get("status") == "active"
+                        and conf.get("score", 1.0) < conf.get("min_score", 0.3)):
+                    results.append(ValidationResult(
+                        file_path=instinct_file,
+                        schema_type="instinct",
+                        valid=True,
+                        errors=[
+                            f"Instinct '{inst_data.get('metadata', {}).get('id', '?')}' "
+                            f"is active but score ({conf['score']}) is below "
+                            f"min_score ({conf.get('min_score', 0.3)}) (warning)"
+                        ],
+                    ))
+            except Exception:
+                pass
+
+    # Validate rules config (optional)
+    rules_config_path = agent_dir / RULES_CONFIG_FILE
+    if rules_config_path.exists():
+        results.append(validate_file(rules_config_path, "rules-config"))
+        # Warn if configured language directories don't exist
+        try:
+            rules_data = load_yaml(rules_config_path)
+            rules_base = agent_dir / RULES_DIR
+            for lang in rules_data.get("languages", []):
+                lang_dir = rules_base / lang
+                if not lang_dir.exists():
+                    results.append(ValidationResult(
+                        file_path=rules_config_path,
+                        schema_type="rules-config",
+                        valid=True,
+                        errors=[
+                            f"Language directory not found: rules/{lang} (warning)"
+                        ],
+                    ))
+        except Exception:
+            pass
 
     # Validate skill dependency graph
     results.extend(_validate_skill_graph(agent_dir, manifest))

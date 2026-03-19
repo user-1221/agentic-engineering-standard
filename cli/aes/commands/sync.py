@@ -16,10 +16,15 @@ from rich.console import Console
 from aes.config import (
     AGENT_DIR,
     COMMANDS_DIR,
+    INSTINCTS_DIR,
+    LEARNING_CONFIG_FILE,
+    LIFECYCLE_FILE,
     LOCAL_FILE,
     MANIFEST_FILE,
     MEMORY_DIR,
     PERMISSIONS_FILE,
+    RULES_CONFIG_FILE,
+    RULES_DIR,
     SKILLS_DIR,
 )
 from aes.i18n import t
@@ -224,6 +229,84 @@ def _load_agent_context(project_root: Path) -> AgentContext:
         if local_perms and permissions:
             permissions = _deep_merge(permissions, local_perms)
 
+    # Load lifecycle.yaml
+    lifecycle: Optional[dict] = None
+    lifecycle_path = agent_dir / LIFECYCLE_FILE
+    if lifecycle_path.exists():
+        with open(lifecycle_path) as f:
+            lifecycle = yaml.safe_load(f) or {}
+
+    # Load learning config and active instincts
+    learning_config: Optional[dict] = None
+    active_instincts: List[dict] = []
+    learning_config_path = agent_dir / LEARNING_CONFIG_FILE
+    if learning_config_path.exists():
+        with open(learning_config_path) as f:
+            learning_config = yaml.safe_load(f) or {}
+
+    instincts_active_dir = agent_dir / INSTINCTS_DIR / "active"
+    if instincts_active_dir.exists():
+        max_instincts = 10
+        if learning_config:
+            max_instincts = (
+                learning_config.get("context_loading", {})
+                .get("max_instincts_in_context", 10)
+            )
+        raw_instincts = []
+        for inst_file in sorted(instincts_active_dir.glob("*.instinct.yaml")):
+            with open(inst_file) as f:
+                inst_data = yaml.safe_load(f)
+            if inst_data:
+                raw_instincts.append(inst_data)
+        # Sort by confidence score descending
+        raw_instincts.sort(
+            key=lambda i: i.get("confidence", {}).get("score", 0),
+            reverse=True,
+        )
+        active_instincts = raw_instincts[:max_instincts]
+
+    # Load rules config and rule files
+    rules_config: Optional[dict] = None
+    rules_files: Dict[str, str] = {}
+    rules_config_path = agent_dir / RULES_CONFIG_FILE
+    if rules_config_path.exists():
+        with open(rules_config_path) as f:
+            rules_config = yaml.safe_load(f) or {}
+
+        rules_base = agent_dir / RULES_DIR
+        overrides = rules_config.get("overrides", {})
+
+        # Determine which language directories to load
+        languages = rules_config.get("languages", [])
+        if not languages:
+            # Auto-detect from project root
+            detection = rules_config.get("detection", {})
+            for lang, patterns in detection.items():
+                for pattern in patterns:
+                    if list(project_root.glob(pattern)):
+                        languages.append(lang)
+                        break
+
+        # Always-load directories (default: common)
+        always = rules_config.get("loading", {}).get("always", ["common"])
+        dirs_to_load = list(always) + languages
+
+        for dir_name in dirs_to_load:
+            rule_dir = rules_base / dir_name
+            if not rule_dir.exists():
+                continue
+            for md_file in sorted(rule_dir.glob("*.md")):
+                content = md_file.read_text()
+                # Resolve ${variable} placeholders from overrides
+                rule_name = md_file.stem
+                rule_overrides = overrides.get(rule_name, {})
+                for var_name, var_value in rule_overrides.items():
+                    content = content.replace(
+                        f"${{{var_name}}}", str(var_value)
+                    )
+                key = f"{dir_name}/{md_file.name}"
+                rules_files[key] = content
+
     return AgentContext(
         project_root=project_root,
         agent_dir=agent_dir,
@@ -236,6 +319,11 @@ def _load_agent_context(project_root: Path) -> AgentContext:
         memory_project=memory_project,
         skill_metadata=skill_metadata,
         local_config=local_config,
+        lifecycle=lifecycle,
+        learning_config=learning_config,
+        active_instincts=active_instincts,
+        rules_config=rules_config,
+        rules_files=rules_files,
     )
 
 

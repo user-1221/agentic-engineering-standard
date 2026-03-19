@@ -1,0 +1,7 @@
+# Coding Standards — AES Template
+aes: "1.4"
+
+name: "coding-standards"
+version: "1.0.0"
+description: "Coding standards and conventions for multi-language projects"
+domain: "general"

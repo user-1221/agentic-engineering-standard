@@ -28,6 +28,11 @@ class AgentContext:
     memory_project: Optional[str]
     skill_metadata: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     local_config: Optional[dict] = None
+    lifecycle: Optional[dict] = None
+    learning_config: Optional[dict] = None
+    active_instincts: List[dict] = field(default_factory=list)
+    rules_config: Optional[dict] = None
+    rules_files: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass

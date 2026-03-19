@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aes.dev/schemas/learning-config/v1",
+  "title": "AES Learning Configuration",
+  "description": "Validates .agent/learning/config.yaml — continuous learning system settings",
+  "type": "object",
+  "required": ["apiVersion", "kind"],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "const": "aes/v1",
+      "description": "AES learning config schema version"
+    },
+    "kind": {
+      "type": "string",
+      "const": "LearningConfig",
+      "description": "Resource kind"
+    },
+    "extraction": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether instinct extraction is active"
+        },
+        "auto_extract": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-extract at session end"
+        },
+        "min_session_length": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 5,
+          "description": "Min turns before extraction triggers"
+        },
+        "max_candidates_per_session": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 3,
+          "description": "Prevent instinct flooding"
+        }
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "properties": {
+        "initial_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.4,
+          "description": "Starting score for new candidates"
+        },
+        "promotion_threshold": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.6,
+          "description": "Score needed to become active"
+        },
+        "promotion_min_validations": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 3,
+          "description": "Min validations to promote"
+        },
+        "publish_threshold": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.8,
+          "description": "Score needed to publish"
+        },
+        "publish_min_validations": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 5,
+          "description": "Min validations to publish"
+        },
+        "decay_rate_per_week": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.01,
+          "description": "Score decrease without validation"
+        },
+        "min_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.3,
+          "description": "Below this, archive the instinct"
+        }
+      }
+    },
+    "context_loading": {
+      "type": "object",
+      "properties": {
+        "max_instincts_in_context": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 10,
+          "description": "Max instincts loaded per session"
+        },
+        "sort_by": {
+          "type": "string",
+          "enum": ["confidence_score", "last_validated", "created_at"],
+          "default": "confidence_score",
+          "description": "How to rank instincts for loading"
+        },
+        "token_budget": {
+          "type": "integer",
+          "minimum": 100,
+          "default": 2000,
+          "description": "Max tokens for instinct context"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["compact", "full"],
+          "default": "compact",
+          "description": "compact: description + action only; full: includes evidence + examples"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

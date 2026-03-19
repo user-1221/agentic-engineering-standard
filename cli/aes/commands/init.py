@@ -22,9 +22,17 @@ from aes.config import (
     AGENTIGNORE_FILE,
     BOM_FILE,
     DECISIONS_DIR,
+    INSTINCTS_DIR,
+    LEARNING_CONFIG_FILE,
+    LEARNING_DIR,
+    LIFECYCLE_FILE,
     LOCAL_EXAMPLE_FILE,
     LOCAL_FILE,
+    LOGS_DIR,
+    RULES_CONFIG_FILE,
+    RULES_DIR,
     SCAFFOLD_DIR,
+    SCRIPTS_DIR,
     SKILLS_DIR,
     REGISTRY_DIR,
     WORKFLOWS_DIR,
@@ -734,6 +742,100 @@ def init_cmd(
         }
         content = _render_template(env, "operations.md.jinja", ops_context)
         (agent_dir / MEMORY_DIR / "operations.md").write_text(content)
+
+    # Lifecycle hooks (all domains)
+    if domain_config.scaffold_lifecycle:
+        (agent_dir / SCRIPTS_DIR).mkdir(exist_ok=True)
+        (agent_dir / LOGS_DIR).mkdir(exist_ok=True)
+        lifecycle_content = (
+            "# .agent/lifecycle.yaml — Lifecycle Hooks\n"
+            "apiVersion: aes/v1\n"
+            "kind: Lifecycle\n"
+            f"\nprofile: {domain_config.lifecycle_profile}\n"
+            "\nhooks:\n"
+            "  on_session_start:\n"
+            "    - name: restore-context\n"
+            "      description: Load previous session summary into context\n"
+            "      profile: minimal\n"
+            "      action: script\n"
+            "      command: node .agent/scripts/restore-context.js\n"
+            "      timeout_seconds: 10\n"
+            "      async: false\n"
+            "      fail_strategy: warn\n"
+            "\n"
+            "  on_session_end:\n"
+            "    - name: persist-summary\n"
+            "      description: Save session summary for next session\n"
+            "      profile: minimal\n"
+            "      action: script\n"
+            "      command: node .agent/scripts/persist-summary.js\n"
+            "      timeout_seconds: 15\n"
+            "      async: true\n"
+            "      fail_strategy: warn\n"
+        )
+        (agent_dir / LIFECYCLE_FILE).write_text(lifecycle_content)
+
+    # Continuous learning (agent-integrated domains only)
+    if domain_config.scaffold_learning:
+        (agent_dir / LEARNING_DIR).mkdir(exist_ok=True)
+        (agent_dir / INSTINCTS_DIR / "active").mkdir(parents=True, exist_ok=True)
+        (agent_dir / INSTINCTS_DIR / "candidates").mkdir(exist_ok=True)
+        (agent_dir / INSTINCTS_DIR / "archived").mkdir(exist_ok=True)
+        learning_content = (
+            "# .agent/learning/config.yaml\n"
+            "apiVersion: aes/v1\n"
+            "kind: LearningConfig\n"
+            "\nextraction:\n"
+            "  enabled: true\n"
+            "  auto_extract: true\n"
+            "  min_session_length: 5\n"
+            "  max_candidates_per_session: 3\n"
+            "\nconfidence:\n"
+            "  initial_score: 0.4\n"
+            "  promotion_threshold: 0.6\n"
+            "  promotion_min_validations: 3\n"
+            "  decay_rate_per_week: 0.01\n"
+            "  min_score: 0.3\n"
+            "\ncontext_loading:\n"
+            "  max_instincts_in_context: 10\n"
+            "  sort_by: confidence_score\n"
+            "  token_budget: 2000\n"
+            "  format: compact\n"
+        )
+        (agent_dir / LEARNING_CONFIG_FILE).write_text(learning_content)
+
+    # Rules & conventions (all domains)
+    if domain_config.scaffold_rules:
+        (agent_dir / RULES_DIR).mkdir(exist_ok=True)
+        (agent_dir / RULES_DIR / "common").mkdir(exist_ok=True)
+        rules_content = (
+            "# .agent/rules/rules.yaml\n"
+            "apiVersion: aes/v1\n"
+            "kind: RulesConfig\n"
+            "\nloading:\n"
+            "  always: [common]\n"
+        )
+        (agent_dir / RULES_CONFIG_FILE).write_text(rules_content)
+
+        # Starter rule
+        starter_rule = (
+            "---\n"
+            "name: testing\n"
+            "scope: common\n"
+            "priority: high\n"
+            "---\n\n"
+            "# Testing Standards\n\n"
+            "## Requirements\n"
+            "- All public functions must have unit tests\n"
+            "- No test should take longer than 5 seconds\n\n"
+            "## Patterns\n"
+            "- Use Arrange-Act-Assert structure\n"
+            "- Mock external dependencies\n\n"
+            "## Anti-patterns\n"
+            "- Never test implementation details\n"
+            "- Never share state between tests\n"
+        )
+        (agent_dir / RULES_DIR / "common" / "testing.md").write_text(starter_rule)
 
     # Auto-sync: generate tool-specific config files
     synced_files = run_sync(project_root, force=True, quiet=True)

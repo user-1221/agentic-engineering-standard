@@ -1,0 +1,35 @@
+# Development Workflow — AES Template
+aes: "1.4"
+
+name: "dev-workflow"
+version: "1.0.0"
+description: "Development workflow with specialized sub-agent roles"
+domain: "general"
+
+agent:
+  instructions: "instructions.md"
+  orchestrator: "skills/ORCHESTRATOR.md"
+
+skills:
+  - id: "planner"
+    manifest: "skills/planner.skill.yaml"
+    runbook: "skills/planner.md"
+  - id: "architect"
+    manifest: "skills/architect.skill.yaml"
+    runbook: "skills/architect.md"
+  - id: "implementer"
+    manifest: "skills/implementer.skill.yaml"
+    runbook: "skills/implementer.md"
+  - id: "tdd-guide"
+    manifest: "skills/tdd-guide.skill.yaml"
+    runbook: "skills/tdd-guide.md"
+  - id: "code-reviewer"
+    manifest: "skills/code-reviewer.skill.yaml"
+    runbook: "skills/code-reviewer.md"
+  - id: "security-reviewer"
+    manifest: "skills/security-reviewer.skill.yaml"
+    runbook: "skills/security-reviewer.md"
+
+workflows:
+  - id: "dev-pipeline"
+    path: "workflows/dev-pipeline.yaml"

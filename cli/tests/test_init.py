@@ -61,7 +61,7 @@ class TestInit:
         agent_yaml = tmp_path / ".agent" / "agent.yaml"
         with open(agent_yaml) as f:
             data = yaml.safe_load(f)
-        assert data["aes"] == "1.2"
+        assert data["aes"] == "1.4"
         assert data["name"] == "test-project"
         assert data["domain"] == "ml"
 

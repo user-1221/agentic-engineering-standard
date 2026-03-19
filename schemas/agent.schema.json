@@ -214,6 +214,26 @@
       "type": "object",
       "description": "Top-level MCP server declarations (keyed by server name)",
       "additionalProperties": { "$ref": "#/$defs/mcp_server_decl" }
+    },
+    "lifecycle": {
+      "type": "string",
+      "description": "Path to lifecycle.yaml relative to .agent/"
+    },
+    "learning": {
+      "type": "object",
+      "description": "Continuous learning system configuration",
+      "properties": {
+        "config": { "type": "string", "description": "Path to learning/config.yaml relative to .agent/" },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "description": "Rules and conventions system configuration",
+      "properties": {
+        "config": { "type": "string", "description": "Path to rules/rules.yaml relative to .agent/" },
+        "enabled": { "type": "boolean", "default": true }
+      }
     }
   },
   "additionalProperties": false,

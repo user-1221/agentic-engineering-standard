@@ -1,0 +1,24 @@
+# .agent/learning/config.yaml — Learning System Configuration
+apiVersion: aes/v1
+kind: LearningConfig
+
+extraction:
+  enabled: true
+  auto_extract: true
+  min_session_length: 5
+  max_candidates_per_session: 3
+
+confidence:
+  initial_score: 0.4
+  promotion_threshold: 0.6
+  promotion_min_validations: 3
+  publish_threshold: 0.8
+  publish_min_validations: 5
+  decay_rate_per_week: 0.01
+  min_score: 0.3
+
+context_loading:
+  max_instincts_in_context: 10
+  sort_by: confidence_score
+  token_budget: 2000
+  format: compact

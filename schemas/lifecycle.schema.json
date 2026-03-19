@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aes.dev/schemas/lifecycle/v1",
+  "title": "AES Lifecycle Hooks",
+  "description": "Validates .agent/lifecycle.yaml — platform-agnostic lifecycle hook declarations",
+  "type": "object",
+  "required": ["apiVersion", "kind", "hooks"],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "const": "aes/v1",
+      "description": "AES lifecycle schema version"
+    },
+    "kind": {
+      "type": "string",
+      "const": "Lifecycle",
+      "description": "Resource kind"
+    },
+    "profile": {
+      "type": "string",
+      "enum": ["minimal", "standard", "strict"],
+      "default": "standard",
+      "description": "Active profile controlling which hooks run"
+    },
+    "disabled_hooks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Hook names to disable (also via AES_DISABLED_HOOKS env var)"
+    },
+    "hooks": {
+      "type": "object",
+      "properties": {
+        "on_session_start": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/hook" }
+        },
+        "on_session_end": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/hook" }
+        },
+        "pre_tool_use": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/tool_hook" }
+        },
+        "post_tool_use": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/tool_hook" }
+        },
+        "heartbeat": {
+          "$ref": "#/$defs/heartbeat"
+        },
+        "on_error": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/error_hook" }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "hook_base": {
+      "type": "object",
+      "required": ["name", "action"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]*$",
+          "description": "Unique hook identifier"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this hook does"
+        },
+        "profile": {
+          "type": "string",
+          "enum": ["minimal", "standard", "strict"],
+          "default": "standard",
+          "description": "Minimum profile to activate this hook"
+        },
+        "action": {
+          "type": "string",
+          "enum": ["script", "checklist"],
+          "description": "Execution type"
+        },
+        "command": {
+          "type": "string",
+          "description": "Shell command to execute (required when action=script)"
+        },
+        "checklist_file": {
+          "type": "string",
+          "description": "Markdown checklist path (required when action=checklist)"
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 30,
+          "description": "Max execution time before kill"
+        },
+        "async": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run in background without blocking"
+        },
+        "fail_strategy": {
+          "type": "string",
+          "enum": ["warn", "skip", "abort"],
+          "default": "warn",
+          "description": "Behavior on failure"
+        },
+        "inputs": {
+          "type": ["object", "array"],
+          "description": "Data paths passed to the script"
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "file": { "type": "string" },
+            "format": {
+              "type": "string",
+              "enum": ["jsonl", "json", "md"]
+            }
+          }
+        },
+        "config": {
+          "type": "object",
+          "description": "Arbitrary configuration passed to the hook",
+          "additionalProperties": true
+        }
+      }
+    },
+    "hook": {
+      "$ref": "#/$defs/hook_base"
+    },
+    "tool_hook": {
+      "allOf": [
+        { "$ref": "#/$defs/hook_base" },
+        {
+          "type": "object",
+          "properties": {
+            "filter": {
+              "type": "object",
+              "properties": {
+                "tools": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Only trigger for these tool types"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Only trigger for files matching these globs"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "error_hook": {
+      "allOf": [
+        { "$ref": "#/$defs/hook_base" },
+        {
+          "type": "object",
+          "properties": {
+            "max_retries": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Retry count for error recovery"
+            },
+            "backoff_seconds": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Delay between retries"
+            }
+          }
+        }
+      ]
+    },
+    "heartbeat": {
+      "type": "object",
+      "required": ["interval_minutes", "actions"],
+      "properties": {
+        "interval_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Minutes between heartbeat runs"
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/hook_base" }
+        }
+      }
+    }
+  }
+}
